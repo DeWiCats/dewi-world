@@ -1,6 +1,5 @@
 import { ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import ServiceSheetPage, {
@@ -29,8 +28,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={darkTheme as any}>
-      {/* <ServiceSheetLayout /> */}
-      <StatusBar style="auto" />
+      {/* <StatusBar style="auto" /> */}
+      <ServiceSheetLayout />
+      
     </ThemeProvider>
   );
 }

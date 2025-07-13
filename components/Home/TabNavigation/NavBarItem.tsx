@@ -1,0 +1,98 @@
+import Box from "@/components/UI/Box";
+import TouchableOpacityBox from "./TouchableOpacityBox";
+import { Animated, Insets, LayoutChangeEvent } from "react-native";
+import { FC } from "react";
+import { useAnimatedStyle } from "react-native-reanimated";
+import { SvgProps } from "react-native-svg";
+import { useColors } from "@/hooks/theme";
+
+export type NavBarOption = {
+  value: string;
+  Icon: FC<SvgProps>;
+  hasBadge?: boolean;
+};
+
+export default function NavBarItem({
+  selected,
+  onLayout,
+  onPress,
+  onLongPress,
+  hitSlop,
+  Icon,
+  value,
+  hasBadge,
+}: {
+  selected: boolean;
+  onPress: () => void;
+  onLongPress?: () => void;
+  onLayout: (event: LayoutChangeEvent) => void;
+  hitSlop: Insets | undefined;
+  hasBadge?: boolean;
+} & NavBarOption) {
+  const colors = useColors();
+
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: 1,
+        },
+      ],
+    };
+  });
+
+  return (
+    <TouchableOpacityBox
+      accessibilityRole="button"
+      accessibilityState={selected ? { selected: true } : {}}
+      accessibilityLabel={value}
+      onLongPress={onLongPress}
+      key={value}
+      onPress={onPress}
+      onLayout={onLayout}
+      marginRight="0"
+      hitSlop={hitSlop}
+      alignItems="center"
+      flexGrow={1}
+      flex={1}
+    >
+      <Animated.View style={animatedStyles}>
+        <Box
+          backgroundColor={selected ? "primaryText" : "transparent"}
+          height={30}
+          width={30}
+          borderRadius="full"
+          justifyContent="center"
+          alignItems="center"
+        />
+      </Animated.View>
+      <Box position="absolute" top={0}>
+        <Icon
+          height={30}
+          width={30}
+          color={selected ? colors.primaryBackground : colors.primaryText}
+        />
+        {hasBadge && (
+          <Box
+            position="absolute"
+            justifyContent="center"
+            alignItems="center"
+            top={6}
+            right={2}
+            backgroundColor={selected ? "primaryText" : "primaryBackground"}
+            borderRadius="full"
+            height={10}
+            width={10}
+          >
+            <Box
+              backgroundColor={selected ? "primaryBackground" : "green.500"}
+              borderRadius="full"
+              height={6}
+              width={6}
+            />
+          </Box>
+        )}
+      </Box>
+    </TouchableOpacityBox>
+  );
+}
