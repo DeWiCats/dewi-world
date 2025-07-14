@@ -4,8 +4,8 @@ import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { Insets, LayoutChangeEvent, LayoutRectangle } from "react-native";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 import { SvgProps } from "react-native-svg";
-import Box from "../../ui/Box";
 import NavBarItem from "./NavBarItem";
+import Box from "./ui/Box";
 
 export type ServiceNavBarOption = {
   value: string

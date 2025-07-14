@@ -67,7 +67,7 @@ export default function NavBarItem({
         <Icon
           height={25}
           width={25}
-          color={selected ? colors.primaryBackground : colors.primaryText}
+          color={selected ? colors["base.white"] : colors["gray.600"]}
         />
         {hasBadge && (
           <Box

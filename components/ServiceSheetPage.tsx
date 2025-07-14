@@ -8,7 +8,7 @@ import {
 import React, { FC, useCallback, useMemo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgProps } from "react-native-svg";
-import ServiceNavBar from "./Home/TabNavigation/ServiceNavBar";
+import ServiceNavBar from "./ServiceNavBar";
 import Box from "./ui/Box";
 
 const Tab = createBottomTabNavigator();
