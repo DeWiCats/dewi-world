@@ -1,49 +1,37 @@
-import { ThemeProvider } from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import { StatusBar } from "expo-status-bar";
-import "react-native-reanimated";
-
-import ServiceSheetPage, {
-  ServiceNavBarOption,
-} from "@/components/ServiceSheetPage";
-import ChatNavigator from "@/features/chat/ChatNavigator";
-import LocationsNavigator from "@/features/locations/LocationsNavigator";
-import RewardsNavigator from "@/features/rewards/RewardsNavigator";
-import WorldNavigator from "@/features/world/WorldNavigator";
-import Chat from "@assets/svgs/chat.svg";
-import Coin from "@assets/svgs/coin.svg";
-import Map from "@assets/svgs/map.svg";
-import World from "@assets/svgs/world.svg";
-import { darkTheme } from "@config/theme/theme";
+import ServiceSheetLayout from "@/components/ServiceSheetLayout";
+import { darkTheme } from "@/constants/theme";
+import { ThemeProvider } from "@shopify/restyle";
 import { useMemo } from "react";
+import { Platform, UIManager } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "react-native-reanimated";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
+  const themeObject = useMemo(() => {
+    return darkTheme;
+  }, []);
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
+  if (Platform.OS === "android") {
+    if (UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
   }
+  const colorAdaptedTheme = useMemo(
+    () => ({
+      ...themeObject,
+    }),
+    [themeObject]
+  );
 
   return (
-    <ThemeProvider value={darkTheme as any}>
-      {/* <ServiceSheetLayout /> */}
-      <StatusBar style="auto" />
+    <ThemeProvider theme={colorAdaptedTheme}>
+      <GestureHandlerRootView>
+        <SafeAreaProvider>
+          {/* <StatusBar style="auto" /> */}
+          <ServiceSheetLayout />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     </ThemeProvider>
   );
 }
-
-const ServiceSheetLayout = () => {
-  const options = useMemo((): Array<ServiceNavBarOption> => {
-    return [
-      { name: "World", Icon: World, component: WorldNavigator },
-      { name: "Locations", Icon: Map, component: LocationsNavigator },
-      { name: "Rewards", Icon: Coin, component: RewardsNavigator },
-      { name: "Chat", Icon: Chat, component: ChatNavigator },
-    ];
-  }, []);
-
-  return <ServiceSheetPage options={options} />;
-};

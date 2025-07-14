@@ -1,6 +1,5 @@
-import Box from "@components/Box";
-import { Color } from "@config/theme/theme";
-import { useColors } from "@config/theme/themeHooks";
+import { Color } from "@/constants/theme";
+import { useColors } from "@/hooks/theme";
 import useHaptic from "@hooks/useHaptic";
 import {
   BottomTabBarProps,
@@ -10,6 +9,7 @@ import React, { FC, useCallback, useMemo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgProps } from "react-native-svg";
 import ServiceNavBar from "./ServiceNavBar";
+import Box from "./ui/Box";
 
 const Tab = createBottomTabNavigator();
 
@@ -124,15 +124,13 @@ const ServiceSheetPage = ({ options }: ServiceSheetProps) => {
           <CustomTabBar {...props} options={options} />
         )}
         screenOptions={{
+          sceneStyle: {
+            height: "100%",
+            backgroundColor: colors.primaryBackground,
+          },
           headerShown: false,
           lazy: true,
         }}
-        // sceneContainerStyle={
-        //   {
-        //     height: "100%",
-        //     backgroundColor: colors.primaryBackground,
-        //   } as ViewStyle
-        // }
       >
         {options.map((option) => (
           <Tab.Screen

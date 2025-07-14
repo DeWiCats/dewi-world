@@ -6,7 +6,7 @@ const Stack = createNativeStackNavigator();
 
 export default function RewardsNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Rewards" component={RewardsScreen} />
     </Stack.Navigator>
   );

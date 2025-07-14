@@ -9,14 +9,16 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.dewiworld"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.dewiworld"
     },
     "web": {
       "bundler": "metro",
@@ -24,6 +26,12 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "sk.eyJ1Ijoic2FsdmFkb3JjMDMiLCJhIjoiY200Y3R3Yjl6MGY5ODJpcTkybWc2Z2M3byJ9._JLgtgoHMwZDYg7J1Qml9Q"
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
