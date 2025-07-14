@@ -1,4 +1,4 @@
-package com.salvadorc03.dewiworld
+package com.anonymous.dewiworld
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

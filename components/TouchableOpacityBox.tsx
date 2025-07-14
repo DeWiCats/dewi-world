@@ -1,4 +1,4 @@
-import { Theme } from "@config/theme/theme";
+import { Theme } from "@/constants/theme";
 import { createBox } from "@shopify/restyle";
 import React from "react";
 import { TouchableOpacity, TouchableOpacityProps } from "react-native";

@@ -1,10 +1,10 @@
-import Box from "@/components/UI/Box";
-import TouchableOpacityBox from "./TouchableOpacityBox";
-import { Animated, Insets, LayoutChangeEvent } from "react-native";
+import TouchableOpacityBox from "@/components/TouchableOpacityBox";
+import Box from "@/components/ui/Box";
+import { useColors } from "@/hooks/theme";
 import { FC } from "react";
+import { Animated, Insets, LayoutChangeEvent } from "react-native";
 import { useAnimatedStyle } from "react-native-reanimated";
 import { SvgProps } from "react-native-svg";
-import { useColors } from "@/hooks/theme";
 
 export type NavBarOption = {
   value: string;
@@ -56,20 +56,17 @@ export default function NavBarItem({
       flexGrow={1}
       flex={1}
     >
-      <Animated.View style={animatedStyles}>
-        <Box
-          backgroundColor={selected ? "primaryText" : "transparent"}
-          height={30}
-          width={30}
-          borderRadius="full"
-          justifyContent="center"
-          alignItems="center"
-        />
-      </Animated.View>
-      <Box position="absolute" top={0}>
+      <Animated.View style={animatedStyles}></Animated.View>
+      <Box
+        justifyContent="center"
+        alignItems="center"
+        borderRadius={selected ? "full" : "none"}
+        padding="2"
+        backgroundColor={selected ? "pink.500" : "transparent"}
+      >
         <Icon
-          height={30}
-          width={30}
+          height={25}
+          width={25}
           color={selected ? colors.primaryBackground : colors.primaryText}
         />
         {hasBadge && (

@@ -257,7 +257,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.salvadorc03.dewiworld";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.dewiworld";
 				PRODUCT_NAME = "dewiworld";
 				SWIFT_OBJC_BRIDGING_HEADER = "dewiworld/dewiworld-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -286,7 +286,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.salvadorc03.dewiworld";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.dewiworld";
 				PRODUCT_NAME = "dewiworld";
 				SWIFT_OBJC_BRIDGING_HEADER = "dewiworld/dewiworld-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

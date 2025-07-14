@@ -199,7 +199,7 @@ const darkTheme = createTheme({
   },
 })
 
-export type Theme = typeof lightTheme
+export type Theme = typeof darkTheme
 export type TextVariant = keyof Theme['textVariants']
 export type TextInputVariant = keyof Theme['inputVariants']
 export type Spacing = keyof Theme['spacing']
@@ -218,8 +218,8 @@ export type FontWeight =
   | 'normal'
   | 'bold'
 
-export { lightColors, darkColors }
+export { darkColors, lightColors }
 
 export { NovaFont as Font }
 
-export { lightTheme, darkTheme }
+export { darkTheme, lightTheme }

@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>dewiworld</string>
-          <string>com.salvadorc03.dewiworld</string>
+          <string>com.anonymous.dewiworld</string>
         </array>
       </dict>
     </array>

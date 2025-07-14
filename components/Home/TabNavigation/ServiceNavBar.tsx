@@ -1,10 +1,10 @@
-import { Insets, LayoutChangeEvent, LayoutRectangle } from "react-native";
-import Box from "../../UI/Box";
-import { TouchableOpacityBoxProps } from "./TouchableOpacityBox";
-import { SvgProps } from "react-native-svg";
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { TouchableOpacityBoxProps } from "@/components/TouchableOpacityBox";
 import { useVerticalHitSlop } from "@/hooks/theme";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { Insets, LayoutChangeEvent, LayoutRectangle } from "react-native";
 import { useSharedValue, withSpring } from "react-native-reanimated";
+import { SvgProps } from "react-native-svg";
+import Box from "../../ui/Box";
 import NavBarItem from "./NavBarItem";
 
 export type ServiceNavBarOption = {
@@ -103,7 +103,7 @@ export default function ServiceNavBar({
       <Box
         flexDirection="row"
         justifyContent="space-between"
-        backgroundColor="primaryText"
+        backgroundColor="base.black"
         borderRadius="full"
         padding="md"
         flex={1}

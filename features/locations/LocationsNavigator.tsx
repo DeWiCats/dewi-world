@@ -6,7 +6,7 @@ const Stack = createNativeStackNavigator();
 
 export default function LocationsNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Locations" component={LocationsScreen} />
     </Stack.Navigator>
   );

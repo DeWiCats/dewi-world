@@ -13,9 +13,8 @@ install! 'cocoapods',
 
 prepare_react_native_project!
 
-# @generated begin @rnmapbox/maps-rnmapboxmapsimpl - expo prebuild (DO NOT MODIFY) sync-979e6977322b65f4fb2d68903f1a39cc7dff6831
+# @generated begin @rnmapbox/maps-rnmapboxmapsimpl - expo prebuild (DO NOT MODIFY) sync-bf1c7b88552aab349df3e757d1256727dda3092e
 $RNMapboxMapsDownloadToken = 'sk.eyJ1Ijoic2FsdmFkb3JjMDMiLCJhIjoiY200Y3R3Yjl6MGY5ODJpcTkybWc2Z2M3byJ9._JLgtgoHMwZDYg7J1Qml9Q'
-$RNMapboxMapsVersion = '11.8.0'
 # @generated end @rnmapbox/maps-rnmapboxmapsimpl
 target 'dewiworld' do
   use_expo_modules!

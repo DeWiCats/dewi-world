@@ -1,4 +1,4 @@
-package com.salvadorc03.dewiworld
+package com.anonymous.dewiworld
 
 import android.app.Application
 import android.content.res.Configuration

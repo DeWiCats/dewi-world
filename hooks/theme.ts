@@ -1,10 +1,10 @@
-import { useTheme } from '@shopify/restyle'
-import tinycolor from 'tinycolor2'
-import { Platform, ViewStyle } from 'react-native'
-import { useCallback, useMemo } from 'react'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Color, Spacing, Theme } from '@/constants/theme'
 import { ww } from '@/utils/layout'
+import { useTheme } from '@shopify/restyle'
+import { useCallback, useMemo } from 'react'
+import { Platform, ViewStyle } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import tinycolor from 'tinycolor2'
 
 const colorScheme = 'dark' as 'dark' | 'light'
 export const useColorScheme = () => {
