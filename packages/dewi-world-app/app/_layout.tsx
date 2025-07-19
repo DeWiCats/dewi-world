@@ -2,7 +2,7 @@ import ServiceSheetLayout from "@/components/ServiceSheetLayout";
 import { darkTheme } from "@/constants/theme";
 import { ThemeProvider } from "@shopify/restyle";
 import { useMemo } from "react";
-import { Platform, UIManager } from "react-native";
+import { Platform, StatusBar, UIManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -28,7 +28,7 @@ export default function RootLayout() {
     <ThemeProvider theme={colorAdaptedTheme}>
       <GestureHandlerRootView>
         <SafeAreaProvider>
-          {/* <StatusBar style="auto" /> */}
+          <StatusBar barStyle="dark-content" />
           <ServiceSheetLayout />
         </SafeAreaProvider>
       </GestureHandlerRootView>

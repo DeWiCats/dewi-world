@@ -1,23 +1,29 @@
-// https://docs.expo.dev/guides/using-eslint/
+// Root ESLint configuration for DEWI monorepo
 const { defineConfig } = require('eslint/config');
-const expoConfig = require('eslint-config-expo/flat');
 
 module.exports = defineConfig([
-  expoConfig,
   {
-    ignores: ['dist/*'],
+    ignores: [
+      'dist/*',
+      'build/*',
+      '**/node_modules/*',
+      '**/dist/*',
+      '**/build/*',
+      '**/.expo/*',
+      '**/ios/*',
+      '**/android/*'
+    ],
   },
   {
-    plugins: {
-      import: require('eslint-plugin-import'),
+    files: ['**/*.js', '**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
     },
-    settings: {
-      'import/resolver': {
-        typescript: {
-          alwaysTryTypes: true,
-          project: './tsconfig.json',
-        },
-      },
+    rules: {
+      'no-console': 'warn',
+      'no-unused-vars': 'warn',
+      'prefer-const': 'error',
     },
   },
-]);
+]); 

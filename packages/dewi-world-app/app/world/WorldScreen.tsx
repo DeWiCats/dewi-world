@@ -7,16 +7,16 @@ import {
   MapView,
   setAccessToken,
   ShapeSource,
+  StyleImport,
   SymbolLayer,
 } from "@rnmapbox/maps";
 import { OnPressEvent } from "@rnmapbox/maps/lib/typescript/src/types/OnPressEvent";
 import React, { useCallback, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import WorldDrawer from "./WorldDrawer";
 
 setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN as string);
 
-const DEFAULT_ZOOM_LEVEL = 1;
+const DEFAULT_ZOOM_LEVEL = 17;
 
 export default function WorldScreen() {
   const colors = useColors();
@@ -62,21 +62,28 @@ export default function WorldScreen() {
   }, [selectedLocation, locations]);
 
   return (
-    <Box
-      width="100%"
-      height="100%"
-      position={"relative"}
-      style={{ marginTop: top }}
-    >
+    <Box width="100%" height="100%" position={"relative"}>
       <MapView
         ref={map}
+        styleURL="mapbox://styles/mapbox/standard-beta"
         style={{ flex: 1 }}
         scaleBarEnabled={false}
         compassEnabled={false}
         logoEnabled={false}
         projection="globe"
       >
-        <Camera ref={camera} zoomLevel={DEFAULT_ZOOM_LEVEL} />
+        <StyleImport
+          id="basemap"
+          existing
+          config={{
+            lightPreset: "night",
+          }}
+        />
+        <Camera
+          ref={camera}
+          zoomLevel={DEFAULT_ZOOM_LEVEL}
+          // centerCoordinate={[80.19261, 25.75914]}
+        />
         <ShapeSource
           cluster
           clusterRadius={100}
@@ -104,10 +111,10 @@ export default function WorldScreen() {
           />
         </ShapeSource>
       </MapView>
-      <WorldDrawer
+      {/* <WorldDrawer
         onClose={onCloseDrawer}
         selectedLocation={selectedLocation}
-      />
+      /> */}
     </Box>
   );
 }
