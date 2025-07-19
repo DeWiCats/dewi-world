@@ -1,3 +1,14 @@
+export type GeoJSONFeature = {
+  type: "Feature";
+  geometry: GeoJSON.Point;
+  properties: {
+    title: string;
+    description: string;
+    population: number;
+    category: string;
+  };
+};
+
 export default {
   type: "FeatureCollection",
   features: [
@@ -18,7 +29,7 @@ export default {
       type: "Feature",
       geometry: {
         type: "Point",
-        coordinates: [-70.0059, 30.7128],
+        coordinates: [-74.0059, 40.8128],
       },
       properties: {
         title: "New York City",
@@ -160,14 +171,5 @@ export default {
   ],
 } as {
   type: "FeatureCollection";
-  features: {
-    type: "Feature";
-    geometry: GeoJSON.Geometry;
-    properties: {
-      title: string;
-      description: string;
-      population: number;
-      category: string;
-    };
-  }[];
+  features: GeoJSONFeature[];
 };
