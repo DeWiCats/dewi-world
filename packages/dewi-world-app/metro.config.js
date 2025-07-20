@@ -1,6 +1,10 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require("expo/metro-config");
 
+const path = require('path');
+// Load monorepo-root env vars before Metro starts transforming code.
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+
 module.exports = (() => {
   const config = getDefaultConfig(__dirname);
 

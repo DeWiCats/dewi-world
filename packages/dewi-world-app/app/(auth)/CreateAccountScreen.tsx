@@ -10,8 +10,8 @@ export default function CreateAccountScreen() {
   const { registerWithEmailPassword, loginWithProvider, loading, error } = useAuthStore();
 
   const handleEmailSignup = async () => {
-    await registerWithEmailPassword(email.trim(), password);
-    if (useAuthStore.getState().user) router.replace('/');
+    await registerWithEmailPassword(email.trim(), password.trim());
+    if (useAuthStore.getState().user) router.replace('/world/WorldScreen');
   };
 
   const handleOAuth = async (provider: 'google' | 'apple') => {

@@ -1,6 +1,6 @@
-import Box from "@/components/ui/Box";
-import geojson, { GeoJSONFeature } from "@/geojson";
-import { useColors } from "@/hooks/theme";
+import Box from '@/components/ui/Box';
+import geojson, { GeoJSONFeature } from '@/geojson';
+import { useColors } from '@/hooks/theme';
 import {
   Camera,
   CircleLayer,
@@ -9,10 +9,10 @@ import {
   ShapeSource,
   StyleImport,
   SymbolLayer,
-} from "@rnmapbox/maps";
-import { OnPressEvent } from "@rnmapbox/maps/lib/typescript/src/types/OnPressEvent";
-import React, { useCallback, useRef, useState } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+} from '@rnmapbox/maps';
+import { OnPressEvent } from '@rnmapbox/maps/lib/typescript/src/types/OnPressEvent';
+import React, { useCallback, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN as string);
 
@@ -29,8 +29,7 @@ export default function WorldScreen() {
 
   const locations = geojson;
 
-  const [selectedLocation, setSelectedLocation] =
-    useState<null | GeoJSONFeature>();
+  const [selectedLocation, setSelectedLocation] = useState<null | GeoJSONFeature>();
 
   const { top } = useSafeAreaInsets();
 
@@ -43,10 +42,7 @@ export default function WorldScreen() {
         camera?.current?.moveTo(coordinates, 500);
         setTimeout(
           async () =>
-            camera?.current?.zoomTo(
-              (await (map?.current?.getZoom() as Promise<number>)) + 2,
-              500
-            ),
+            camera?.current?.zoomTo((await (map?.current?.getZoom() as Promise<number>)) + 2, 500),
           500
         );
         return;
@@ -62,7 +58,7 @@ export default function WorldScreen() {
   }, [selectedLocation, locations]);
 
   return (
-    <Box width="100%" height="100%" position={"relative"}>
+    <Box width="100%" height="100%" position={'relative'}>
       <MapView
         ref={map}
         styleURL="mapbox://styles/mapbox/standard-beta"
@@ -76,7 +72,7 @@ export default function WorldScreen() {
           id="basemap"
           existing
           config={{
-            lightPreset: "night",
+            lightPreset: 'night',
           }}
         />
         <Camera
@@ -87,25 +83,25 @@ export default function WorldScreen() {
         <ShapeSource
           cluster
           clusterRadius={100}
-          id={"myGeoJsonSource"}
+          id={'myGeoJsonSource'}
           shape={locations}
           onPress={onSelectLocation}
         >
           <CircleLayer
             id="myPointLayer"
             style={{
-              circleColor: colors["pink.500"],
+              circleColor: colors['pink.500'],
               circleRadius: 8,
               circleStrokeWidth: 3,
-              circleStrokeColor: colors["base.white"],
+              circleStrokeColor: colors['base.white'],
             }}
           ></CircleLayer>
           <SymbolLayer
             id="clusterCount"
             style={{
-              textField: ["get", "point_count"], // Display the count
+              textField: ['get', 'point_count'], // Display the count
               textSize: 13,
-              textColor: "white",
+              textColor: 'white',
               textHaloWidth: 0.5,
             }}
           />

@@ -11,7 +11,7 @@ export default function WelcomeScreen() {
         <Button title="Login" />
       </Link>
 
-      <Link href="/(auth)/create-account" asChild>
+      <Link href="/(auth)/CreateAccountScreen" asChild>
         <Button title="Create Account" />
       </Link>
     </View>

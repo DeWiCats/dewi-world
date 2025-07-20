@@ -26,6 +26,7 @@
     "@shopify/restyle": "^2.4.5",
     "@supabase/supabase-js": "^2.52.0",
     "@types/tinycolor2": "^1.4.6",
+    "dotenv": "^17.2.0",
     "expo": "~53.0.17",
     "expo-blur": "~14.1.5",
     "expo-constants": "~17.1.7",
