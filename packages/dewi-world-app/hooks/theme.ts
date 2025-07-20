@@ -1,169 +1,164 @@
-import { Color, Spacing, Theme } from '@/constants/theme'
-import { ww } from '@/utils/layout'
-import { useTheme } from '@shopify/restyle'
-import { useCallback, useMemo } from 'react'
-import { Platform, ViewStyle } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import tinycolor from 'tinycolor2'
+import { Color, Spacing, Theme } from '@/constants/theme';
+import { ww } from '@/utils/layout';
+import { useTheme } from '@shopify/restyle';
+import { useCallback, useMemo } from 'react';
+import { Platform, ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import tinycolor from 'tinycolor2';
 
-const colorScheme = 'dark' as 'dark' | 'light'
+const colorScheme = 'dark' as 'dark' | 'light';
 export const useColorScheme = () => {
   // TODO: Use this hook from 'react-native' and revert back to device color scheme
   // const colorScheme = useColorScheme()
 
-  return colorScheme
-}
+  return colorScheme;
+};
 
 export const useColors = () => {
-  const { colors } = useTheme<Theme>()
-  return colors
-}
+  const { colors } = useTheme<Theme>();
+  return colors;
+};
 
 export const useBackgroundStyle = (color: Color) => {
-  const colors = useColors()
-  return { backgroundColor: colors[color] }
-}
+  const colors = useColors();
+  return { backgroundColor: colors[color] };
+};
 
 export const useOpacity = (color: Color, alpha: number) => {
-  const colors = useColors()
+  const colors = useColors();
 
-  const alphaColor = tinycolor(colors[color]).setAlpha(alpha).toRgbString()
+  const alphaColor = tinycolor(colors[color]).setAlpha(alpha).toRgbString();
 
   const backgroundStyle = useMemo(() => {
-    return { backgroundColor: alphaColor } as ViewStyle
-  }, [alphaColor])
+    return { backgroundColor: alphaColor } as ViewStyle;
+  }, [alphaColor]);
 
   const colorStyle = useMemo(() => {
-    return { color: alphaColor } as ViewStyle
-  }, [alphaColor])
+    return { color: alphaColor } as ViewStyle;
+  }, [alphaColor]);
 
   return {
     backgroundStyle,
     colorStyle,
     alphaColor,
-  }
-}
+  };
+};
 
 export const useCreateOpacity = () => {
-  const colors = useColors()
+  const colors = useColors();
 
   const color = useCallback(
-    (c: Color, alpha: number) =>
-      tinycolor(colors[c]).setAlpha(alpha).toRgbString(),
+    (c: Color, alpha: number) => tinycolor(colors[c]).setAlpha(alpha).toRgbString(),
 
-    [colors],
-  )
+    [colors]
+  );
 
   const backgroundStyle = useCallback(
     (c: Color, alpha: number) => {
       return {
         backgroundColor: color(c, alpha),
-      } as ViewStyle
+      } as ViewStyle;
     },
-    [color],
-  )
+    [color]
+  );
   const colorStyle = useCallback(
     (c: Color, alpha: number) => {
       return {
         color: color(c, alpha),
-      } as ViewStyle
+      } as ViewStyle;
     },
-    [color],
-  )
+    [color]
+  );
 
   return {
     backgroundStyle,
     colorStyle,
     color,
-  }
-}
+  };
+};
 
 export const useHitSlop = (val: Spacing) => {
-  const { spacing } = useTheme<Theme>()
-  const slopSpacing = spacing[val]
+  const { spacing } = useTheme<Theme>();
+  const slopSpacing = spacing[val];
 
   return {
     left: slopSpacing,
     right: slopSpacing,
     top: slopSpacing,
     bottom: slopSpacing,
-  }
-}
+  };
+};
 
 export const useVerticalHitSlop = (val: Spacing) => {
-  const { spacing } = useTheme<Theme>()
-  const slopSpacing = spacing[val]
+  const { spacing } = useTheme<Theme>();
+  const slopSpacing = spacing[val];
 
   return {
     top: slopSpacing,
     bottom: slopSpacing,
-  }
-}
+  };
+};
 
 export const useSpacing = () => {
-  const { spacing } = useTheme<Theme>()
-  return spacing
-}
+  const { spacing } = useTheme<Theme>();
+  return spacing;
+};
 
 export const usePaddingStyle = (
   padding: Spacing,
-  edges: ('top' | 'bottom' | 'left' | 'right')[],
+  edges: ('top' | 'bottom' | 'left' | 'right')[]
 ) => {
-  const { spacing } = useTheme<Theme>()
-  const amount = spacing[padding]
+  const { spacing } = useTheme<Theme>();
+  const amount = spacing[padding];
   return {
     paddingTop: edges.includes('top') ? amount : undefined,
     paddingBottom: edges.includes('bottom') ? amount : undefined,
     paddingLeft: edges.includes('left') ? amount : undefined,
     paddingRight: edges.includes('right') ? amount : undefined,
-  } as ViewStyle
-}
+  } as ViewStyle;
+};
 
 export const useBorderRadii = () => {
-  const { borderRadii } = useTheme<Theme>()
-  return borderRadii
-}
+  const { borderRadii } = useTheme<Theme>();
+  return borderRadii;
+};
 
 export const useTextVariants = () => {
-  const { textVariants } = useTheme<Theme>()
-  return textVariants
-}
+  const { textVariants } = useTheme<Theme>();
+  return textVariants;
+};
 
 export const useInputVariants = () => {
-  const { inputVariants } = useTheme<Theme>()
-  return inputVariants
-}
+  const { inputVariants } = useTheme<Theme>();
+  return inputVariants;
+};
 
 export const useBreakpoints = () => {
-  const { breakpoints } = useTheme<Theme>()
-  const width = ww
+  const { breakpoints } = useTheme<Theme>();
+  const width = ww;
   return {
     smallPhone: breakpoints.sm > width,
     largePhone: breakpoints.md <= width,
     phone: breakpoints.sm <= width,
-  }
-}
+  };
+};
 
-export const useSafeVerticalPaddingStyle = (
-  platform: 'ios' | 'android' | 'all' = 'all',
-) => {
-  const { top, bottom } = useSafeAreaInsets()
+export const useSafeVerticalPaddingStyle = (platform: 'ios' | 'android' | 'all' = 'all') => {
+  const { top, bottom } = useSafeAreaInsets();
   return useMemo(() => {
     if (platform === 'all' || Platform.OS === platform) {
-      return { paddingTop: top, paddingBottom: bottom }
+      return { paddingTop: top, paddingBottom: bottom };
     }
-    return {}
-  }, [bottom, platform, top])
-}
+    return {};
+  }, [bottom, platform, top]);
+};
 
-export const useSafeTopPaddingStyle = (
-  platform: 'ios' | 'android' | 'all' = 'all',
-) => {
-  const { top } = useSafeAreaInsets()
+export const useSafeTopPaddingStyle = (platform: 'ios' | 'android' | 'all' = 'all') => {
+  const { top } = useSafeAreaInsets();
   return useMemo(() => {
     if (platform === 'all' || Platform.OS === platform) {
-      return { paddingTop: top }
+      return { paddingTop: top };
     }
-    return {}
-  }, [platform, top])
-}
+    return {};
+  }, [platform, top]);
+};

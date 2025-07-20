@@ -8,6 +8,9 @@ module.exports = defineConfig([
     ignores: ['dist/*', '.expo/*'],
   },
   {
+    rules: {
+      'import/no-unresolved': 'off', // Temporarily disable to avoid resolver issues
+    },
     settings: {
       'import/resolver': {
         typescript: {

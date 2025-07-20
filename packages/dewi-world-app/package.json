@@ -18,11 +18,13 @@
     "@expo/vector-icons": "^14.1.0",
     "@gorhom/bottom-sheet": "^5.1.6",
     "@novalabsxyz/mobile-theme": "^2.1.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
     "@rnmapbox/maps": "^10.1.39",
     "@shopify/restyle": "^2.4.5",
+    "@supabase/supabase-js": "^2.52.0",
     "@types/tinycolor2": "^1.4.6",
     "expo": "~53.0.17",
     "expo-blur": "~14.1.5",
@@ -49,7 +51,8 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "tinycolor2": "^1.6.0",
-    "use-debounce": "^10.0.5"
+    "use-debounce": "^10.0.5",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
