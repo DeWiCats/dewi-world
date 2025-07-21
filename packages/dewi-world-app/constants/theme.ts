@@ -1,7 +1,7 @@
-import { createTheme } from '@shopify/restyle'
+import { createTheme } from '@shopify/restyle';
 
-import darkThemeTokens from '@novalabsxyz/mobile-theme/build/dark-theme.json'
-import lightThemeTokens from '@novalabsxyz/mobile-theme/build/light-theme.json'
+import darkThemeTokens from '@novalabsxyz/mobile-theme/build/dark-theme.json';
+import lightThemeTokens from '@novalabsxyz/mobile-theme/build/light-theme.json';
 
 const NovaFont = {
   bold: 'Figtree',
@@ -12,7 +12,7 @@ const NovaFont = {
   mediumItalic: 'Figtree',
   regular: 'Figtree',
   semiBold: 'Figtree',
-}
+};
 
 export const breakpoints = {
   none: 0,
@@ -22,7 +22,7 @@ export const breakpoints = {
   lg: 960,
   xl: 1200,
   xxl: 1440,
-}
+};
 
 export const baseTheme = {
   borderRadii: { ...lightThemeTokens.borderRadii, '6xl': 40 },
@@ -120,10 +120,10 @@ export const baseTheme = {
   textVariants: {
     ...lightThemeTokens.textVariants,
   },
-}
+};
 
-const lightColors = lightThemeTokens.colors
-const darkColors = darkThemeTokens.colors
+const lightColors = lightThemeTokens.colors;
+const darkColors = darkThemeTokens.colors;
 
 const allSpacing = {
   ...baseTheme.spacing,
@@ -143,34 +143,7 @@ const allSpacing = {
   '14': 56,
   '15': 60,
   '28': 112,
-}
-
-const lightTheme = createTheme({
-  ...baseTheme,
-  spacing: allSpacing,
-  colors: {
-    ...lightColors,
-
-    primaryBackground: lightColors['bg.primary'], // background.bg.primary
-    secondaryBackground: lightColors['bg.secondary'], // background.bg.secondary
-    cardBackground: lightColors['bg.tertiary'], // background.bg.primary // add border around all cards... secondary border
-    primaryText: lightColors['text.primary-900'], // text.primary.900 -> text.primary
-    secondaryText: lightColors['text.secondary-700'], // text.text.secondary.700 -> text.secondary
-    placeholderText: lightColors['text.placeholder'], // text.placeholder
-    // accentText: palette.silver, //  text.tertiary, //probably remove
-    inputBackground: lightColors['bg.primary'], // background.bg.primary // add border around all inputs... primary border
-    activeBackground: lightColors['bg.active'], // background.bg.active
-    inactiveIcon: lightColors['fg.disabled'], // foreground.fg.disabled
-    transparent10: '#ffffff1A',
-    transparent: '#00000000',
-    hntBlue: '#2755F8',
-    mobileDarkBlue: '#00273D',
-    mobileBlue: '#009EF8',
-    iotDarkGreen: '#053919',
-    iotGreen: '#26ED75',
-    solanaPurple: '#9945FF',
-  },
-})
+};
 
 const darkTheme = createTheme({
   ...baseTheme,
@@ -196,15 +169,16 @@ const darkTheme = createTheme({
     iotDarkGreen: '#053919',
     iotGreen: '#26ED75',
     solanaPurple: '#9945FF',
+    dewiPink: '#DD46F8',
   },
-})
+});
 
-export type Theme = typeof darkTheme
-export type TextVariant = keyof Theme['textVariants']
-export type TextInputVariant = keyof Theme['inputVariants']
-export type Spacing = keyof Theme['spacing']
-export type Color = keyof Theme['colors']
-export type BorderRadii = keyof Theme['borderRadii']
+export type Theme = typeof darkTheme;
+export type TextVariant = keyof Theme['textVariants'];
+export type TextInputVariant = keyof Theme['inputVariants'];
+export type Spacing = keyof Theme['spacing'];
+export type Color = keyof Theme['colors'];
+export type BorderRadii = keyof Theme['borderRadii'];
 export type FontWeight =
   | '100'
   | '200'
@@ -216,10 +190,10 @@ export type FontWeight =
   | '800'
   | '900'
   | 'normal'
-  | 'bold'
+  | 'bold';
 
-export { darkColors, lightColors }
+export { darkColors, lightColors };
 
-export { NovaFont as Font }
+export { NovaFont as Font };
 
-export { darkTheme, lightTheme }
+export { darkTheme };

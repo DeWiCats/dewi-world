@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "../../tsconfig.json",
-    "expo/tsconfig.base"
-  ],
+  "extends": ["../../tsconfig.json", "expo/tsconfig.base"],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "paths": {
@@ -11,7 +8,8 @@
       "@config/*": ["./config/*"],
       "@hooks/*": ["./hooks/*"],
       "@utils/*": ["./utils/*"],
-      "@assets/*": ["./assets/*"]
+      "@assets/*": ["./assets/*"],
+      "@app/*": ["./app/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]

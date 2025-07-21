@@ -7,7 +7,7 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Dewi World</Text>
 
-      <Link href="/(auth)/login" asChild>
+      <Link href="/(auth)/LoginScreen" asChild>
         <Button title="Login" />
       </Link>
 

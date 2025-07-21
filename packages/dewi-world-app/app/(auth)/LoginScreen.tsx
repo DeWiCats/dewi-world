@@ -10,7 +10,7 @@ export default function LoginScreen() {
   const { loginWithEmailPassword, loginWithProvider, loading, error } = useAuthStore();
 
   const handleEmailLogin = async () => {
-    await loginWithEmailPassword(email.trim(), password);
+    await loginWithEmailPassword(email.trim(), password.trim());
     if (useAuthStore.getState().user) router.replace('/');
   };
 

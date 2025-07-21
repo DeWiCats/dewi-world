@@ -34,6 +34,10 @@ export const useAuthStore = create<AuthStore>()(
           email,
           password,
         });
+
+        console.log('data', data);
+        console.log('error', error);
+
         if (error) return set({ error: error.message, loading: false });
         set({ user: data.user, loading: false });
       },
@@ -41,6 +45,10 @@ export const useAuthStore = create<AuthStore>()(
       registerWithEmailPassword: async (email, password) => {
         set({ loading: true, error: null });
         const { data, error } = await supabase.auth.signUp({ email, password });
+
+        console.log('data', data);
+        console.log('error', error);
+
         if (error) return set({ error: error.message, loading: false });
         set({ user: data.user, loading: false });
       },
