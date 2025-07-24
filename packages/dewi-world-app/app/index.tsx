@@ -21,7 +21,7 @@ export default function Index() {
   //   const inAuthGroup = segments[0] === '(auth)';
 
   if (user) {
-    return <Redirect href="(tabs)" />;
+    return <Redirect href="/(tabs)/world/WorldScreen" />;
   }
 
   return <Redirect href="/(auth)/WelcomeScreen" />;
