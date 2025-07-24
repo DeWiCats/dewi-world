@@ -13,6 +13,7 @@ import {
 import { OnPressEvent } from '@rnmapbox/maps/lib/typescript/src/types/OnPressEvent';
 import React, { useCallback, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import WorldDrawer from './WorldDrawer';
 
 setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN as string);
 
@@ -107,10 +108,10 @@ export default function WorldScreen() {
           />
         </ShapeSource>
       </MapView>
-      {/* <WorldDrawer
+      <WorldDrawer
         onClose={onCloseDrawer}
         selectedLocation={selectedLocation}
-      /> */}
+      />
     </Box>
   );
 }
