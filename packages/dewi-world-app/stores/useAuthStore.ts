@@ -1,80 +1,349 @@
 import { supabase } from '@/utils/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 type AuthStore = {
   user: User | null;
+  session: Session | null;
   hydrated: boolean;
   loading: boolean;
   error: string | null;
+  pendingEmail: string | null; // Store email for verification
 
   /* Mutations */
   loginWithEmailPassword: (email: string, password: string) => Promise<void>;
-  registerWithEmailPassword: (email: string, password: string) => Promise<void>;
+  registerWithEmail: (email: string, password: string) => Promise<{ needsVerification: boolean }>;
+  verifyEmail: (email: string, token: string) => Promise<void>;
+  resendEmailCode: (email: string) => Promise<void>;
   loginWithProvider: (provider: 'google' | 'apple') => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
+  setSession: (session: Session | null) => void;
+  setAuthState: (user: User | null, session: Session | null) => void;
+  setPendingEmail: (email: string | null) => void;
 };
 
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       user: null,
+      session: null,
       hydrated: false,
       loading: false,
       error: null,
-
-      setUser: user => set({ user }),
+      pendingEmail: null,
 
       loginWithEmailPassword: async (email, password) => {
+        console.log('🔐 Starting email login process for:', email);
         set({ loading: true, error: null });
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
 
-        console.log('data', data);
-        console.log('error', error);
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password: password.trim(),
+          });
 
-        if (error) return set({ error: error.message, loading: false });
-        set({ user: data.user, loading: false });
+          console.log('🔐 Supabase login response:', {
+            hasUser: !!data.user,
+            hasSession: !!data.session,
+            userEmail: data.user?.email,
+            userEmailConfirmed: data.user?.email_confirmed_at,
+            error: error?.message,
+            errorCode: error?.status,
+          });
+
+          if (error) {
+            console.error('❌ Login error:', {
+              message: error.message,
+              status: error.status,
+              details: error,
+            });
+
+            // Handle specific error types
+            if (error.message.includes('Invalid login credentials')) {
+              set({
+                error: 'Invalid email or password. Please check your credentials and try again.',
+                loading: false,
+              });
+            } else if (error.message.includes('Email not confirmed')) {
+              set({
+                error:
+                  'Please verify your email first. Check your inbox for the verification code.',
+                loading: false,
+              });
+            } else if (error.message.includes('Too many requests')) {
+              set({
+                error: 'Too many login attempts. Please wait a moment and try again.',
+                loading: false,
+              });
+            } else {
+              set({
+                error: `Login failed: ${error.message}`,
+                loading: false,
+              });
+            }
+            return;
+          }
+
+          if (!data.user || !data.session) {
+            console.error('❌ Login succeeded but missing user or session data');
+            set({
+              error: 'Login failed: Missing user data. Please try again.',
+              loading: false,
+            });
+            return;
+          }
+
+          console.log('✅ Login successful:', {
+            userId: data.user.id,
+            email: data.user.email,
+            emailConfirmed: data.user.email_confirmed_at,
+            sessionExpires: data.session.expires_at,
+          });
+
+          set({
+            user: data.user,
+            session: data.session,
+            loading: false,
+            error: null,
+            pendingEmail: null,
+          });
+        } catch (err) {
+          console.error('❌ Login exception:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown login error';
+          set({ error: errorMessage, loading: false });
+        }
       },
 
-      registerWithEmailPassword: async (email, password) => {
+      registerWithEmail: async (email, password) => {
+        console.log('📧 Starting email registration for:', email);
         set({ loading: true, error: null });
-        const { data, error } = await supabase.auth.signUp({ email, password });
 
-        console.log('data', data);
-        console.log('error', error);
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email: email.trim(),
+            password: password.trim(),
+            options: {
+              emailRedirectTo: undefined, // Don't use email links, use OTP codes instead
+            },
+          });
 
-        if (error) return set({ error: error.message, loading: false });
-        set({ user: data.user, loading: false });
+          console.log('📧 Email registration response:', {
+            hasUser: !!data.user,
+            hasSession: !!data.session,
+            userEmail: data.user?.email,
+            emailConfirmed: data.user?.email_confirmed_at,
+            needsConfirmation: !data.session && data.user && !data.user.email_confirmed_at,
+            error: error?.message,
+          });
+
+          if (error) {
+            console.error('❌ Email registration error:', error);
+
+            if (error.message.includes('already registered')) {
+              set({
+                error: 'This email is already registered. Please try signing in instead.',
+                loading: false,
+              });
+            } else if (error.message.includes('Password should be')) {
+              set({
+                error: 'Password must be at least 6 characters long.',
+                loading: false,
+              });
+            } else if (error.message.includes('Invalid email')) {
+              set({
+                error: 'Please enter a valid email address.',
+                loading: false,
+              });
+            } else {
+              set({
+                error: `Registration failed: ${error.message}`,
+                loading: false,
+              });
+            }
+            return { needsVerification: false };
+          }
+
+          // Check if email verification is needed
+          if (data.user && !data.session) {
+            console.log('📧 Email verification required');
+            set({
+              pendingEmail: email.trim(),
+              loading: false,
+              error: null,
+            });
+            return { needsVerification: true };
+          }
+
+          // If we get a session immediately, registration is complete
+          if (data.user && data.session) {
+            console.log('✅ Registration successful with immediate session');
+            set({
+              user: data.user,
+              session: data.session,
+              loading: false,
+              error: null,
+              pendingEmail: null,
+            });
+            return { needsVerification: false };
+          }
+
+          // Fallback - assume verification needed
+          set({
+            pendingEmail: email.trim(),
+            loading: false,
+            error: null,
+          });
+          return { needsVerification: true };
+        } catch (err) {
+          console.error('❌ Email registration exception:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown registration error';
+          set({ error: errorMessage, loading: false });
+          return { needsVerification: false };
+        }
+      },
+
+      verifyEmail: async (email, token) => {
+        console.log('🔢 Verifying email with code:', {
+          email,
+          token: token.substring(0, 2) + '****',
+        });
+        set({ loading: true, error: null });
+
+        try {
+          const { data, error } = await supabase.auth.verifyOtp({
+            email: email.trim(),
+            token: token.trim(),
+            type: 'signup',
+          });
+
+          console.log('🔢 Email verification response:', {
+            hasUser: !!data.user,
+            hasSession: !!data.session,
+            userEmail: data.user?.email,
+            emailConfirmed: data.user?.email_confirmed_at,
+            error: error?.message,
+          });
+
+          if (error) {
+            console.error('❌ Email verification error:', error);
+
+            if (error.message.includes('expired')) {
+              set({
+                error: 'Verification code has expired. Please request a new one.',
+                loading: false,
+              });
+            } else if (error.message.includes('invalid')) {
+              set({
+                error: 'Invalid verification code. Please check and try again.',
+                loading: false,
+              });
+            } else {
+              set({
+                error: `Verification failed: ${error.message}`,
+                loading: false,
+              });
+            }
+            return;
+          }
+
+          if (data.user && data.session) {
+            console.log('✅ Email verification successful');
+            set({
+              user: data.user,
+              session: data.session,
+              loading: false,
+              error: null,
+              pendingEmail: null,
+            });
+          }
+        } catch (err) {
+          console.error('❌ Email verification exception:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown verification error';
+          set({ error: errorMessage, loading: false });
+        }
+      },
+
+      resendEmailCode: async email => {
+        console.log('🔄 Resending verification code to:', email);
+        set({ loading: true, error: null });
+
+        try {
+          console.log('🔄 Resending verification code to:', email.trim());
+          const { error } = await supabase.auth.resend({
+            email: email.trim(),
+            type: 'signup',
+          });
+
+          if (error) {
+            console.error('❌ Resend code error:', error);
+            set({
+              error: `Failed to resend code: ${error.message}`,
+              loading: false,
+            });
+          } else {
+            console.log('✅ Verification code resent');
+            set({
+              loading: false,
+              error: null,
+            });
+          }
+        } catch (err) {
+          console.error('❌ Resend code exception:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          set({ error: errorMessage, loading: false });
+        }
       },
 
       loginWithProvider: async provider => {
         set({ loading: true, error: null });
         const { error } = await supabase.auth.signInWithOAuth({ provider });
-        if (error) set({ error: error.message });
-        set({ loading: false });
+        if (error) {
+          console.error('OAuth error:', error);
+          set({ error: error.message, loading: false });
+        }
       },
 
       logout: async () => {
+        console.log('🚪 Logging out user');
         await supabase.auth.signOut();
-        set({ user: null });
+        set({ user: null, session: null, error: null, pendingEmail: null });
       },
+
+      setUser: user => set({ user }),
+      setSession: session => set({ session }),
+      setAuthState: (user, session) => set({ user, session }),
+      setPendingEmail: email => set({ pendingEmail: email }),
     }),
     {
       name: 'auth-store',
       storage: createJSONStorage(() => AsyncStorage),
-      onRehydrateStorage: () => state => state?.setState({ hydrated: true }),
+      partialize: state => ({
+        user: state.user,
+        session: state.session,
+        pendingEmail: state.pendingEmail,
+      }),
+      onRehydrateStorage: () => state => {
+        if (state) {
+          state.hydrated = true;
+        }
+      },
     }
   )
 );
 
-/* ------------ Keep Zustand & Supabase in sync in real-time -------- */
+// Listen for auth changes and update store
 supabase.auth.onAuthStateChange((_event, session) => {
+  console.log('🔄 Auth state changed:', {
+    event: _event,
+    hasUser: !!session?.user,
+    hasSession: !!session,
+    userEmail: session?.user?.email,
+    emailConfirmed: session?.user?.email_confirmed_at,
+  });
+
   const user = session?.user ?? null;
-  useAuthStore.getState().setUser(user);
+  useAuthStore.getState().setAuthState(user, session);
 });

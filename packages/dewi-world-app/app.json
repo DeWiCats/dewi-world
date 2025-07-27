@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.dewiworld"
+      "bundleIdentifier": "com.anonymous.dewiworld",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to let you upload images for location posts.",
+        "NSCameraUsageDescription": "This app needs access to your camera to let you take photos for location posts."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +22,13 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.dewiworld"
+      "package": "com.anonymous.dewiworld",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +43,13 @@
         }
       ],
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share location images.",
+          "cameraPermission": "The app accesses your camera to let you take photos of locations."
+        }
+      ],
       [
         "expo-font",
         {

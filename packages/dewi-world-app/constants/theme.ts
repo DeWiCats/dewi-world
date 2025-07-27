@@ -29,6 +29,13 @@ export const baseTheme = {
   breakpoints,
   Font: NovaFont,
   inputVariants: {
+    defaults: {
+      color: 'primaryText',
+      fontSize: 18,
+      fontFamily: 'Figtree',
+      padding: '4',
+      backgroundColor: 'inputBackground',
+    },
     outline: {
       color: 'primaryText',
       fontSize: 18,
@@ -121,8 +128,9 @@ export const baseTheme = {
     ...lightThemeTokens.textVariants,
     riolaTitle: {
       fontFamily: 'TheRiola',
-      fontSize: 50
+      fontSize: 50,
     },
+    defaults: {},
   },
 };
 
@@ -198,7 +206,6 @@ export type FontWeight =
 
 export { darkColors, lightColors };
 
-  export { NovaFont as Font };
+export { NovaFont as Font };
 
-  export { darkTheme };
-
+export { darkTheme };

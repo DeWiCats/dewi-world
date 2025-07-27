@@ -1,19 +1,4 @@
 {
-  "name": "@dewi/world-app",
-  "main": "expo-router/entry",
-  "version": "1.0.0",
-  "description": "DEWI World mobile application built with Expo",
-  "private": true,
-  "scripts": {
-    "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "web": "expo start --web",
-    "build": "expo export",
-    "lint": "expo lint",
-    "clean": "expo clean"
-  },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@gorhom/bottom-sheet": "^5.1.6",
@@ -33,6 +18,7 @@
     "expo-font": "~13.3.2",
     "expo-haptics": "~14.1.4",
     "expo-image": "~2.3.2",
+    "expo-image-picker": "~16.1.4",
     "expo-linking": "~7.1.7",
     "expo-router": "~5.1.3",
     "expo-splash-screen": "~0.30.10",
@@ -56,11 +42,26 @@
     "use-debounce": "^10.0.5",
     "zustand": "^5.0.6"
   },
+  "description": "DEWI World mobile application built with Expo",
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
     "eslint-config-expo": "~9.2.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0"
-  }
+  },
+  "main": "expo-router/entry",
+  "name": "@dewi/world-app",
+  "private": true,
+  "scripts": {
+    "android": "expo run:android",
+    "build": "expo export",
+    "clean": "expo clean",
+    "ios": "expo run:ios",
+    "lint": "expo lint",
+    "reset-project": "node ./scripts/reset-project.js",
+    "start": "expo start",
+    "web": "expo start --web"
+  },
+  "version": "1.0.0"
 }
