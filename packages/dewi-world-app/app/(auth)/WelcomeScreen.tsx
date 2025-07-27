@@ -1,24 +1,74 @@
+import ButtonPressable from '@/components/ButtonPressable';
+import Box from '@/components/ui/Box';
+import Text from '@/components/ui/Text';
+import { ww } from '@/utils/layout';
+import { Camera, MapView, setAccessToken, StyleImport } from '@rnmapbox/maps';
 import { Link } from 'expo-router';
 import React from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+
+setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN as string);
 
 export default function WelcomeScreen() {
+  const DEFAULT_ZOOM_LEVEL = 1.5;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Dewi World</Text>
+    <Box
+      backgroundColor={'blue.dark-950'}
+      flex={1}
+      alignItems={'center'}
+      justifyContent={'space-between'}
+    >
+      <MapView
+        zoomEnabled={false}
+        styleURL="mapbox://styles/mapbox/standard-beta"
+        style={{ flex: 1, position: 'absolute', width: '100%', height: '100%' }}
+        scaleBarEnabled={false}
+        compassEnabled={false}
+        logoEnabled={false}
+        projection="globe"
+      >
+        <StyleImport
+          id="basemap"
+          existing
+          config={{
+            lightPreset: 'night',
+          }}
+        />
+        <Camera zoomLevel={DEFAULT_ZOOM_LEVEL} />
+      </MapView>
+      <Text
+        marginTop="56"
+        variant="displayLgBold"
+        color="text.white"
+        textAlign={'center'}
+        fontWeight={'bold'}
+      >
+        Welcome to Dewi World
+      </Text>
 
-      <Link href="/(auth)/LoginScreen" asChild>
-        <Button title="Login" />
-      </Link>
+      <Box width={ww} paddingHorizontal={'xl'} gap="xl" marginBottom={'5'}>
+        <Link href="/(auth)/CreateAccountScreen" asChild>
+          <ButtonPressable
+            width={'100%'}
+            backgroundColor={'base.white'}
+            titleColor="base.black"
+            title="Create New Account"
+            fontSize={16}
+            fontWeight="bold"
+          />
+        </Link>
 
-      <Link href="/(auth)/CreateAccountScreen" asChild>
-        <Button title="Create Account" />
-      </Link>
-    </View>
+        <Link href="/(auth)/LoginScreen" asChild>
+          <ButtonPressable
+            width={'100%'}
+            backgroundColor={'base.black'}
+            titleColor="base.white"
+            title="Login"
+            fontSize={16}
+            fontWeight="bold"
+          />
+        </Link>
+      </Box>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, gap: 24, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 28, fontWeight: '600' },
-});
