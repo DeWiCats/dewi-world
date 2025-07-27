@@ -119,6 +119,10 @@ export const baseTheme = {
   },
   textVariants: {
     ...lightThemeTokens.textVariants,
+    riolaTitle: {
+      fontFamily: 'TheRiola',
+      fontSize: 50
+    },
   },
 };
 
@@ -194,6 +198,7 @@ export type FontWeight =
 
 export { darkColors, lightColors };
 
-export { NovaFont as Font };
+  export { NovaFont as Font };
 
-export { darkTheme };
+  export { darkTheme };
+

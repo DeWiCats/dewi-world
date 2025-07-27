@@ -1,7 +1,6 @@
 import ButtonPressable from '@/components/ButtonPressable';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
-import { ww } from '@/utils/layout';
 import { Camera, MapView, setAccessToken, StyleImport } from '@rnmapbox/maps';
 import { Link } from 'expo-router';
 import React from 'react';
@@ -38,15 +37,16 @@ export default function WelcomeScreen() {
       </MapView>
       <Text
         marginTop="56"
-        variant="displayLgBold"
+        variant="riolaTitle"
         color="text.white"
         textAlign={'center'}
-        fontWeight={'bold'}
+        textTransform={'uppercase'}
+        width={'70%'}
       >
         Welcome to Dewi World
       </Text>
 
-      <Box width={ww} paddingHorizontal={'xl'} gap="xl" marginBottom={'5'}>
+      <Box width={'100%'} paddingHorizontal={'xl'} gap="xl" marginBottom={'5'}>
         <Link href="/(auth)/CreateAccountScreen" asChild>
           <ButtonPressable
             width={'100%'}
