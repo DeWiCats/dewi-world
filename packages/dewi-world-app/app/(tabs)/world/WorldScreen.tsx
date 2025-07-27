@@ -12,7 +12,6 @@ import {
 } from '@rnmapbox/maps';
 import { OnPressEvent } from '@rnmapbox/maps/lib/typescript/src/types/OnPressEvent';
 import React, { useCallback, useRef, useState } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WorldDrawer from './WorldDrawer';
 
 setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN as string);
@@ -31,11 +30,10 @@ export default function WorldScreen() {
   const locations = geojson;
 
   const [selectedLocation, setSelectedLocation] = useState<null | GeoJSONFeature>();
-
-  const { top } = useSafeAreaInsets();
-
+  
   const onSelectLocation = useCallback(
     async (event: OnPressEvent) => {
+      if (!!selectedLocation) return
       const feature = event.features[0];
       const coordinates = (feature.geometry as GeoJSON.Point).coordinates;
 

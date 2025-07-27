@@ -1,15 +1,15 @@
-import Box from '@/components/ui/Box';
+import Box, { ReAnimatedBox } from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
 import { Theme } from '@/constants/theme';
 import { GeoJSONFeature } from '@/geojson';
 import { useColors } from '@/hooks/theme';
-import { wh } from '@/utils/layout';
+import { wh, ww } from '@/utils/layout';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useTheme } from '@shopify/restyle';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 type WorldDrawerProps = {
   selectedLocation?: null | GeoJSONFeature;
@@ -17,39 +17,64 @@ type WorldDrawerProps = {
 };
 
 export default function WorldDrawer({ selectedLocation, onClose = () => {} }: WorldDrawerProps) {
-  const { top } = useSafeAreaInsets();
-  const height = wh - top;
-
-  const isExpanded = useMemo(() => !!selectedLocation, [selectedLocation]);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const imageSize = 200;
+
+  const animationDelay = 600;
+  const imageSize = ww;
 
   const colors = useColors();
   const { borderRadii } = useTheme<Theme>();
 
-  useEffect(() => {
-    if (isExpanded) bottomSheetRef.current?.expand();
-    else bottomSheetRef.current?.close();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const closeHandler = () => {
+    setIsExpanded(false);
+    setTimeout(onClose, animationDelay);
+  };
+
+  const style = useAnimatedStyle(() => {
+    if (isExpanded) {
+      return {
+        opacity: withTiming(1, { duration: animationDelay }),
+      };
+    }
+
+    return {
+      opacity: withTiming(0, { duration: animationDelay }),
+    };
   }, [isExpanded]);
 
-  // callbacks
-  const handleSheetChanges = useCallback(
-    (index: number) => {
-      console.log('handleSheetChanges', index);
-    },
-    [bottomSheetRef]
-  );
+  useEffect(() => {
+    if (selectedLocation) {
+      bottomSheetRef.current?.snapToIndex(0);
+      setIsExpanded(true);
+    }
+  }, [selectedLocation]);
 
   return (
     <>
+      <ReAnimatedBox style={style} position={'absolute'} height={imageSize + 20}>
+        {selectedLocation && (
+          <ScrollView horizontal>
+            {selectedLocation.properties.photos.map((photo, i) => (
+              <Image
+                key={selectedLocation.properties.address + i}
+                width={imageSize}
+                height={imageSize}
+                source={photo}
+                style={{ width: imageSize, height: imageSize }}
+              ></Image>
+            ))}
+          </ScrollView>
+        )}
+      </ReAnimatedBox>
       <BottomSheet
-        snapPoints={[wh / 4, wh / 1.5, wh - top]}
+        snapPoints={[ww + 20, wh]}
         index={-1}
         enablePanDownToClose
         role="alert"
-        onClose={onClose}
+        onClose={closeHandler}
         ref={bottomSheetRef}
-        onChange={handleSheetChanges}
         handleIndicatorStyle={{ backgroundColor: colors['gray.700'] }}
         handleStyle={{
           backgroundColor: colors['primaryBackground'],
@@ -63,22 +88,11 @@ export default function WorldDrawer({ selectedLocation, onClose = () => {} }: Wo
             flex: 1,
             padding: 36,
             alignItems: 'center',
-            height,
+            height: wh,
           }}
         >
           {selectedLocation && (
             <Box>
-              <ScrollView horizontal style={{ maxHeight: imageSize + 20 }}>
-                {selectedLocation.properties.photos.map((photo, i) => (
-                  <Image
-                    key={selectedLocation.properties.address + i}
-                    width={imageSize}
-                    height={imageSize}
-                    source={photo}
-                    style={{ width: imageSize, height: imageSize }}
-                  ></Image>
-                ))}
-              </ScrollView>
               <Text variant={'textXsLight'} color="text.white">
                 {selectedLocation.properties.address}
               </Text>
