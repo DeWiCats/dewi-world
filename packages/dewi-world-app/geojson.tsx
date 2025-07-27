@@ -45,8 +45,8 @@ export default {
           require('@/assets/images/locations/empire/5.png'),
         ],
         depin_hardware: [
-          { name: 'Helium Hotspot', icon: HeliumLogo },
-          { name: 'WiFi Mesh Node', icon: WifiLogo },
+          { name: 'Helium Hotspot', Icon: HeliumLogo },
+          { name: 'WiFi Mesh Node', Icon: WifiLogo },
         ],
       },
     },

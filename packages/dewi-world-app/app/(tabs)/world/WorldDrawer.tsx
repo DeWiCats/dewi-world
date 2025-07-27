@@ -10,18 +10,22 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useTheme } from '@shopify/restyle';
 import { useEffect, useRef, useState } from 'react';
 import { useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type WorldDrawerProps = {
   locations: GeoJSONFeature[];
   selectedLocation?: null | GeoJSONFeature;
   onClose?: () => void;
+  onSelect?: (location: GeoJSONFeature) => void;
 };
 
 export default function WorldDrawer({
   locations,
   selectedLocation,
   onClose = () => {},
+  onSelect = () => {},
 }: WorldDrawerProps) {
+  const { bottom } = useSafeAreaInsets();
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const animationDelay = 600;
@@ -66,13 +70,16 @@ export default function WorldDrawer({
         )}
       </ReAnimatedBox>
       <BottomSheet
-        snapPoints={[150, wh - ww + 20, wh - 110]}
+        bottomInset={bottom}
+        snapPoints={[100, wh - ww + 20, wh - 110]}
         index={0}
         onAnimate={animateHandler}
         role="alert"
         ref={bottomSheetRef}
+        maxDynamicContentSize={wh - 110}
         handleIndicatorStyle={{ backgroundColor: colors['gray.700'] }}
         backgroundStyle={{
+          backgroundColor: colors['primaryBackground'],
           borderTopRightRadius: borderRadii.full,
           borderTopLeftRadius: borderRadii.full,
         }}
@@ -93,7 +100,7 @@ export default function WorldDrawer({
           {selectedLocation ? (
             <LocationDetail location={selectedLocation} />
           ) : (
-            <LocationsList locations={locations} />
+            <LocationsList onSelect={onSelect} locations={locations} />
           )}
         </BottomSheetView>
       </BottomSheet>

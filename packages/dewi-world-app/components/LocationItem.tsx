@@ -1,24 +1,43 @@
 import { GeoJSONFeature } from '@/geojson';
-import { Image } from 'react-native';
+import { Image, Pressable } from 'react-native';
+import ProfileDisplay from './ProfileDisplay';
 import Box from './ui/Box';
 import Text from './ui/Text';
 
 interface LocationItemProps {
   location: GeoJSONFeature;
+  onSelect?: (location: GeoJSONFeature) => void;
 }
 
-export default function LocationItem({ location }: LocationItemProps) {
+export default function LocationItem({ location, onSelect = () => {} }: LocationItemProps) {
   return (
-    <Box width={'100%'} padding="xl" borderRadius="md" backgroundColor={'secondaryBackground'}>
-      <Image
-        width={100}
-        height={100}
-        style={{ width: '100%', height: 220 }}
-        source={location.properties.photos[0]}
-      />
-      <Text variant="textSmLight" color="gray.600">
+    <Box
+      width={'100%'}
+      padding="xl"
+      borderRadius="md"
+      backgroundColor={'secondaryBackground'}
+      gap="sm"
+    >
+      <Pressable onPress={() => onSelect(location)}>
+        <Image
+          width={100}
+          height={100}
+          style={{ width: '100%', height: 220 }}
+          source={location.properties.photos[0]}
+        />
+      </Pressable>
+      <ProfileDisplay />
+      <Text variant="textXsLight" color="gray.400">
         {location.properties.address}
       </Text>
+      <Text variant="textSmLight" color="brand.600">
+        500m away
+      </Text>
+      <Box flexDirection={'row'} gap="sm" alignItems={'center'}>
+        {location.properties.depin_hardware.map(({ name, Icon }) => (
+          <Icon key={name + location.properties.name} width={25} height={25} />
+        ))}
+      </Box>
     </Box>
   );
 }

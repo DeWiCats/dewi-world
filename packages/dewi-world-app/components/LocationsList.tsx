@@ -8,9 +8,10 @@ import Box from './ui/Box';
 
 interface LocationsListProps {
   locations: GeoJSONFeature[];
+  onSelect?: (location: GeoJSONFeature) => void;
 }
 
-export default function LocationsList({ locations }: LocationsListProps) {
+export default function LocationsList({ locations, onSelect = () => {} }: LocationsListProps) {
   const { spacing } = useTheme<Theme>();
 
   return (
@@ -25,7 +26,7 @@ export default function LocationsList({ locations }: LocationsListProps) {
       />
       <ScrollView style={{ width: '100%' }} contentContainerStyle={{ gap: spacing.md }}>
         {locations.map(location => (
-          <LocationItem key={location.properties.name} location={location} />
+          <LocationItem onSelect={onSelect} key={location.properties.name} location={location} />
         ))}
       </ScrollView>
     </Box>

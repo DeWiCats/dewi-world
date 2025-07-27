@@ -1,0 +1,13 @@
+{
+  "extends": ["../../tsconfig.json", "fastify-tsconfig"],
+  "compilerOptions": {
+    "sourceMap": true,
+    "outDir": "./dist",
+    "noEmit": false,
+    "noUnusedParameters": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
+  },
+  "include": ["./src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

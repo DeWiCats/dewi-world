@@ -52,6 +52,8 @@ export default function WorldScreen() {
     [selectedLocation, locations]
   );
 
+  const onSelectFromDrawer = (location: GeoJSONFeature) => setSelectedLocation(location);
+
   const onCloseDrawer = useCallback(() => {
     setSelectedLocation(null);
   }, [selectedLocation, locations]);
@@ -108,6 +110,7 @@ export default function WorldScreen() {
       </MapView>
       <WorldDrawer
         locations={locations.features}
+        onSelect={onSelectFromDrawer}
         onClose={onCloseDrawer}
         selectedLocation={selectedLocation}
       />
