@@ -30,10 +30,10 @@ export default function WorldScreen() {
   const locations = geojson;
 
   const [selectedLocation, setSelectedLocation] = useState<null | GeoJSONFeature>();
-  
+
   const onSelectLocation = useCallback(
     async (event: OnPressEvent) => {
-      if (!!selectedLocation) return
+      if (!!selectedLocation) return;
       const feature = event.features[0];
       const coordinates = (feature.geometry as GeoJSON.Point).coordinates;
 
@@ -107,6 +107,7 @@ export default function WorldScreen() {
         </ShapeSource>
       </MapView>
       <WorldDrawer
+        locations={locations.features}
         onClose={onCloseDrawer}
         selectedLocation={selectedLocation}
       />
