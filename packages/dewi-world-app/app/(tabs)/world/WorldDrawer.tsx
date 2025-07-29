@@ -9,6 +9,7 @@ import { wh, ww } from '@/utils/layout';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useTheme } from '@shopify/restyle';
 import { useEffect, useRef, useState } from 'react';
+import { Keyboard } from 'react-native';
 import { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,21 +28,46 @@ export default function WorldDrawer({
 }: WorldDrawerProps) {
   const { bottom } = useSafeAreaInsets();
   const bottomSheetRef = useRef<BottomSheet>(null);
-
-  const animationDelay = 600;
-  const imageSize = ww;
+  const animationDelay = 400;
 
   const colors = useColors();
   const { borderRadii } = useTheme<Theme>();
 
+  const [index, setIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [fadeIn, setFadeIn] = useState(true);
+  const [panningEnabled, setPanningEnabled] = useState(false);
 
-  const animateHandler = (_: number, toIndex: number) => {
-    if (toIndex === 0) {
+  useEffect(() => {
+    Keyboard.addListener('keyboardDidShow', () => {
+      setPanningEnabled(false);
+      bottomSheetRef.current?.snapToIndex(1);
+    });
+    Keyboard.addListener('keyboardDidHide', () => {
+      setPanningEnabled(true)
+    });
+    return () => {
+      Keyboard.removeAllListeners('keyboardDidShow');
+      Keyboard.removeAllListeners('keyboardDidHide');
+    };
+  }, []);
+
+  useEffect(() => console.log('fadein', fadeIn), [fadeIn]);
+
+  const animateHandler = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === 0) return;
+    if (toIndex === 0 && selectedLocation) {
       setIsExpanded(false);
+      setFadeIn(false);
       setTimeout(onClose, animationDelay);
     }
   };
+
+  useEffect(() => {
+    if (!fadeIn) setTimeout(() => setFadeIn(true), animationDelay);
+  }, [fadeIn]);
+
+  const handleSheetChanges = (index: number) => setIndex(index);
 
   const style = useAnimatedStyle(() => {
     if (isExpanded) {
@@ -55,6 +81,18 @@ export default function WorldDrawer({
     };
   }, [isExpanded]);
 
+  const fadeInStyle = useAnimatedStyle(() => {
+    if (fadeIn) {
+      return {
+        opacity: withTiming(1, { duration: animationDelay }),
+      };
+    }
+
+    return {
+      opacity: withTiming(0, { duration: animationDelay }),
+    };
+  }, [fadeIn]);
+
   useEffect(() => {
     if (selectedLocation) {
       bottomSheetRef.current?.snapToIndex(1);
@@ -64,15 +102,15 @@ export default function WorldDrawer({
 
   return (
     <>
-      <ReAnimatedBox style={style} position={'absolute'} height={imageSize}>
-        {selectedLocation && (
-          <FeatureImageSlide location={selectedLocation} imageSize={imageSize} />
-        )}
+      <ReAnimatedBox style={style} position={'absolute'} height={ww}>
+        {selectedLocation && <FeatureImageSlide location={selectedLocation} imageSize={ww} />}
       </ReAnimatedBox>
       <BottomSheet
+        enableHandlePanningGesture={panningEnabled}
         bottomInset={bottom}
-        snapPoints={[100, wh - ww + 20, wh - 110]}
+        snapPoints={[150, wh - ww + 20, wh - 110]}
         index={0}
+        onChange={handleSheetChanges}
         onAnimate={animateHandler}
         role="alert"
         ref={bottomSheetRef}
@@ -97,11 +135,19 @@ export default function WorldDrawer({
             height: wh - 110,
           }}
         >
-          {selectedLocation ? (
-            <LocationDetail location={selectedLocation} />
-          ) : (
-            <LocationsList onSelect={onSelect} locations={locations} />
-          )}
+          <ReAnimatedBox
+            style={fadeInStyle}
+            alignItems={'center'}
+            flex={1}
+            width={'100%'}
+            height="100%"
+          >
+            {selectedLocation ? (
+              <LocationDetail location={selectedLocation} />
+            ) : (
+              <LocationsList onSelect={onSelect} locations={locations} />
+            )}
+          </ReAnimatedBox>
         </BottomSheetView>
       </BottomSheet>
     </>

@@ -47,7 +47,10 @@ export default function WorldScreen() {
         return;
       }
 
-      setSelectedLocation(feature as GeoJSONFeature);
+      const location = locations.features.find(
+        location => location.properties.name === feature?.properties?.name
+      );
+      setSelectedLocation(location as GeoJSONFeature);
     },
     [selectedLocation, locations]
   );
