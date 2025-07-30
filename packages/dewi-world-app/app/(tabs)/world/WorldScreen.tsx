@@ -1,3 +1,4 @@
+import LocationsHeader from '@/components/LocationsHeader';
 import Box from '@/components/ui/Box';
 import geojson, { GeoJSONFeature } from '@/geojson';
 import { useColors } from '@/hooks/theme';
@@ -11,7 +12,8 @@ import {
   SymbolLayer,
 } from '@rnmapbox/maps';
 import { OnPressEvent } from '@rnmapbox/maps/lib/typescript/src/types/OnPressEvent';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { TabsContext } from '../context';
 import WorldDrawer from './WorldDrawer';
 
 setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN as string);
@@ -28,8 +30,28 @@ export default function WorldScreen() {
   const map = useRef<MapView>(null);
 
   const locations = geojson;
+  const context = useContext(TabsContext);
 
   const [selectedLocation, setSelectedLocation] = useState<null | GeoJSONFeature>();
+  const [fadeIn, setFadeIn] = useState(true);
+
+  const animationDelay = 400;
+
+  useEffect(() => {
+    if (!fadeIn) setTimeout(() => setFadeIn(true), animationDelay);
+  }, [fadeIn]);
+
+  useEffect(() => {
+    if (selectedLocation) {
+      context.hideHeader();
+      context.hideTabBar();
+    }
+
+    return () => {
+      context.showHeader();
+      context.showTabBar();
+    };
+  }, [selectedLocation]);
 
   const onSelectLocation = useCallback(
     async (event: OnPressEvent) => {
@@ -50,19 +72,25 @@ export default function WorldScreen() {
       const location = locations.features.find(
         location => location.properties.name === feature?.properties?.name
       );
-      setSelectedLocation(location as GeoJSONFeature);
+      setFadeIn(false);
+      setTimeout(() => setSelectedLocation(location as GeoJSONFeature), animationDelay);
     },
     [selectedLocation, locations]
   );
 
-  const onSelectFromDrawer = (location: GeoJSONFeature) => setSelectedLocation(location);
+  const onSelectFromDrawer = (location: GeoJSONFeature) => {
+    setFadeIn(false);
+    setSelectedLocation(location);
+  };
 
   const onCloseDrawer = useCallback(() => {
-    setSelectedLocation(null);
+    setFadeIn(false);
+    setTimeout(() => setSelectedLocation(null), animationDelay);
   }, [selectedLocation, locations]);
 
   return (
     <Box width="100%" height="100%" position={'relative'}>
+      {selectedLocation && <LocationsHeader onExit={onCloseDrawer} onLike={() => {}} />}
       <MapView
         ref={map}
         styleURL="mapbox://styles/mapbox/standard-beta"
@@ -112,6 +140,8 @@ export default function WorldScreen() {
         </ShapeSource>
       </MapView>
       <WorldDrawer
+        fadeIn={fadeIn}
+        animationDelay={animationDelay}
         locations={locations.features}
         onSelect={onSelectFromDrawer}
         onClose={onCloseDrawer}

@@ -9,7 +9,7 @@ import Map from '@assets/svgs/map.svg';
 import World from '@assets/svgs/world.svg';
 import { useMemo } from 'react';
 
-export default function ServiceSheetLayout() {
+export default function ServiceSheetLayout({ showTabBar }: { showTabBar: boolean }) {
   const options = useMemo((): ServiceNavBarOption[] => {
     return [
       { name: 'WorldTab', Icon: World, component: WorldNavigator },
@@ -19,5 +19,5 @@ export default function ServiceSheetLayout() {
     ];
   }, []);
 
-  return <ServiceSheetPageWrapper options={options} />;
+  return <ServiceSheetPageWrapper options={options} showTabBar={showTabBar} />;
 }

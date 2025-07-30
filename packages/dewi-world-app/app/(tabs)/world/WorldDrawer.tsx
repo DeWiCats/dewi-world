@@ -16,6 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type WorldDrawerProps = {
   locations: GeoJSONFeature[];
   selectedLocation?: null | GeoJSONFeature;
+  fadeIn: boolean;
+  animationDelay: number;
   onClose?: () => void;
   onSelect?: (location: GeoJSONFeature) => void;
 };
@@ -23,19 +25,16 @@ type WorldDrawerProps = {
 export default function WorldDrawer({
   locations,
   selectedLocation,
+  fadeIn,
+  animationDelay,
   onClose = () => {},
   onSelect = () => {},
 }: WorldDrawerProps) {
   const { bottom } = useSafeAreaInsets();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const animationDelay = 400;
 
   const colors = useColors();
   const { borderRadii } = useTheme<Theme>();
-
-  const [index, setIndex] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [fadeIn, setFadeIn] = useState(true);
   const [panningEnabled, setPanningEnabled] = useState(false);
 
   useEffect(() => {
@@ -44,7 +43,7 @@ export default function WorldDrawer({
       bottomSheetRef.current?.snapToIndex(1);
     });
     Keyboard.addListener('keyboardDidHide', () => {
-      setPanningEnabled(true)
+      setPanningEnabled(true);
     });
     return () => {
       Keyboard.removeAllListeners('keyboardDidShow');
@@ -52,34 +51,12 @@ export default function WorldDrawer({
     };
   }, []);
 
-  useEffect(() => console.log('fadein', fadeIn), [fadeIn]);
-
   const animateHandler = (fromIndex: number, toIndex: number) => {
     if (fromIndex === 0) return;
     if (toIndex === 0 && selectedLocation) {
-      setIsExpanded(false);
-      setFadeIn(false);
-      setTimeout(onClose, animationDelay);
+      onClose();
     }
   };
-
-  useEffect(() => {
-    if (!fadeIn) setTimeout(() => setFadeIn(true), animationDelay);
-  }, [fadeIn]);
-
-  const handleSheetChanges = (index: number) => setIndex(index);
-
-  const style = useAnimatedStyle(() => {
-    if (isExpanded) {
-      return {
-        opacity: withTiming(1, { duration: animationDelay }),
-      };
-    }
-
-    return {
-      opacity: withTiming(0, { duration: animationDelay }),
-    };
-  }, [isExpanded]);
 
   const fadeInStyle = useAnimatedStyle(() => {
     if (fadeIn) {
@@ -96,13 +73,12 @@ export default function WorldDrawer({
   useEffect(() => {
     if (selectedLocation) {
       bottomSheetRef.current?.snapToIndex(1);
-      setIsExpanded(true);
     }
   }, [selectedLocation]);
 
   return (
     <>
-      <ReAnimatedBox style={style} position={'absolute'} height={ww}>
+      <ReAnimatedBox style={fadeInStyle} position={'absolute'} height={ww}>
         {selectedLocation && <FeatureImageSlide location={selectedLocation} imageSize={ww} />}
       </ReAnimatedBox>
       <BottomSheet
@@ -110,7 +86,6 @@ export default function WorldDrawer({
         bottomInset={bottom}
         snapPoints={[150, wh - ww + 20, wh - 110]}
         index={0}
-        onChange={handleSheetChanges}
         onAnimate={animateHandler}
         role="alert"
         ref={bottomSheetRef}

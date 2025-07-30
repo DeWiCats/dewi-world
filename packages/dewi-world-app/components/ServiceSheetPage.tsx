@@ -1,15 +1,12 @@
-import { Color } from "@/constants/theme";
-import { useColors } from "@/hooks/theme";
-import useHaptic from "@hooks/useHaptic";
-import {
-  BottomTabBarProps,
-  createBottomTabNavigator,
-} from "@react-navigation/bottom-tabs";
-import React, { FC, useCallback, useMemo } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SvgProps } from "react-native-svg";
-import ServiceNavBar from "./ServiceNavBar";
-import Box from "./ui/Box";
+import { Color } from '@/constants/theme';
+import { useColors } from '@/hooks/theme';
+import useHaptic from '@hooks/useHaptic';
+import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React, { FC, useCallback, useMemo } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SvgProps } from 'react-native-svg';
+import ServiceNavBar from './ServiceNavBar';
+import Box from './ui/Box';
 
 const Tab = createBottomTabNavigator();
 
@@ -21,6 +18,7 @@ export type ServiceNavBarOption = {
 };
 
 export type ServiceSheetProps = {
+  showTabBar: boolean;
   options: ServiceNavBarOption[];
 };
 
@@ -39,11 +37,11 @@ function CustomTabBar({
     Icon: FC<SvgProps>;
     iconColor: Color;
   }[] => {
-    return options.map((option) => {
+    return options.map(option => {
       return {
         value: option.name,
         Icon: option.Icon,
-        iconColor: "primaryText",
+        iconColor: 'primaryText',
         iconProps: option.iconProps,
       };
     });
@@ -53,11 +51,11 @@ function CustomTabBar({
 
   const onPress = useCallback(
     (type: string) => {
-      triggerImpact("light");
-      const index = tabData.findIndex((item) => item.value === type);
+      triggerImpact('light');
+      const index = tabData.findIndex(item => item.value === type);
       const isSelected = selectedValue === type;
       const event = navigation.emit({
-        type: "tabPress",
+        type: 'tabPress',
         target: state.routes[index || 0].key,
         canPreventDefault: true,
       });
@@ -76,10 +74,10 @@ function CustomTabBar({
 
   const onLongPress = useCallback(
     (type: string) => {
-      const index = tabData.findIndex((item) => item.value === type);
+      const index = tabData.findIndex(item => item.value === type);
 
       navigation.emit({
-        type: "tabLongPress",
+        type: 'tabLongPress',
         target: state.routes[index || 0].key,
       });
     },
@@ -91,13 +89,7 @@ function CustomTabBar({
   }
 
   return (
-    <Box
-      backgroundColor="transparent"
-      position="absolute"
-      bottom={0}
-      left={0}
-      right={0}
-    >
+    <Box backgroundColor="transparent" position="absolute" bottom={0} left={0} right={0}>
       <Box
         style={{
           marginBottom: bottom,
@@ -114,38 +106,34 @@ function CustomTabBar({
   );
 }
 
-const ServiceSheetPage = ({ options }: ServiceSheetProps) => {
+const ServiceSheetPage = ({ options, showTabBar }: ServiceSheetProps) => {
   const colors = useColors();
 
   return (
     <Box height="100%" flexDirection="row" flex={1} zIndex={1}>
       <Tab.Navigator
         tabBar={(props: BottomTabBarProps) => (
-          <CustomTabBar {...props} options={options} />
+          <>{showTabBar && <CustomTabBar {...props} options={options} />}</>
         )}
         screenOptions={{
           sceneStyle: {
-            height: "100%",
+            height: '100%',
             backgroundColor: colors.primaryBackground,
           },
           headerShown: false,
           lazy: true,
         }}
       >
-        {options.map((option) => (
-          <Tab.Screen
-            key={option.name}
-            name={option.name}
-            component={option.component}
-          />
+        {options.map(option => (
+          <Tab.Screen key={option.name} name={option.name} component={option.component} />
         ))}
       </Tab.Navigator>
     </Box>
   );
 };
 
-const ServiceSheetPageWrapper = ({ options }: ServiceSheetProps) => {
-  return <ServiceSheetPage options={options} />;
+const ServiceSheetPageWrapper = ({ options, showTabBar }: ServiceSheetProps) => {
+  return <ServiceSheetPage showTabBar={showTabBar} options={options} />;
 };
 
 export default ServiceSheetPageWrapper;
