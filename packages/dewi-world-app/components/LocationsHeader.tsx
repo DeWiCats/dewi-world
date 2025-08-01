@@ -3,7 +3,7 @@ import LeftArrow from '@/assets/svgs/leftArrow.svg';
 import { Theme } from '@/constants/theme';
 import { BoxProps } from '@shopify/restyle';
 import React from 'react';
-import Box from './ui/Box';
+import { ReAnimatedBox } from './ui/Box';
 import TouchableContainer from './ui/TouchableContainer';
 
 type LocationsHeaderProps = BoxProps<Theme> & {
@@ -13,11 +13,13 @@ type LocationsHeaderProps = BoxProps<Theme> & {
 
 export default function LocationsHeader({ onExit, onLike, ...rest }: LocationsHeaderProps) {
   return (
-    <Box
+    <ReAnimatedBox
       {...rest}
       flex={1}
       zIndex={1}
       width={'100%'}
+      position={'absolute'}
+      backgroundColor={'transparent'}
       paddingVertical={'2xl'}
       flexDirection={'row'}
       justifyContent={'space-between'}
@@ -65,6 +67,6 @@ export default function LocationsHeader({ onExit, onLike, ...rest }: LocationsHe
       >
         <HeartOutlined width={25} height={25} />
       </TouchableContainer>
-    </Box>
+    </ReAnimatedBox>
   );
 }

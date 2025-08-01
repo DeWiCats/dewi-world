@@ -1,0 +1,61 @@
+import { Theme } from '@/constants/theme';
+import { useColors } from '@/hooks/theme';
+import { wh, ww } from '@/utils/layout';
+import BottomSheet, { BottomSheetProps, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetViewProps } from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheetView/types';
+import { BottomSheetMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
+import { useTheme } from '@shopify/restyle';
+import { PropsWithChildren, RefObject } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+type CustomBottomSheetProps = PropsWithChildren<{
+  ref?: RefObject<BottomSheetMethods | null>;
+  sheetProps?: Omit<BottomSheetProps, 'children'>;
+  sheetViewProps?: BottomSheetViewProps;
+}>;
+
+export default function CustomBottomSheet({
+  ref,
+  sheetProps,
+  sheetViewProps,
+  children,
+}: CustomBottomSheetProps) {
+  const { bottom } = useSafeAreaInsets();
+  const colors = useColors();
+  const { borderRadii } = useTheme<Theme>();
+
+  return (
+    <BottomSheet
+      bottomInset={bottom}
+      snapPoints={[150, wh - ww + 20, wh - 110]}
+      index={0}
+      role="alert"
+      ref={ref}
+      maxDynamicContentSize={wh - 110}
+      handleIndicatorStyle={{ backgroundColor: colors['gray.700'] }}
+      backgroundStyle={{
+        backgroundColor: colors['primaryBackground'],
+        borderTopRightRadius: borderRadii.full,
+        borderTopLeftRadius: borderRadii.full,
+      }}
+      handleStyle={{
+        backgroundColor: colors['primaryBackground'],
+        borderTopRightRadius: borderRadii.full,
+        borderTopLeftRadius: borderRadii.full,
+      }}
+      {...sheetProps}
+    >
+      <BottomSheetView
+        style={{
+          backgroundColor: colors['primaryBackground'],
+          flex: 1,
+          alignItems: 'center',
+          height: wh - 110,
+        }}
+        {...sheetViewProps}
+      >
+        {children}
+      </BottomSheetView>
+    </BottomSheet>
+  );
+}

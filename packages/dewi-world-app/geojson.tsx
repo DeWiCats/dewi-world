@@ -4,12 +4,10 @@ export type GeoJSONFeature = {
   properties: {
     name: string;
     description: string;
-    population: number;
     deployment_cost: string;
     extras: string[];
     address: string;
-    category: string;
-    photos: any[];
+    photos: string[] | any[];
     depin_hardware: { name: string; Icon: FC<SvgProps> }[];
   };
 };

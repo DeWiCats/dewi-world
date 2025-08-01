@@ -8,16 +8,20 @@ import { useAppStore } from '@/stores/useAppStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import AddIcon from '@assets/svgs/add.svg';
 import { useNavigation, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Alert, FlatList, Pressable, TextInput } from 'react-native';
+import { TabsContext } from '../context';
+import DetailScreen from './DetailScreen';
 import { LocationsStackNavigationProp } from './LocationsNavigator';
 
 export default function LocationsScreen() {
+  const context = useContext(TabsContext);
   const nav = useNavigation<LocationsStackNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   const { user, session, hydrated } = useAuthStore();
   const { mockMode, setMockMode } = useAppStore();
   const { locations, loading, error, refreshLocations } = useLocations();
+  const [selectedLocation, setSelectedLocation] = useState<null | LocationPost>();
   const router = useRouter();
 
   // Debug auth state when component mounts
@@ -45,6 +49,11 @@ export default function LocationsScreen() {
     );
   });
 
+  const handleExitDetail = () => {
+    context.showHeader();
+    setSelectedLocation(null);
+  };
+
   const handleCreateLocation = () => {
     if (!user) {
       Alert.alert('Sign In Required', 'Please sign in to create a location.', [
@@ -59,6 +68,8 @@ export default function LocationsScreen() {
   const handleLocationPress = (location: LocationPost) => {
     // Handle location press (navigate to detail or messaging)
     console.log('Location pressed:', location.title);
+    context.hideHeader();
+    setSelectedLocation(location);
   };
 
   const toggleMockMode = () => {
@@ -201,35 +212,39 @@ export default function LocationsScreen() {
   }
 
   return (
-    <Box flex={1} backgroundColor="primaryBackground">
-      <FlatList
-        data={filteredLocations}
-        renderItem={({ item }) => (
-          <LocationCard location={item} onPress={() => handleLocationPress(item)} />
-        )}
-        keyExtractor={item => item.id}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={
-          loading ? (
-            <Box alignItems="center" paddingVertical="8">
-              <CircleLoader />
-              <Text variant="textMdRegular" color="secondaryText" marginTop="4">
-                Loading locations...
-              </Text>
-            </Box>
-          ) : (
-            renderEmptyState
-          )
-        }
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingBottom: 120,
-          paddingTop: 120,
-        }}
-        showsVerticalScrollIndicator={false}
-        refreshing={loading}
-        onRefresh={refreshLocations}
-      />
+    <Box flex={1} backgroundColor="primaryBackground" paddingTop="7xl">
+      {selectedLocation ? (
+        <DetailScreen onExit={handleExitDetail} location={selectedLocation} />
+      ) : (
+        <FlatList
+          data={filteredLocations}
+          renderItem={({ item }) => (
+            <LocationCard location={item} onPress={() => handleLocationPress(item)} />
+          )}
+          keyExtractor={item => item.id}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={
+            loading ? (
+              <Box alignItems="center" paddingVertical="8">
+                <CircleLoader />
+                <Text variant="textMdRegular" color="secondaryText" marginTop="4">
+                  Loading locations...
+                </Text>
+              </Box>
+            ) : (
+              renderEmptyState
+            )
+          }
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: 120,
+            paddingTop: 120,
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshing={loading}
+          onRefresh={refreshLocations}
+        />
+      )}
     </Box>
   );
 }

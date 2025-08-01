@@ -21,7 +21,7 @@ interface LocationCardProps {
   showDeleteButton?: boolean;
 }
 
-const hardwareIconMap = {
+export const hardwareIconMap = {
   '5g': Icon5G,
   helium: IconHelium,
   wifi: IconWifi,

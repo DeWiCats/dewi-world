@@ -13,6 +13,7 @@ import {
 } from '@rnmapbox/maps';
 import { OnPressEvent } from '@rnmapbox/maps/lib/typescript/src/types/OnPressEvent';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { TabsContext } from '../context';
 import WorldDrawer from './WorldDrawer';
 
@@ -36,6 +37,17 @@ export default function WorldScreen() {
   const [fadeIn, setFadeIn] = useState(true);
 
   const animationDelay = 400;
+  const fadeInStyle = useAnimatedStyle(() => {
+    if (fadeIn) {
+      return {
+        opacity: withTiming(1, { duration: animationDelay }),
+      };
+    }
+
+    return {
+      opacity: withTiming(0, { duration: animationDelay }),
+    };
+  }, [fadeIn]);
 
   useEffect(() => {
     if (!fadeIn) setTimeout(() => setFadeIn(true), animationDelay);
@@ -90,7 +102,9 @@ export default function WorldScreen() {
 
   return (
     <Box width="100%" height="100%" position={'relative'}>
-      {selectedLocation && <LocationsHeader onExit={onCloseDrawer} onLike={() => {}} />}
+      {selectedLocation && (
+        <LocationsHeader onExit={onCloseDrawer} onLike={() => {}} />
+      )}
       <MapView
         ref={map}
         styleURL="mapbox://styles/mapbox/standard-beta"
@@ -140,8 +154,7 @@ export default function WorldScreen() {
         </ShapeSource>
       </MapView>
       <WorldDrawer
-        fadeIn={fadeIn}
-        animationDelay={animationDelay}
+        style={fadeInStyle}
         locations={locations.features}
         onSelect={onSelectFromDrawer}
         onClose={onCloseDrawer}
