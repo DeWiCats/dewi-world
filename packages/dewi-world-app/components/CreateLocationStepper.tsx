@@ -5,7 +5,7 @@ import { useLocations } from '@/hooks/useLocations';
 import { CreateLocationRequest } from '@/lib/api';
 import { pickImages, uploadMultipleImages } from '@/lib/imageUpload';
 import * as ImagePicker from 'expo-image-picker';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, Switch, TextInput } from 'react-native';
 import Animated, {
@@ -17,6 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 // Import hardware icons
+import { useStepperStore } from '@/stores/useStepperStore';
 import Icon5G from '@assets/svgs/5g-logo.svg';
 import IconAir from '@assets/svgs/air-logo.svg';
 import IconHelium from '@assets/svgs/helium-logo.svg';
@@ -44,7 +45,28 @@ interface StepperProps {
 
 export default function CreateLocationStepper({ onComplete, visible }: StepperProps) {
   const nav = useNavigation<ServiceSheetStackNavigationProp>();
+  const router = useRouter();
   const { createLocation, refreshLocations } = useLocations();
+  const { hideStepper } = useStepperStore();
+
+  const onCompleteHandler = () => {
+    // reset stepper
+    setCurrentStep(0);
+    setFormData({
+      title: '',
+      description: '',
+      formatted_address: '',
+      latitude: undefined,
+      longitude: undefined,
+      place_id: '',
+      price: '',
+      is_negotiable: true,
+      deployable_hardware: [],
+      gallery: [],
+      distance: 0,
+    });
+    onComplete();
+  };
 
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -187,7 +209,7 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       // Success animation and callback
       opacity.value = withTiming(0, { duration: 500 }, finished => {
         if (finished) {
-          runOnJS(onComplete)();
+          runOnJS(onCompleteHandler)();
         }
       });
     } catch (error) {
@@ -285,7 +307,7 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
     }
   };
 
-  const onCreateLocation = async () => {
+  const onExit = async () => {
     // reset stepper
     setCurrentStep(0);
     setFormData({
@@ -301,7 +323,7 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       gallery: [],
       distance: 0,
     });
-    nav.reset({ index: 0, routes: [{ name: 'LocationsTab' }] });
+    hideStepper();
   };
 
   if (!visible) return null;
@@ -328,7 +350,7 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
             justifyContent="space-between"
             marginBottom="4"
           >
-            <Pressable onPress={() => (currentStep > 0 ? prevStep() : onCreateLocation())}>
+            <Pressable onPress={() => (currentStep > 0 ? prevStep() : onExit())}>
               <Text variant="textMdRegular" color="blue.500">
                 {currentStep > 0 ? '← Back' : '✕ Cancel'}
               </Text>

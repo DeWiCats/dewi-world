@@ -6,6 +6,7 @@ import Text from '@/components/ui/Text';
 import { useLocations } from '@/hooks/useLocations';
 import { LocationPost } from '@/lib/api';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useStepperStore } from '@/stores/useStepperStore';
 import AddIcon from '@assets/svgs/add.svg';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
@@ -22,6 +23,8 @@ export default function LocationsScreen() {
   const { locations, loading, error, refreshLocations } = useLocations();
   const [selectedLocation, setSelectedLocation] = useState<null | LocationPost>();
   const router = useRouter();
+
+  const { showStepper, hideStepper } = useStepperStore();
 
   // Memoized callbacks for delete operations to prevent Reanimated crashes
   const handleDeleteStart = useCallback((locationId: string) => {
@@ -75,7 +78,7 @@ export default function LocationsScreen() {
       ]);
       return;
     }
-    nav.push('create');
+    showStepper();
   };
 
   const handleLocationPress = (location: LocationPost) => {
