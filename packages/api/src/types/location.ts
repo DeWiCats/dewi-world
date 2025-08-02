@@ -1,5 +1,5 @@
 export interface LocationPost {
-  id: string; // UUID
+  id: string;
   owner_id: string; // Supabase user ID
   title: string;
   description: string;

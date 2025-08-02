@@ -11,6 +11,7 @@ type AuthStore = {
   loading: boolean;
   error: string | null;
   pendingEmail: string | null; // Store email for verification
+  _isInternalUpdate: boolean; // Internal flag to prevent infinite loops
 
   /* Mutations */
   loginWithEmailPassword: (email: string, password: string) => Promise<void>;
@@ -34,6 +35,7 @@ export const useAuthStore = create<AuthStore>()(
       loading: false,
       error: null,
       pendingEmail: null,
+      _isInternalUpdate: false,
 
       loginWithEmailPassword: async (email, password) => {
         console.log('🔐 Starting email login process for:', email);
@@ -314,7 +316,31 @@ export const useAuthStore = create<AuthStore>()(
 
       setUser: user => set({ user }),
       setSession: session => set({ session }),
-      setAuthState: (user, session) => set({ user, session }),
+      setAuthState: (user, session) => {
+        const currentState = get();
+
+        // Prevent infinite loops from Supabase auth listener callbacks
+        if (currentState._isInternalUpdate) {
+          return;
+        }
+
+        set({ user, session, _isInternalUpdate: true });
+
+        // Sync session to Supabase client for storage operations
+        if (session) {
+          supabase.auth.setSession({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          });
+        } else {
+          supabase.auth.signOut();
+        }
+
+        // Reset the flag after a brief delay
+        setTimeout(() => {
+          set({ _isInternalUpdate: false });
+        }, 100);
+      },
       setPendingEmail: email => set({ pendingEmail: email }),
     }),
     {
@@ -325,39 +351,28 @@ export const useAuthStore = create<AuthStore>()(
           user: state.user,
           session: state.session,
           pendingEmail: state.pendingEmail,
+          // Exclude _isInternalUpdate from persistence
         };
-        console.log('💾 Persisting auth state:', {
-          hasUser: !!persistedState.user,
-          hasSession: !!persistedState.session,
-          userEmail: persistedState.user?.email,
-          sessionExpires: persistedState.session?.expires_at
-            ? new Date(persistedState.session.expires_at * 1000).toISOString()
-            : 'N/A',
-        });
         return persistedState;
       },
       onRehydrateStorage: () => {
-        console.log('🔄 Starting auth store rehydration...');
         return state => {
           if (state) {
-            console.log('✅ Auth store rehydrated successfully:', {
-              hasUser: !!state.user,
-              hasSession: !!state.session,
-              userEmail: state.user?.email,
-              sessionExpires: state.session?.expires_at
-                ? new Date(state.session.expires_at * 1000).toISOString()
-                : 'N/A',
-            });
             state.hydrated = true;
+            state._isInternalUpdate = false; // Reset internal flag on hydration
+
+            // CRITICAL: Restore session to Supabase client for storage operations
+            if (state.session) {
+              supabase.auth.setSession({
+                access_token: state.session.access_token,
+                refresh_token: state.session.refresh_token,
+              });
+            }
 
             // After hydration, check if the persisted session is still valid
-            console.log('🔄 Checking session validity...');
-
-            // Give Supabase some time to restore its session before validating
             setTimeout(() => {
               supabase.auth.getSession().then(({ data: { session }, error }) => {
                 if (error) {
-                  console.error('❌ Session check error:', error);
                   return;
                 }
 
@@ -367,34 +382,17 @@ export const useAuthStore = create<AuthStore>()(
                   ? persistedSession.expires_at < now
                   : true;
 
-                console.log('📋 Session validity check:', {
-                  hasPersistedSession: !!persistedSession,
-                  hasCurrentSession: !!session,
-                  persistedExpiry: persistedSession?.expires_at
-                    ? new Date(persistedSession.expires_at * 1000).toISOString()
-                    : 'N/A',
-                  currentExpiry: session?.expires_at
-                    ? new Date(session.expires_at * 1000).toISOString()
-                    : 'N/A',
-                  isPersistedExpired,
-                  currentTime: new Date().toISOString(),
-                });
-
                 // Only clear persisted session if it's actually expired
                 if (persistedSession && isPersistedExpired) {
-                  console.log('⚠️ Persisted session has expired, clearing auth state');
                   useAuthStore.getState().setAuthState(null, null);
                 } else if (
                   session &&
                   (!persistedSession || session.expires_at !== persistedSession.expires_at)
                 ) {
-                  console.log('🔄 Updating auth state with current session');
                   useAuthStore.getState().setAuthState(session.user, session);
-                } else if (persistedSession && !session) {
-                  // Persisted session exists but Supabase doesn't have it
-                  // This is normal during app startup - keep the persisted session
-                  console.log('📌 Keeping persisted session, Supabase will sync later');
                 }
+                // If persisted session exists but Supabase doesn't have it,
+                // this is normal during app startup - keep the persisted session
               });
             }, 1000); // Wait 1 second for Supabase to restore session
           }
@@ -408,34 +406,20 @@ export const useAuthStore = create<AuthStore>()(
 supabase.auth.onAuthStateChange((_event, session) => {
   const state = useAuthStore.getState();
 
-  console.log('🔄 Auth state changed:', {
-    event: _event,
-    hasUser: !!session?.user,
-    hasSession: !!session,
-    userEmail: session?.user?.email,
-    emailConfirmed: session?.user?.email_confirmed_at,
-    hydrated: state.hydrated,
-  });
-
   // Handle different auth events appropriately
   if (state.hydrated) {
     if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
       // Always update on sign in or token refresh
-      console.log('🔄 Updating auth state from auth event:', _event);
       const user = session?.user ?? null;
       state.setAuthState(user, session);
     } else if (_event === 'SIGNED_OUT') {
       // Always clear on sign out
-      console.log('🚪 Clearing auth state from sign out');
       state.setAuthState(null, null);
     } else if (_event === 'INITIAL_SESSION' && session) {
       // Only update on initial session if we don't have a persisted session
       if (!state.session) {
-        console.log('🔄 Setting initial session from Supabase');
         const user = session?.user ?? null;
         state.setAuthState(user, session);
-      } else {
-        console.log('📌 Keeping persisted session over initial session');
       }
     }
   }
