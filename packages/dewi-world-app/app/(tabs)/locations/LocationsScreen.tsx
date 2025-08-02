@@ -51,6 +51,7 @@ export default function LocationsScreen() {
 
   const handleExitDetail = () => {
     context.showHeader();
+    context.showTabBar();
     setSelectedLocation(null);
   };
 
@@ -69,6 +70,7 @@ export default function LocationsScreen() {
     // Handle location press (navigate to detail or messaging)
     console.log('Location pressed:', location.title);
     context.hideHeader();
+    context.hideTabBar();
     setSelectedLocation(location);
   };
 
