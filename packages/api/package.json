@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "fastify": "^5.4.0",
-    "uuid": "^9.0.0",
     "@supabase/supabase-js": "^2.39.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "fastify": "^5.4.0",
+    "uuid": "^9.0.0"
   },
   "description": "DEWI World Fastify backend API",
   "devDependencies": {
@@ -14,7 +14,8 @@
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "rimraf": "^5.0.7",
-    "tsconfig-paths": "^4.2.0"
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.0.0"
   },
   "name": "@dewi/api",
   "private": true,
