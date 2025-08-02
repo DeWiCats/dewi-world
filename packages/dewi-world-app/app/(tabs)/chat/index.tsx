@@ -1,5 +1,6 @@
 import CircleLoader from '@/components/CircleLoader';
 import Box from '@/components/ui/Box';
+import ImageBox from '@/components/ui/ImageBox';
 import Text from '@/components/ui/Text';
 import { useConversations } from '@/hooks/useMessages';
 import { Conversation } from '@/lib/messagingAPI';
@@ -47,18 +48,13 @@ function ConversationCard({
         alignItems="center"
       >
         {/* Avatar */}
-        <Box
-          style={{ width: 48, height: 48 }}
-          borderRadius="full"
-          backgroundColor="blue.500"
-          alignItems="center"
-          justifyContent="center"
+        <ImageBox
+          source={require('@assets/images/profile-pic.png')}
+          width={48}
+          height={48}
+          borderRadius={'full'}
           marginRight="3"
-        >
-          <Text variant="textMdSemibold" color="primaryBackground">
-            {conversation.other_user?.email?.[0]?.toUpperCase() || 'P'}
-          </Text>
-        </Box>
+        />
 
         {/* Content */}
         <Box flex={1} gap="1">
@@ -91,17 +87,13 @@ function ConversationCard({
           marginLeft="3"
         >
           {conversation.location?.gallery?.[0] ? (
-            <Box
-              style={{ width: 60, height: 45 }}
+            <ImageBox
+              source={{ uri: conversation.location.gallery[0] }}
               borderRadius="lg"
-              backgroundColor="blue.500"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Text variant="textXsRegular" color="primaryBackground">
-                📷
-              </Text>
-            </Box>
+              width={60}
+              height={45}
+              style={{ width: 60, height: 45 }}
+            />
           ) : (
             <Text variant="textSmBold" color="primaryBackground">
               📍
