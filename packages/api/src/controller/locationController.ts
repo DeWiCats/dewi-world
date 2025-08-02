@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyReply } from 'fastify';
+import { validateAndGeocodeAddress } from '../lib/geocoding';
 import { LocationInsert, LocationRow, LocationUpdate, supabase } from '../lib/supabase';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
 import {
@@ -23,6 +24,10 @@ function formatLocationResponse(row: LocationRow): LocationPost {
     title: row.title,
     description: row.description || '',
     address: row.address,
+    formatted_address: row.formatted_address || undefined,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    place_id: row.place_id || undefined,
     deployable_hardware: row.deployable_hardware,
     price: Number(row.price),
     is_negotiable: row.is_negotiable,
@@ -153,11 +158,27 @@ export default async function locationController(fastify: FastifyInstance) {
       try {
         const locationData = request.body as CreateLocationRequest;
 
+        // Validate and geocode the address
+        const geocodingResult = await validateAndGeocodeAddress(locationData.address);
+
+        if (!geocodingResult.success || !geocodingResult.data) {
+          return reply.status(400).send({
+            success: false,
+            message: geocodingResult.error || 'Invalid address provided',
+          });
+        }
+
+        const { latitude, longitude, formatted_address, place_id } = geocodingResult.data;
+
         const insertData: LocationInsert = {
           owner_id: request.user_id!,
           title: locationData.title,
           description: locationData.description,
           address: locationData.address,
+          formatted_address,
+          latitude,
+          longitude,
+          place_id,
           deployable_hardware: locationData.deployable_hardware,
           price: locationData.price,
           is_negotiable: locationData.is_negotiable,

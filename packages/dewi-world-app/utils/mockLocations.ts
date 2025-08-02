@@ -21,6 +21,10 @@ export interface CreateLocationRequest {
   title: string;
   description: string;
   address: string;
+  formatted_address?: string;
+  latitude?: number;
+  longitude?: number;
+  place_id?: string;
   deployable_hardware: string[];
   price: number;
   is_negotiable: boolean;

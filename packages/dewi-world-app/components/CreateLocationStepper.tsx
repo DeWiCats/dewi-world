@@ -1,0 +1,773 @@
+import PlaceAutocomplete from '@/components/PlaceAutocomplete';
+import Box from '@/components/ui/Box';
+import Text from '@/components/ui/Text';
+import { useLocations } from '@/hooks/useLocations';
+import { CreateLocationRequest } from '@/lib/api';
+import { pickImages, uploadMultipleImages } from '@/lib/imageUpload';
+import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, Image, Pressable, ScrollView, Switch, TextInput } from 'react-native';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+
+// Import hardware icons
+import Icon5G from '@assets/svgs/5g-logo.svg';
+import IconAir from '@assets/svgs/air-logo.svg';
+import IconHelium from '@assets/svgs/helium-logo.svg';
+import IconLorawan from '@assets/svgs/lorawan-logo.svg';
+import IconMarine from '@assets/svgs/marine-logo.svg';
+import IconWeather from '@assets/svgs/weather-logo.svg';
+import IconWifi from '@assets/svgs/wifi-logo.svg';
+import { Portal } from '@gorhom/portal';
+import { ServiceSheetStackNavigationProp } from './ServiceSheetLayout';
+
+const hardwareOptions = [
+  { id: '5g', name: '5G', Icon: Icon5G },
+  { id: 'helium', name: 'Helium', Icon: IconHelium },
+  { id: 'wifi', name: 'WiFi', Icon: IconWifi },
+  { id: 'lorawan', name: 'LoRaWAN', Icon: IconLorawan },
+  { id: 'weather', name: 'Weather', Icon: IconWeather },
+  { id: 'air', name: 'Air Quality', Icon: IconAir },
+  { id: 'marine', name: 'Marine', Icon: IconMarine },
+];
+
+interface StepperProps {
+  onComplete: () => void;
+  visible: boolean;
+}
+
+export default function CreateLocationStepper({ onComplete, visible }: StepperProps) {
+  const nav = useNavigation<ServiceSheetStackNavigationProp>();
+  const { createLocation, refreshLocations } = useLocations();
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    formatted_address: '',
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
+    place_id: '',
+    price: '',
+    is_negotiable: true,
+    deployable_hardware: [] as string[],
+    gallery: [] as string[],
+    distance: 0,
+  });
+
+  const [selectedImages, setSelectedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
+
+  // Animation values
+  const slideX = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  const steps = [
+    {
+      title: 'What is your location called?',
+      subtitle: 'Give your location a memorable name that hosts will recognize',
+      icon: '📍',
+    },
+    {
+      title: 'Where is it located?',
+      subtitle: 'Help us find your exact address for accurate mapping',
+      icon: '🗺️',
+    },
+    {
+      title: 'Tell us more about it',
+      subtitle: 'Share details that will help hosts understand what makes your location special',
+      icon: '✨',
+    },
+    {
+      title: 'Set your pricing',
+      subtitle: 'Choose a competitive rate for your hosting services',
+      icon: '💰',
+    },
+    {
+      title: 'What can be deployed?',
+      subtitle: 'Select the types of hardware your location can support',
+      icon: '🔧',
+    },
+    {
+      title: 'Add some photos',
+      subtitle: 'Show off your location with high-quality images',
+      icon: '📸',
+    },
+  ];
+
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      const nextStepIndex = currentStep + 1;
+      slideX.value = withTiming(-100, { duration: 300 }, finished => {
+        if (finished) {
+          runOnJS(setCurrentStep)(nextStepIndex);
+          slideX.value = 100;
+          slideX.value = withSpring(0, { damping: 20, stiffness: 200 });
+        }
+      });
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      const prevStepIndex = currentStep - 1;
+      slideX.value = withTiming(100, { duration: 300 }, finished => {
+        if (finished) {
+          runOnJS(setCurrentStep)(prevStepIndex);
+          slideX.value = -100;
+          slideX.value = withSpring(0, { damping: 20, stiffness: 200 });
+        }
+      });
+    }
+  };
+
+  const canProceed = () => {
+    switch (currentStep) {
+      case 0:
+        return formData.title.trim().length > 0;
+      case 1:
+        return formData.formatted_address.trim().length > 0;
+      case 2:
+        return true; // Description is optional
+      case 3:
+        return formData.price && Number(formData.price) > 0;
+      case 4:
+        return formData.deployable_hardware.length > 0;
+      case 5:
+        return selectedImages.length > 0;
+      default:
+        return false;
+    }
+  };
+
+  const handleFinish = async () => {
+    if (!canProceed()) return;
+
+    try {
+      setLoading(true);
+
+      // Upload images
+      const uploadResult = await uploadMultipleImages(
+        selectedImages,
+        'locations',
+        (completed, total) => setUploadProgress({ completed, total })
+      );
+
+      if (!uploadResult.success || uploadResult.urls.length === 0) {
+        Alert.alert('Error', 'Failed to upload images. Please try again.');
+        return;
+      }
+
+      const locationData: CreateLocationRequest = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        address: formData.formatted_address.trim(),
+        formatted_address: formData.formatted_address.trim(),
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        place_id: formData.place_id,
+        price: Number(formData.price),
+        is_negotiable: formData.is_negotiable,
+        deployable_hardware: formData.deployable_hardware,
+        gallery: uploadResult.urls,
+        distance: formData.distance,
+      };
+
+      await createLocation(locationData);
+      await refreshLocations();
+
+      // Success animation and callback
+      opacity.value = withTiming(0, { duration: 500 }, finished => {
+        if (finished) {
+          runOnJS(onComplete)();
+        }
+      });
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to create location');
+    } finally {
+      setLoading(false);
+      setUploadProgress({ completed: 0, total: 0 });
+    }
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: slideX.value }],
+    opacity: opacity.value,
+  }));
+
+  const renderProgressBar = () => (
+    <Box flexDirection="row" alignItems="center" marginBottom="6" paddingHorizontal="4">
+      {steps.map((_, index) => (
+        <Box key={index} flex={1} marginHorizontal="1">
+          <Box
+            height={4}
+            borderRadius="xs"
+            backgroundColor={index <= currentStep ? 'blue.500' : 'inputBackground'}
+            style={{
+              opacity: index <= currentStep ? 1 : 0.3,
+            }}
+          />
+        </Box>
+      ))}
+    </Box>
+  );
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <TitleStep
+            value={formData.title}
+            onChange={title => setFormData(prev => ({ ...prev, title }))}
+          />
+        );
+      case 1:
+        return (
+          <LocationStep
+            onPlaceSelected={place => {
+              setFormData(prev => ({
+                ...prev,
+                formatted_address: place.description,
+                place_id: place.placeId,
+                latitude: place.coordinates?.latitude,
+                longitude: place.coordinates?.longitude,
+              }));
+            }}
+            selectedAddress={formData.formatted_address}
+          />
+        );
+      case 2:
+        return (
+          <DescriptionStep
+            value={formData.description}
+            onChange={description => setFormData(prev => ({ ...prev, description }))}
+          />
+        );
+      case 3:
+        return (
+          <PricingStep
+            price={formData.price}
+            isNegotiable={formData.is_negotiable}
+            onPriceChange={price => setFormData(prev => ({ ...prev, price }))}
+            onNegotiableChange={negotiable =>
+              setFormData(prev => ({ ...prev, is_negotiable: negotiable }))
+            }
+          />
+        );
+      case 4:
+        return (
+          <HardwareStep
+            selectedHardware={formData.deployable_hardware}
+            onSelectionChange={hardware =>
+              setFormData(prev => ({ ...prev, deployable_hardware: hardware }))
+            }
+          />
+        );
+      case 5:
+        return (
+          <PhotosStep
+            selectedImages={selectedImages}
+            onImagesChange={setSelectedImages}
+            uploadProgress={uploadProgress}
+            isLoading={loading}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const onCreateLocation = async () => {
+    // reset stepper
+    setCurrentStep(0);
+    setFormData({
+      title: '',
+      description: '',
+      formatted_address: '',
+      latitude: undefined,
+      longitude: undefined,
+      place_id: '',
+      price: '',
+      is_negotiable: true,
+      deployable_hardware: [],
+      gallery: [],
+      distance: 0,
+    });
+    nav.reset({ index: 0, routes: [{ name: 'LocationsTab' }] });
+  };
+
+  if (!visible) return null;
+
+  return (
+    <Portal>
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        backgroundColor="primaryBackground"
+        zIndex={9999}
+        style={{
+          elevation: 1000, // For Android
+        }}
+      >
+        {/* Header */}
+        <Box paddingTop="7xl" paddingHorizontal="4" paddingBottom="4">
+          <Box
+            flexDirection="row"
+            alignItems="center"
+            justifyContent="space-between"
+            marginBottom="4"
+          >
+            <Pressable onPress={() => (currentStep > 0 ? prevStep() : onCreateLocation())}>
+              <Text variant="textMdRegular" color="blue.500">
+                {currentStep > 0 ? '← Back' : '✕ Cancel'}
+              </Text>
+            </Pressable>
+            <Text variant="textMdMedium" color="secondaryText">
+              {currentStep + 1} of {steps.length}
+            </Text>
+          </Box>
+
+          {renderProgressBar()}
+        </Box>
+
+        {/* Content */}
+        <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Step Header */}
+            <Box alignItems="center" marginBottom="6">
+              <Text style={{ fontSize: 60 }} marginBottom="4">
+                {steps[currentStep].icon}
+              </Text>
+              <Text variant="textXlBold" color="primaryText" textAlign="center" marginBottom="2">
+                {steps[currentStep].title}
+              </Text>
+              <Text variant="textMdRegular" color="secondaryText" textAlign="center">
+                {steps[currentStep].subtitle}
+              </Text>
+            </Box>
+
+            {renderStepContent()}
+          </ScrollView>
+        </Animated.View>
+
+        {/* Bottom Button */}
+        <Box
+          paddingHorizontal="4"
+          paddingBottom="8"
+          paddingTop="4"
+          backgroundColor="primaryBackground"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 10,
+          }}
+        >
+          <Pressable
+            onPress={currentStep === steps.length - 1 ? handleFinish : nextStep}
+            disabled={!canProceed() || loading}
+            style={({ pressed }) => ({
+              backgroundColor: canProceed() && !loading ? '#3b82f6' : '#555',
+              paddingVertical: 16,
+              paddingHorizontal: 24,
+              borderRadius: 16,
+              opacity: pressed ? 0.8 : 1,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 8,
+            })}
+          >
+            <Text variant="textLgBold" color="primaryBackground" textAlign="center">
+              {loading
+                ? 'Creating...'
+                : currentStep === steps.length - 1
+                  ? 'Create Location'
+                  : 'Continue'}
+            </Text>
+          </Pressable>
+        </Box>
+      </Box>
+    </Portal>
+  );
+}
+
+// Individual Step Components
+const TitleStep = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
+  <Box>
+    <Box
+      backgroundColor="inputBackground"
+      borderRadius="xl"
+      paddingHorizontal="4"
+      paddingVertical="4"
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 3,
+      }}
+    >
+      <TextInput
+        placeholder="e.g., Downtown Office with Rooftop Access"
+        placeholderTextColor="#888"
+        value={value}
+        onChangeText={onChange}
+        style={{
+          fontSize: 18,
+          color: '#ffffff',
+          fontFamily: 'Figtree',
+          textAlign: 'center',
+        }}
+        maxLength={200}
+        autoFocus
+        returnKeyType="next"
+      />
+    </Box>
+    <Text variant="textSmRegular" color="secondaryText" textAlign="center" marginTop="3">
+      Make it descriptive and memorable
+    </Text>
+  </Box>
+);
+
+const LocationStep = ({
+  onPlaceSelected,
+  selectedAddress,
+}: {
+  onPlaceSelected: (place: any) => void;
+  selectedAddress: string;
+}) => (
+  <Box>
+    <PlaceAutocomplete onPlaceSelected={onPlaceSelected} />
+    {selectedAddress && (
+      <Box
+        marginTop="4"
+        padding="4"
+        backgroundColor="green.500"
+        borderRadius="xl"
+        style={{ opacity: 0.1 }}
+      >
+        <Text variant="textMdRegular" color="green.500" textAlign="center">
+          ✓ {selectedAddress}
+        </Text>
+      </Box>
+    )}
+  </Box>
+);
+
+const DescriptionStep = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => (
+  <Box>
+    <Box
+      backgroundColor="inputBackground"
+      borderRadius="xl"
+      paddingHorizontal="4"
+      paddingVertical="4"
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 3,
+      }}
+    >
+      <TextInput
+        placeholder="• Power availability and reliability&#10;• Internet connection details&#10;• Access instructions and hours&#10;• View, height, and coverage area&#10;• Special features or amenities"
+        placeholderTextColor="#888"
+        value={value}
+        onChangeText={onChange}
+        style={{
+          fontSize: 16,
+          color: '#ffffff',
+          fontFamily: 'Figtree',
+          minHeight: 120,
+          textAlignVertical: 'top',
+        }}
+        multiline
+        maxLength={2000}
+        autoFocus
+      />
+    </Box>
+    <Text variant="textSmRegular" color="secondaryText" textAlign="center" marginTop="3">
+      This step is optional, but helpful for hosts
+    </Text>
+  </Box>
+);
+
+const PricingStep = ({
+  price,
+  isNegotiable,
+  onPriceChange,
+  onNegotiableChange,
+}: {
+  price: string;
+  isNegotiable: boolean;
+  onPriceChange: (price: string) => void;
+  onNegotiableChange: (negotiable: boolean) => void;
+}) => (
+  <Box>
+    {/* Cash App Style Price Input */}
+    <Box alignItems="center" marginBottom="6">
+      <Box flexDirection="row" alignItems="center">
+        <Text variant="textXlBold" color="primaryText" style={{ fontSize: 40 }}>
+          $
+        </Text>
+        <TextInput
+          placeholder="0"
+          placeholderTextColor="#888"
+          value={price}
+          onChangeText={onPriceChange}
+          style={{
+            fontSize: 48,
+            color: '#ffffff',
+            fontFamily: 'Figtree',
+            fontWeight: 'bold',
+            minWidth: 100,
+            textAlign: 'left',
+          }}
+          keyboardType="numeric"
+          autoFocus
+          maxLength={6}
+        />
+        <Text variant="textLgRegular" color="secondaryText" marginLeft="2">
+          /month
+        </Text>
+      </Box>
+    </Box>
+
+    {/* Negotiable Toggle */}
+    <Box
+      backgroundColor="inputBackground"
+      borderRadius="xl"
+      paddingHorizontal="4"
+      paddingVertical="4"
+      flexDirection="row"
+      alignItems="center"
+      justifyContent="space-between"
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 3,
+      }}
+    >
+      <Box>
+        <Text variant="textMdMedium" color="primaryText">
+          Open to negotiation
+        </Text>
+        <Text variant="textSmRegular" color="secondaryText">
+          Let hosts know if you&apos;re flexible on price
+        </Text>
+      </Box>
+      <Switch
+        value={isNegotiable}
+        onValueChange={onNegotiableChange}
+        trackColor={{ false: '#555', true: '#3b82f6' }}
+        thumbColor="#ffffff"
+      />
+    </Box>
+  </Box>
+);
+
+const HardwareStep = ({
+  selectedHardware,
+  onSelectionChange,
+}: {
+  selectedHardware: string[];
+  onSelectionChange: (hardware: string[]) => void;
+}) => {
+  const toggleHardware = (hardwareId: string) => {
+    const newSelection = selectedHardware.includes(hardwareId)
+      ? selectedHardware.filter(id => id !== hardwareId)
+      : [...selectedHardware, hardwareId];
+    onSelectionChange(newSelection);
+  };
+
+  return (
+    <Box flexDirection="row" flexWrap="wrap" gap="3" justifyContent="center">
+      {hardwareOptions.map(hardware => {
+        const isSelected = selectedHardware.includes(hardware.id);
+        return (
+          <Pressable key={hardware.id} onPress={() => toggleHardware(hardware.id)}>
+            <Box
+              borderRadius="xl"
+              borderWidth={3}
+              borderColor={isSelected ? 'blue.500' : 'inputBackground'}
+              backgroundColor={isSelected ? 'blue.500' : 'inputBackground'}
+              paddingHorizontal="4"
+              paddingVertical="4"
+              alignItems="center"
+              minWidth={120}
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isSelected ? 0.2 : 0.05,
+                shadowRadius: 8,
+                elevation: isSelected ? 5 : 2,
+                transform: [{ scale: isSelected ? 1.05 : 1 }],
+              }}
+            >
+              <Box marginBottom="2">
+                <hardware.Icon width={32} height={32} />
+              </Box>
+              <Text
+                variant="textMdMedium"
+                color={isSelected ? 'primaryBackground' : 'primaryText'}
+                textAlign="center"
+              >
+                {hardware.name}
+              </Text>
+            </Box>
+          </Pressable>
+        );
+      })}
+    </Box>
+  );
+};
+
+const PhotosStep = ({
+  selectedImages,
+  onImagesChange,
+  uploadProgress,
+  isLoading,
+}: {
+  selectedImages: ImagePicker.ImagePickerAsset[];
+  onImagesChange: (images: ImagePicker.ImagePickerAsset[]) => void;
+  uploadProgress: { completed: number; total: number };
+  isLoading: boolean;
+}) => {
+  const handleImagePicker = async () => {
+    try {
+      const result = await pickImages(5 - selectedImages.length);
+      if (result.success && result.images) {
+        onImagesChange([...selectedImages, ...result.images].slice(0, 5));
+      } else if (result.error) {
+        Alert.alert('Error', result.error);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick images');
+    }
+  };
+
+  const removeImage = (index: number) => {
+    onImagesChange(selectedImages.filter((_, i) => i !== index));
+  };
+
+  return (
+    <Box>
+      {/* Selected Images */}
+      {selectedImages.length > 0 && (
+        <Box marginBottom="4">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <Box flexDirection="row" gap="3" paddingHorizontal="2">
+              {selectedImages.map((image, index) => (
+                <Box key={index} position="relative">
+                  <Image
+                    source={{ uri: image.uri }}
+                    style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: 16,
+                    }}
+                    resizeMode="cover"
+                  />
+                  <Pressable
+                    onPress={() => removeImage(index)}
+                    style={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      backgroundColor: '#ef4444',
+                      borderRadius: 16,
+                      width: 32,
+                      height: 32,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text variant="textMdBold" color="primaryBackground">
+                      ×
+                    </Text>
+                  </Pressable>
+                </Box>
+              ))}
+            </Box>
+          </ScrollView>
+        </Box>
+      )}
+
+      {/* Add Photos Button */}
+      {selectedImages.length < 5 && (
+        <Pressable onPress={handleImagePicker} disabled={isLoading}>
+          <Box
+            backgroundColor="inputBackground"
+            borderRadius="xl"
+            borderWidth={3}
+            borderStyle="dashed"
+            borderColor="blue.500"
+            padding="6"
+            alignItems="center"
+            justifyContent="center"
+            minHeight={150}
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+          >
+            <Text style={{ fontSize: 40 }} marginBottom="2">
+              📸
+            </Text>
+            <Text variant="textLgBold" color="blue.500" marginBottom="1">
+              {selectedImages.length === 0 ? 'Add Photos' : 'Add More Photos'}
+            </Text>
+            <Text variant="textMdRegular" color="secondaryText" textAlign="center">
+              {selectedImages.length}/5 selected
+            </Text>
+          </Box>
+        </Pressable>
+      )}
+
+      {/* Upload Progress */}
+      {isLoading && uploadProgress.total > 0 && (
+        <Box marginTop="4" padding="4" backgroundColor="inputBackground" borderRadius="xl">
+          <Text variant="textMdRegular" color="primaryText" marginBottom="3" textAlign="center">
+            Uploading images... {uploadProgress.completed}/{uploadProgress.total}
+          </Text>
+          <Box backgroundColor="secondaryText" height={6} borderRadius="xs" overflow="hidden">
+            <Box
+              backgroundColor="blue.500"
+              height="100%"
+              width={`${(uploadProgress.completed / uploadProgress.total) * 100}%`}
+            />
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+};

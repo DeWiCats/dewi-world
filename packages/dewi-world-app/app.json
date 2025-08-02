@@ -13,7 +13,9 @@
       "bundleIdentifier": "com.anonymous.dewiworld",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to let you upload images for location posts.",
-        "NSCameraUsageDescription": "This app needs access to your camera to let you take photos for location posts."
+        "NSCameraUsageDescription": "This app needs access to your camera to let you take photos for location posts.",
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby DEWI hardware deployment locations and help you discover opportunities in your area.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses your location to show nearby DEWI hardware deployment locations and help you discover opportunities in your area."
       }
     },
     "android": {
@@ -27,7 +29,9 @@
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_IMAGES"
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
     "web": {
@@ -41,6 +45,13 @@
         {
           "photosPermission": "The app accesses your photos to let you share location images.",
           "cameraPermission": "The app accesses your camera to let you take photos of locations."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "This app uses your location to show nearby DEWI hardware deployment locations and help you discover opportunities in your area.",
+          "locationWhenInUsePermission": "This app uses your location to show nearby DEWI hardware deployment locations and help you discover opportunities in your area."
         }
       ],
       [

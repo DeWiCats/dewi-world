@@ -7,7 +7,17 @@ import Chat from '@assets/svgs/chat.svg';
 import Coin from '@assets/svgs/coin.svg';
 import Map from '@assets/svgs/map.svg';
 import World from '@assets/svgs/world.svg';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useMemo } from 'react';
+
+export type ServiceSheetStackParamList = {
+  WorldTab: undefined;
+  LocationsTab: undefined;
+  ChatTab: undefined;
+  RewardsTab: undefined;
+};
+
+export type ServiceSheetStackNavigationProp = BottomTabNavigationProp<ServiceSheetStackParamList>;
 
 export default function ServiceSheetLayout({ showTabBar }: { showTabBar: boolean }) {
   const options = useMemo((): ServiceNavBarOption[] => {

@@ -22,58 +22,53 @@ export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   },
 });
 
-// Database types for better TypeScript support
-export interface Database {
-  public: {
-    Tables: {
-      locations: {
-        Row: {
-          id: string;
-          owner_id: string;
-          title: string;
-          description: string | null;
-          address: string;
-          deployable_hardware: string[];
-          price: number;
-          is_negotiable: boolean;
-          gallery: string[];
-          rating: number | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          owner_id: string;
-          title: string;
-          description?: string | null;
-          address: string;
-          deployable_hardware: string[];
-          price: number;
-          is_negotiable: boolean;
-          gallery?: string[];
-          rating?: number | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          owner_id?: string;
-          title?: string;
-          description?: string | null;
-          address?: string;
-          deployable_hardware?: string[];
-          price?: number;
-          is_negotiable?: boolean;
-          gallery?: string[];
-          rating?: number | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-    };
-  };
+// Supabase Database Types
+export interface LocationRow {
+  id: string;
+  owner_id: string;
+  title: string;
+  description: string | null;
+  address: string;
+  formatted_address: string | null; // Google-validated address
+  latitude: number; // Geocoded latitude
+  longitude: number; // Geocoded longitude
+  place_id: string | null; // Google Places ID
+  deployable_hardware: string[];
+  price: number;
+  is_negotiable: boolean;
+  gallery: string[];
+  rating: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
-export type LocationRow = Database['public']['Tables']['locations']['Row'];
-export type LocationInsert = Database['public']['Tables']['locations']['Insert'];
-export type LocationUpdate = Database['public']['Tables']['locations']['Update'];
+export interface LocationInsert {
+  owner_id: string;
+  title: string;
+  description?: string;
+  address: string;
+  formatted_address?: string;
+  latitude: number;
+  longitude: number;
+  place_id?: string;
+  deployable_hardware: string[];
+  price: number;
+  is_negotiable: boolean;
+  gallery: string[];
+  rating?: number;
+}
+
+export interface LocationUpdate {
+  title?: string;
+  description?: string;
+  address?: string;
+  formatted_address?: string;
+  latitude?: number;
+  longitude?: number;
+  place_id?: string;
+  deployable_hardware?: string[];
+  price?: number;
+  is_negotiable?: boolean;
+  gallery?: string[];
+  rating?: number;
+}

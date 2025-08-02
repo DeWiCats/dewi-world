@@ -4,12 +4,16 @@ export interface LocationPost {
   title: string;
   description: string;
   address: string;
+  formatted_address?: string; // Google-validated address
+  latitude: number; // Geocoded latitude
+  longitude: number; // Geocoded longitude
+  place_id?: string; // Google Places ID
   deployable_hardware: string[]; // Array of tags/icons
   price: number;
   is_negotiable: boolean;
   gallery: string[]; // Array of image URLs
   rating?: number; // Optional, for sorting later
-  distance: number; // Mocked client-side for now
+  distance: number; // Calculated client-side based on user location
   created_at?: string;
   updated_at?: string;
 }
@@ -45,6 +49,11 @@ export interface LocationQueryParams {
   negotiable?: boolean;
   limit?: number;
   offset?: number;
+  // Geospatial filtering
+  latitude?: number;
+  longitude?: number;
+  radius_km?: number; // Radius in kilometers
+  search?: string; // Text search
 }
 
 export interface LocationResponse {
@@ -52,4 +61,31 @@ export interface LocationResponse {
   data: LocationPost | LocationPost[];
   message?: string;
   total?: number;
+}
+
+// GeoJSON types for the new geojson controller
+export interface GeoJSONLocation {
+  type: 'Feature';
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+  properties: {
+    id: string;
+    name: string;
+    description: string;
+    address: string;
+    price: number;
+    is_negotiable: boolean;
+    deployable_hardware: string[];
+    gallery: string[];
+    rating?: number;
+    distance?: number;
+    created_at?: string;
+  };
+}
+
+export interface GeoJSONResponse {
+  type: 'FeatureCollection';
+  features: GeoJSONLocation[];
 }

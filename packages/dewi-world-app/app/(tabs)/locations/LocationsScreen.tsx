@@ -1,14 +1,14 @@
 import CircleLoader from '@/components/CircleLoader';
 import LocationCard from '@/components/LocationCard';
+import { LocationSkeletonList } from '@/components/LocationSkeleton';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
 import { useLocations } from '@/hooks/useLocations';
 import { LocationPost } from '@/lib/api';
-import { useAppStore } from '@/stores/useAppStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import AddIcon from '@assets/svgs/add.svg';
 import { useNavigation, useRouter } from 'expo-router';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Alert, FlatList, Pressable, TextInput } from 'react-native';
 import { TabsContext } from '../context';
 import DetailScreen from './DetailScreen';
@@ -19,10 +19,23 @@ export default function LocationsScreen() {
   const nav = useNavigation<LocationsStackNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   const { user, session, hydrated } = useAuthStore();
-  const { mockMode, setMockMode } = useAppStore();
   const { locations, loading, error, refreshLocations } = useLocations();
   const [selectedLocation, setSelectedLocation] = useState<null | LocationPost>();
   const router = useRouter();
+
+  // Memoized callbacks for delete operations to prevent Reanimated crashes
+  const handleDeleteStart = useCallback((locationId: string) => {
+    console.log('🗑️ Starting optimistic delete for:', locationId);
+  }, []);
+
+  const handleDeleteComplete = useCallback((locationId: string) => {
+    console.log('✅ Delete completed for:', locationId);
+    // The useLocations hook should already handle state updates
+  }, []);
+
+  const handleDeleteError = useCallback((locationId: string, error: Error) => {
+    console.error('❌ Delete failed for:', locationId, error.message);
+  }, []);
 
   // Debug auth state when component mounts
   useEffect(() => {
@@ -32,11 +45,10 @@ export default function LocationsScreen() {
       hasSession: !!session,
       hasToken: !!session?.access_token,
       userEmail: user?.email,
-      mockMode,
       loading,
       error,
     });
-  }, [hydrated, user, session, mockMode, loading, error]);
+  }, [hydrated, user, session, loading, error]);
 
   // Filter locations based on search
   const filteredLocations = locations.filter(location => {
@@ -74,12 +86,6 @@ export default function LocationsScreen() {
     setSelectedLocation(location);
   };
 
-  const toggleMockMode = () => {
-    console.log('🔄 Toggling mock mode from', mockMode, 'to', !mockMode);
-    setMockMode(!mockMode);
-    refreshLocations();
-  };
-
   const renderHeader = () => (
     <Box paddingHorizontal="4" paddingTop="4" paddingBottom="2">
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" marginBottom="4">
@@ -87,14 +93,12 @@ export default function LocationsScreen() {
           <Text variant="textXlBold" color="primaryText">
             My Locations
           </Text>
-          <Pressable onPress={toggleMockMode}>
-            <Text variant="textSmRegular" color="blue.500">
-              {mockMode ? 'Mock Mode' : 'Live Mode'} • Tap to toggle
-            </Text>
-          </Pressable>
-          {/* Auth debug info */}
-          <Text variant="textXsRegular" color="secondaryText">
-            Auth: {hydrated ? (user ? '✅ Signed In' : '❌ Not Signed In') : '⏳ Loading...'}
+          <Text variant="textSmRegular" color="secondaryText">
+            {hydrated
+              ? user
+                ? `Welcome back, ${user.email?.split('@')[0]}`
+                : 'Please sign in to continue'
+              : 'Loading...'}
           </Text>
         </Box>
         <Pressable onPress={handleCreateLocation}>
@@ -221,22 +225,17 @@ export default function LocationsScreen() {
         <FlatList
           data={filteredLocations}
           renderItem={({ item }) => (
-            <LocationCard location={item} onPress={() => handleLocationPress(item)} />
+            <LocationCard
+              location={item}
+              onPress={() => handleLocationPress(item)}
+              onDeleteStart={handleDeleteStart}
+              onDeleteComplete={handleDeleteComplete}
+              onDeleteError={handleDeleteError}
+            />
           )}
           keyExtractor={item => item.id}
           ListHeaderComponent={renderHeader}
-          ListEmptyComponent={
-            loading ? (
-              <Box alignItems="center" paddingVertical="8">
-                <CircleLoader />
-                <Text variant="textMdRegular" color="secondaryText" marginTop="4">
-                  Loading locations...
-                </Text>
-              </Box>
-            ) : (
-              renderEmptyState
-            )
-          }
+          ListEmptyComponent={loading ? <LocationSkeletonList count={3} /> : renderEmptyState}
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingBottom: 120,

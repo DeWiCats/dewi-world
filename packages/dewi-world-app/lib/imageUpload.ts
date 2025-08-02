@@ -187,21 +187,64 @@ export async function uploadImageToSupabase(
       throw new Error('Invalid image data');
     }
 
-    // Convert blob to ArrayBuffer for Supabase
-    const arrayBuffer = await blob.arrayBuffer();
-
     // Generate unique filename with timestamp and random string
     const timestamp = Date.now();
     const fileExtension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
     const uniqueFileName = `${timestamp}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
-    const filePath = `${bucket}/${uniqueFileName}`;
+    // Don't include bucket name in path since supabase.storage.from() already handles that
+    const filePath = uniqueFileName;
+
+    // Convert blob to format compatible with Supabase (React Native compatible)
+    let uploadData: ArrayBuffer | Uint8Array;
+
+    try {
+      // Method 1: Try using arrayBuffer() if available (web environments)
+      if (typeof blob.arrayBuffer === 'function') {
+        uploadData = await blob.arrayBuffer();
+        console.log('📊 Using arrayBuffer conversion');
+      } else {
+        // Method 2: React Native-specific conversion using FileReader
+        console.log('📊 Using React Native FileReader conversion');
+
+        uploadData = await new Promise<ArrayBuffer>((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onload = () => {
+            if (reader.result instanceof ArrayBuffer) {
+              resolve(reader.result);
+            } else {
+              reject(new Error('FileReader did not return ArrayBuffer'));
+            }
+          };
+
+          reader.onerror = () => reject(reader.error);
+          reader.readAsArrayBuffer(blob);
+        });
+      }
+    } catch (error) {
+      console.error('❌ Blob conversion failed:', error);
+      throw new Error(
+        `Failed to convert image data: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+
+    console.log('🚀 Starting upload to Supabase:', {
+      filePath,
+      bucket,
+      blobType: blob.type,
+      blobSize: blob.size,
+      uploadDataType: typeof uploadData,
+      uploadDataSize: uploadData.byteLength,
+    });
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage.from(bucket).upload(filePath, arrayBuffer, {
+    const { data, error } = await supabase.storage.from(bucket).upload(filePath, uploadData, {
       contentType: blob.type || 'image/jpeg',
       cacheControl: '3600',
       upsert: false,
     });
+
+    console.log('📤 Upload response:', { data, error });
 
     if (error) {
       console.error('Supabase upload error:', error);
@@ -230,6 +273,27 @@ export async function uploadImageToSupabase(
     if (!urlData.publicUrl) {
       throw new Error('Failed to get public URL for uploaded image');
     }
+
+    // Verify the upload by checking if the file exists
+    try {
+      const { data: fileExists, error: checkError } = await supabase.storage
+        .from(bucket)
+        .list('', { search: data.path });
+
+      console.log('🔍 File verification:', {
+        fileExists: fileExists && fileExists.length > 0,
+        checkError,
+        searchPath: data.path,
+      });
+    } catch (verifyError) {
+      console.warn('⚠️ Could not verify file upload:', verifyError);
+    }
+
+    console.log('✅ Image uploaded successfully:', {
+      filePath: data.path,
+      publicUrl: urlData.publicUrl,
+      bucket,
+    });
 
     return {
       success: true,
@@ -303,3 +367,68 @@ export async function uploadMultipleImages(
     errors,
   };
 }
+
+export async function testSupabaseStorageAccess(): Promise<void> {
+  try {
+    console.log('🧪 Testing Supabase storage access...');
+    console.log('🔑 Supabase config check:', {
+      url: process.env.EXPO_PUBLIC_SUPABASE_URL?.substring(0, 20) + '...',
+      hasAnonKey: !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      anonKeyStart: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 10) + '...',
+    });
+
+    // Test 1: Check if we can list buckets
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    console.log('📦 Available buckets:', buckets);
+    if (bucketsError) {
+      console.error('❌ Error listing buckets:', bucketsError);
+    }
+
+    // Test 2: Check if locations bucket exists and is accessible
+    const { data: files, error: filesError } = await supabase.storage
+      .from('locations')
+      .list('', { limit: 5 });
+
+    if (filesError) {
+      console.error('❌ Error accessing locations bucket:', filesError);
+    } else {
+      console.log('✅ Locations bucket accessible, files found:', files?.length || 0);
+      console.log('📁 Sample files:', files?.slice(0, 3));
+    }
+
+    // Test 2.5: Try a simple upload test
+    try {
+      const testData = new TextEncoder().encode('test file content');
+      const testFileName = `test-${Date.now()}.txt`;
+
+      const { data: uploadTest, error: uploadError } = await supabase.storage
+        .from('locations')
+        .upload(testFileName, testData, {
+          contentType: 'text/plain',
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error('❌ Test upload failed:', uploadError);
+      } else {
+        console.log('✅ Test upload successful:', uploadTest);
+
+        // Clean up test file
+        await supabase.storage.from('locations').remove([testFileName]);
+      }
+    } catch (testError) {
+      console.error('❌ Test upload exception:', testError);
+    }
+
+    // Test 3: Test getting a public URL for a non-existent file
+    const { data: testUrl } = supabase.storage.from('locations').getPublicUrl('test-file.jpg');
+
+    console.log('🔗 Test public URL format:', testUrl.publicUrl);
+  } catch (error) {
+    console.error('🚨 Storage test failed:', error);
+  }
+}
+
+// Call this once to debug
+// testSupabaseStorageAccess();

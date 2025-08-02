@@ -23,7 +23,11 @@ export default function LocationItem({ location, onSelect = () => {} }: Location
           width={100}
           height={100}
           style={{ width: '100%', height: 220 }}
-          source={location.properties.photos[0]}
+          source={
+            location.properties.photos && location.properties.photos[0]
+              ? location.properties.photos[0]
+              : { uri: 'https://via.placeholder.com/220x220?text=No+Image' }
+          }
         />
       </Pressable>
       <ProfileDisplay />
@@ -34,8 +38,8 @@ export default function LocationItem({ location, onSelect = () => {} }: Location
         500m away
       </Text>
       <Box flexDirection={'row'} gap="sm" alignItems={'center'}>
-        {location.properties.depin_hardware.map(({ name, Icon }) => (
-          <Icon key={name + location.properties.name} width={25} height={25} />
+        {location.properties.depin_hardware.map(({ name, Icon }, index) => (
+          <Icon key={`${name}-${location.properties.name}-${index}`} width={25} height={25} />
         ))}
       </Box>
     </Box>

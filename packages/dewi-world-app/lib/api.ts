@@ -1,12 +1,10 @@
 import { getAuthHeaders, handleAuthError, requireAuth } from '@/lib/authHelpers';
-import { useAppStore } from '@/stores/useAppStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import {
   CreateLocationRequest,
   LocationPost,
   LocationQueryParams,
   LocationResponse,
-  mockLocationsAPI,
   UpdateLocationRequest,
 } from '@/utils/mockLocations';
 
@@ -129,21 +127,40 @@ class RealLocationsAPI {
       requireAuth();
 
       const headers = this.getAuthHeaders();
-      const response = await fetch(`${API_BASE_URL}/api/v1/locations/${id}`, {
+      console.log('🗑️ Deleting location:', id);
+      console.log('🔑 Auth headers:', headers);
+
+      const url = `${API_BASE_URL}/api/v1/locations/${id}`;
+      console.log('🌐 DELETE URL:', url);
+
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
+          // Don't set Content-Type for DELETE requests (no body)
           ...headers,
         },
       });
 
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response ok:', response.ok);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorBody = await response.text();
+        console.error('❌ Delete response error body:', errorBody);
+
+        // Check if it's a UUID validation error
+        if (errorBody.includes('must match format "uuid"')) {
+          throw new Error(`Invalid location ID format. Expected UUID but got: ${id}`);
+        }
+
+        throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('✅ Delete success:', result);
+      return result;
     } catch (error) {
-      console.error('Error deleting location:', error);
+      console.error('❌ Error deleting location:', error);
       handleAuthError(error);
       throw error;
     }
@@ -157,48 +174,33 @@ class RealLocationsAPI {
 // Create singleton instances
 const realAPI = new RealLocationsAPI();
 
-// Main API interface that switches between mock and real
+// Production-ready API interface - always uses real API
 export class LocationsAPI {
   async getLocations(params?: LocationQueryParams): Promise<LocationResponse> {
-    const { mockMode } = useAppStore.getState();
-
-    if (mockMode) {
-      return mockLocationsAPI.getLocations(params);
-    } else {
-      // Filter by current user for real API
-      const { user } = useAuthStore.getState();
-      const userParams = { ...params, owner_id: user?.id };
-      return realAPI.getLocations(userParams);
-    }
+    // Always use real API for production
+    const { user } = useAuthStore.getState();
+    const userParams = { ...params, owner_id: user?.id };
+    return realAPI.getLocations(userParams);
   }
 
   async getLocation(id: string): Promise<LocationResponse> {
-    const { mockMode } = useAppStore.getState();
-    return mockMode ? mockLocationsAPI.getLocation(id) : realAPI.getLocation(id);
+    return realAPI.getLocation(id);
   }
 
   async createLocation(locationData: CreateLocationRequest): Promise<LocationResponse> {
-    const { mockMode } = useAppStore.getState();
-    return mockMode
-      ? mockLocationsAPI.createLocation(locationData)
-      : realAPI.createLocation(locationData);
+    return realAPI.createLocation(locationData);
   }
 
   async updateLocation(id: string, updateData: UpdateLocationRequest): Promise<LocationResponse> {
-    const { mockMode } = useAppStore.getState();
-    return mockMode
-      ? mockLocationsAPI.updateLocation(id, updateData)
-      : realAPI.updateLocation(id, updateData);
+    return realAPI.updateLocation(id, updateData);
   }
 
   async deleteLocation(id: string): Promise<LocationResponse> {
-    const { mockMode } = useAppStore.getState();
-    return mockMode ? mockLocationsAPI.deleteLocation(id) : realAPI.deleteLocation(id);
+    return realAPI.deleteLocation(id);
   }
 
   get loading(): boolean {
-    const { mockMode } = useAppStore.getState();
-    return mockMode ? mockLocationsAPI.loading : realAPI.loading;
+    return realAPI.loading;
   }
 }
 

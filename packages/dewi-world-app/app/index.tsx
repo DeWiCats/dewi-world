@@ -1,25 +1,25 @@
 import { useAuthStore } from '@/stores/useAuthStore';
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect } from 'expo-router';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 export default function Index() {
-  const router = useRouter();
-
   /* -------------------------  AUTH LOGIC -------------------------- */
-  const { user, hydrated } = useAuthStore(s => ({
-    user: s.user,
-    hydrated: s.hydrated,
-  }));
-  // const segments = useSegments();
+  const user = useAuthStore(s => s.user);
+  const hydrated = useAuthStore(s => s.hydrated);
 
-  //   useEffect(() => {
-  //     router.replace('/(auth)/WelcomeScreen');
-  //   }, [router]);
+  // Wait for Zustand to re-hydrate storage before making routing decisions
+  if (!hydrated) {
+    return (
+      <View
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}
+      >
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text style={{ color: '#fff', marginTop: 12, fontSize: 16 }}>Loading...</Text>
+      </View>
+    );
+  }
 
-  //   // Wait for Zustand to re-hydrate storage
-  //   if (!hydrated) return null; // Could render a splash screen here
-
-  //   const inAuthGroup = segments[0] === '(auth)';
-
+  // Now we can safely check auth state after hydration
   if (user) {
     return <Redirect href="/(tabs)/world/WorldScreen" />;
   }

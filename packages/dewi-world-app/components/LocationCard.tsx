@@ -3,8 +3,15 @@ import Text from '@/components/ui/Text';
 import { useLocations } from '@/hooks/useLocations';
 import { LocationPost } from '@/lib/api';
 import { useAuthStore } from '@/stores/useAuthStore';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, Pressable } from 'react-native';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 // Import hardware icons
 import Icon5G from '@assets/svgs/5g-logo.svg';
@@ -19,6 +26,9 @@ interface LocationCardProps {
   location: LocationPost;
   onPress?: () => void;
   showDeleteButton?: boolean;
+  onDeleteStart?: (locationId: string) => void;
+  onDeleteComplete?: (locationId: string) => void;
+  onDeleteError?: (locationId: string, error: Error) => void;
 }
 
 export const hardwareIconMap = {
@@ -35,11 +45,30 @@ export default function LocationCard({
   location,
   onPress,
   showDeleteButton = true,
+  onDeleteStart,
+  onDeleteComplete,
+  onDeleteError,
 }: LocationCardProps) {
   const { user } = useAuthStore();
   const { deleteLocation } = useLocations();
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Animation values for premium UX
+  const opacity = useSharedValue(1);
+  const scale = useSharedValue(1);
+  const translateY = useSharedValue(0);
 
   const isOwner = user?.id === location.owner_id;
+
+  // Debug: Log image URL for troubleshooting
+  useEffect(() => {
+    if (location.gallery && location.gallery.length > 0) {
+      console.log('🖼️ LocationCard - Image URL:', location.gallery[0]);
+      console.log('🖼️ LocationCard - Full gallery:', location.gallery);
+    }
+  }, [location.gallery]);
 
   const renderHardwareIcons = () => {
     return location.deployable_hardware.slice(0, 5).map((hardware, index) => {
@@ -49,7 +78,7 @@ export default function LocationCard({
 
       return (
         <Box
-          key={hardware}
+          key={`${hardware}-${index}`}
           width={32}
           height={32}
           borderRadius="full"
@@ -90,121 +119,237 @@ export default function LocationCard({
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteLocation(location.id);
-              Alert.alert('Success', 'Location deleted successfully');
-            } catch (error) {
-              Alert.alert(
-                'Error',
-                error instanceof Error ? error.message : 'Failed to delete location'
-              );
-            }
-          },
+          onPress: () => performDelete(),
         },
       ]
     );
   };
 
+  const performDelete = async () => {
+    try {
+      setIsDeleting(true);
+
+      // Notify parent of optimistic delete start
+      onDeleteStart?.(location.id);
+
+      // Start elegant deletion animation
+      opacity.value = withTiming(0.5, { duration: 200 });
+      scale.value = withTiming(0.95, { duration: 200 });
+      translateY.value = withTiming(-10, { duration: 200 });
+
+      // Perform actual deletion
+      await deleteLocation(location.id);
+
+      // Complete deletion with smooth fade and slide
+      opacity.value = withTiming(0, { duration: 300 });
+      scale.value = withTiming(0.8, { duration: 300 });
+      translateY.value = withTiming(-50, { duration: 300 }, finished => {
+        if (finished && onDeleteComplete) {
+          runOnJS(onDeleteComplete)(location.id);
+        }
+      });
+    } catch (error) {
+      console.error('❌ Delete failed, reverting optimistic update:', error);
+
+      // Elegant bounce-back animation on error
+      opacity.value = withSequence(
+        withTiming(0.3, { duration: 100 }),
+        withTiming(1, { duration: 300 })
+      );
+      scale.value = withSequence(
+        withTiming(1.05, { duration: 100 }),
+        withTiming(1, { duration: 300 })
+      );
+      translateY.value = withSequence(
+        withTiming(5, { duration: 100 }),
+        withTiming(0, { duration: 300 })
+      );
+
+      setIsDeleting(false);
+      onDeleteError?.(location.id, error instanceof Error ? error : new Error('Delete failed'));
+
+      Alert.alert(
+        'Delete Failed',
+        error instanceof Error ? error.message : 'Failed to delete location',
+        [{ text: 'OK', style: 'default' }]
+      );
+    }
+  };
+
+  // Animated styles for premium deletion UX
+  const animatedCardStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }, { translateY: translateY.value }],
+  }));
+
   return (
-    <Box
-      backgroundColor="cardBackground"
-      borderRadius="xl"
-      marginBottom="4"
-      style={{
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 5,
-      }}
-    >
-      {/* Image with delete button overlay */}
-      <Box position="relative">
-        {location.gallery && location.gallery.length > 0 && (
-          <Image
-            source={{ uri: location.gallery[0] }}
-            style={{
-              width: '100%',
-              height: 200,
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
-            }}
-            resizeMode="cover"
-          />
-        )}
-
-        {/* Delete button for owned locations */}
-        {showDeleteButton && isOwner && (
-          <Box position="absolute" top={12} right={12}>
-            <Pressable onPress={handleDelete}>
-              <Box
-                width={32}
-                height={32}
-                borderRadius="full"
-                alignItems="center"
-                justifyContent="center"
+    <Animated.View style={[animatedCardStyle]}>
+      <Box
+        backgroundColor="cardBackground"
+        borderRadius="xl"
+        marginBottom="4"
+        style={{
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 5,
+        }}
+      >
+        {/* Image with delete button overlay */}
+        <Box position="relative">
+          {location.gallery && location.gallery.length > 0 && !imageError ? (
+            <Box position="relative">
+              <Image
+                source={{ uri: location.gallery[0] }}
                 style={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.9)',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 4,
-                  elevation: 4,
+                  width: '100%',
+                  height: 200,
+                  borderTopLeftRadius: 16,
+                  borderTopRightRadius: 16,
                 }}
-              >
-                <Text variant="textMdBold" color="primaryBackground">
-                  ×
-                </Text>
-              </Box>
-            </Pressable>
-          </Box>
-        )}
-      </Box>
+                resizeMode="cover"
+                onLoad={() => setImageLoading(false)}
+                onError={() => {
+                  setImageError(true);
+                  setImageLoading(false);
+                }}
+              />
 
-      {/* Content */}
-      <Pressable onPress={onPress}>
-        <Box padding="4">
-          {/* Address */}
-          <Text variant="textMdRegular" color="secondaryText" marginBottom="2" numberOfLines={2}>
-            {location.address}
-          </Text>
-
-          {/* Distance */}
-          <Text variant="textSmRegular" color="blue.500" marginBottom="3">
-            {formatDistance(location.distance)}
-          </Text>
-
-          {/* Hardware Icons Row */}
-          <Box flexDirection="row" alignItems="center" justifyContent="space-between">
-            <Box flexDirection="row" alignItems="center">
-              {renderHardwareIcons()}
-              {location.deployable_hardware.length > 5 && (
+              {/* Loading overlay */}
+              {imageLoading && (
                 <Box
-                  width={32}
-                  height={32}
-                  borderRadius="full"
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  right={0}
+                  bottom={0}
                   backgroundColor="inputBackground"
                   alignItems="center"
                   justifyContent="center"
-                  marginLeft="-2"
+                  style={{
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                  }}
                 >
-                  <Text variant="textXsRegular" color="secondaryText">
-                    +{location.deployable_hardware.length - 5}
+                  <Text variant="textSmRegular" color="secondaryText">
+                    Loading...
                   </Text>
                 </Box>
               )}
             </Box>
-
-            {/* Navigation Arrow */}
-            <Box width={24} height={24} alignItems="center" justifyContent="center">
-              <Text variant="textMdRegular" color="secondaryText">
-                →
+          ) : (
+            // Fallback when no image or image failed to load
+            <Box
+              width="100%"
+              height={200}
+              backgroundColor="inputBackground"
+              alignItems="center"
+              justifyContent="center"
+              style={{
+                borderTopLeftRadius: 16,
+                borderTopRightRadius: 16,
+              }}
+            >
+              <Text variant="textLgRegular" color="secondaryText" marginBottom="2">
+                📍
+              </Text>
+              <Text variant="textSmRegular" color="secondaryText">
+                {imageError ? 'Image failed to load' : 'No image available'}
               </Text>
             </Box>
-          </Box>
+          )}
+
+          {/* Premium Delete button with states */}
+          {showDeleteButton && isOwner && (
+            <Box position="absolute" top={12} right={12}>
+              <Pressable onPress={handleDelete} disabled={isDeleting}>
+                <Box
+                  width={32}
+                  height={32}
+                  borderRadius="full"
+                  alignItems="center"
+                  justifyContent="center"
+                  style={{
+                    backgroundColor: isDeleting
+                      ? 'rgba(239, 68, 68, 0.5)'
+                      : 'rgba(239, 68, 68, 0.9)',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    elevation: 4,
+                  }}
+                >
+                  <Text variant="textMdBold" color="primaryBackground">
+                    {isDeleting ? '⏳' : '×'}
+                  </Text>
+                </Box>
+              </Pressable>
+            </Box>
+          )}
         </Box>
-      </Pressable>
-    </Box>
+
+        {/* Content */}
+        <Pressable onPress={onPress} disabled={isDeleting}>
+          <Box padding="4" style={{ opacity: isDeleting ? 0.7 : 1 }}>
+            {/* Title */}
+            <Text variant="textLgBold" color="primaryText" marginBottom="1" numberOfLines={1}>
+              {location.title}
+            </Text>
+
+            {/* Address */}
+            <Text variant="textMdRegular" color="secondaryText" marginBottom="2" numberOfLines={2}>
+              {location.address}
+            </Text>
+
+            {/* Price and Distance Row */}
+            <Box
+              flexDirection="row"
+              alignItems="center"
+              justifyContent="space-between"
+              marginBottom="3"
+            >
+              <Text variant="textLgBold" color="blue.500">
+                ${location.price}
+                {location.is_negotiable ? '/mo' : '/mo (fixed)'}
+              </Text>
+              <Text variant="textSmRegular" color="secondaryText">
+                {formatDistance(location.distance)}
+              </Text>
+            </Box>
+
+            {/* Hardware Icons Row */}
+            <Box flexDirection="row" alignItems="center" justifyContent="space-between">
+              <Box flexDirection="row" alignItems="center">
+                {renderHardwareIcons()}
+                {location.deployable_hardware.length > 5 && (
+                  <Box
+                    width={32}
+                    height={32}
+                    borderRadius="full"
+                    backgroundColor="inputBackground"
+                    alignItems="center"
+                    justifyContent="center"
+                    marginLeft="-2"
+                  >
+                    <Text variant="textXsRegular" color="secondaryText">
+                      +{location.deployable_hardware.length - 5}
+                    </Text>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Navigation Arrow */}
+              <Box width={24} height={24} alignItems="center" justifyContent="center">
+                <Text variant="textMdRegular" color="secondaryText">
+                  →
+                </Text>
+              </Box>
+            </Box>
+          </Box>
+        </Pressable>
+      </Box>
+    </Animated.View>
   );
 }
