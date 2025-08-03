@@ -3,18 +3,21 @@ import LeftArrow from '@/assets/svgs/leftArrow.svg';
 import { Theme } from '@/constants/theme';
 import { BoxProps } from '@shopify/restyle';
 import React from 'react';
+import { StyleProp, ViewStyle } from 'react-native';
 import { ReAnimatedBox } from './ui/Box';
 import TouchableContainer from './ui/TouchableContainer';
 
 type LocationsHeaderProps = BoxProps<Theme> & {
   onExit: () => void;
   onLike: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
-export default function LocationsHeader({ onExit, onLike, ...rest }: LocationsHeaderProps) {
+export default function LocationsHeader({ onExit, onLike, style, ...rest }: LocationsHeaderProps) {
   return (
     <ReAnimatedBox
       {...rest}
+      style={style}
       flex={1}
       zIndex={1}
       width={'100%'}

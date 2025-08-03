@@ -9,7 +9,7 @@ interface LocationDetailProps {
 
 export default function LocationDetail({ location }: LocationDetailProps) {
   return (
-    <Box padding={'3xl'} gap="3xl">
+    <Box padding={'3xl'} gap="3xl" width="100%">
       <Box gap="md">
         <ProfileDisplay />
         <Text variant="textXsLight" color="gray.400">

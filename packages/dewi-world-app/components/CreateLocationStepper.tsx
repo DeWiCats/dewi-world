@@ -255,6 +255,7 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
         return (
           <LocationStep
             onPlaceSelected={place => {
+              console.log('selected place', place);
               setFormData(prev => ({
                 ...prev,
                 formatted_address: place.description,

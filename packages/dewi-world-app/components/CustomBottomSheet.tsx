@@ -10,7 +10,7 @@ import { PropsWithChildren, RefObject } from 'react';
 type CustomBottomSheetProps = PropsWithChildren<{
   ref?: RefObject<BottomSheetMethods | null>;
   sheetProps?: Omit<BottomSheetProps, 'children'>;
-  sheetViewProps?: BottomSheetViewProps;
+  sheetViewProps?: Omit<BottomSheetViewProps, 'children'>;
 }>;
 
 export default function CustomBottomSheet({

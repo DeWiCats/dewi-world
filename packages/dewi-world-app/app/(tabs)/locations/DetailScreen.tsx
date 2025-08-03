@@ -10,6 +10,7 @@ import { wh, ww } from '@/utils/layout';
 import { LocationPost } from '@/utils/mockLocations';
 import { useNavigation } from 'expo-router';
 import { useMemo } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DetailScreenProps {
   location: LocationPost;
@@ -18,9 +19,10 @@ interface DetailScreenProps {
 
 export default function DetailScreen({ location, onExit }: DetailScreenProps) {
   const nav = useNavigation<ServiceSheetStackNavigationProp>();
+  const { top } = useSafeAreaInsets();
 
   const messageOwnerHandler = () => {
-    onExit()
+    onExit();
     nav.navigate('ChatTab');
   };
 
@@ -48,9 +50,9 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
 
   return (
     <>
-      <LocationsHeader onExit={onExit} onLike={() => {}} />
+      <LocationsHeader paddingTop="7xl" onExit={onExit} onLike={() => {}} />
       <ImageSlide imageSize={ww} srcURIs={location.gallery} />
-      <CustomBottomSheet sheetProps={{ snapPoints: [wh - (ww + 90), wh - 110] }}>
+      <CustomBottomSheet sheetProps={{ snapPoints: [wh - ww + 20, wh - 110] }}>
         <LocationDetail location={feature} />
       </CustomBottomSheet>
       <PriceAndMessageBox price={location.price} onMessageOwner={messageOwnerHandler} />
