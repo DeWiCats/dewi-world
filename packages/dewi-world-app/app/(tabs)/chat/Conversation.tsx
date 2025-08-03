@@ -1,11 +1,15 @@
+import LeftArrow from '@/assets/svgs/leftArrow.svg';
 import CircleLoader from '@/components/CircleLoader';
 import Box from '@/components/ui/Box';
+import ImageBox from '@/components/ui/ImageBox';
 import Text from '@/components/ui/Text';
+import TouchableContainer from '@/components/ui/TouchableContainer';
 import { useMessages, useTypingIndicator } from '@/hooks/useMessages';
 import { Message } from '@/lib/messagingAPI';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -16,6 +20,8 @@ import {
   TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TabsContext } from '../context';
+import { ChatStackParamList } from './ChatNavigator';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -55,7 +61,7 @@ function MessageBubble({
       {/* Message bubble */}
       <Box alignItems={isOwn ? 'flex-end' : 'flex-start'} paddingHorizontal="4">
         <Box
-          backgroundColor={isOwn ? 'primaryBackground' : 'cardBackground'}
+          backgroundColor={isOwn ? 'base.white' : 'primaryBackground'}
           borderRadius="lg"
           paddingHorizontal="4"
           paddingVertical="3"
@@ -69,7 +75,7 @@ function MessageBubble({
         >
           <Text
             variant="textMdRegular"
-            color={isOwn ? 'primaryText' : 'primaryBackground'}
+            color={isOwn ? 'base.black' : 'text.white'}
             style={{ lineHeight: 20 }}
           >
             {message.message}
@@ -107,15 +113,28 @@ function TypingIndicator({ typingUsers }: { typingUsers: string[] }) {
   );
 }
 
+export type Route = RouteProp<ChatStackParamList, 'Conversation'>;
+
 export default function ChatDetailScreen() {
   const router = useRouter();
-  const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
+  const route = useRoute<Route>();
+  const { conversationId } = route.params;
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
 
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const context = useContext(TabsContext);
+
+  useEffect(() => {
+    context.hideHeader();
+    context.hideTabBar();
+    return () => {
+      context.showHeader();
+      context.showTabBar();
+    };
+  }, []);
 
   const {
     messages,
@@ -159,9 +178,11 @@ export default function ChatDetailScreen() {
     try {
       // Find the other user in the conversation (we need this for the API)
       const otherUserId = 'other-user-id'; // This should come from conversation data
+      const senderId = user?.email as string;
 
       await sendMessage({
         receiver_id: otherUserId,
+        sender_id: senderId,
         message: messageText,
       });
     } catch (error) {
@@ -185,7 +206,9 @@ export default function ChatDetailScreen() {
   };
 
   const renderMessage = ({ item: message, index }: { item: Message; index: number }) => {
-    const isOwn = message.sender_id === user?.id;
+    console.log('message', message);
+    const isOwn = message.sender_id === user?.email;
+    console.log('isOwn', isOwn);
 
     // Show timestamp if it's the first message or if there's a significant time gap
     const previousMessage = index < messages.length - 1 ? messages[index + 1] : null;
@@ -216,7 +239,7 @@ export default function ChatDetailScreen() {
 
   if (!conversationId) {
     return (
-      <Box flex={1} backgroundColor="primaryBackground" alignItems="center" justifyContent="center">
+      <Box flex={1} backgroundColor="base.black" alignItems="center" justifyContent="center">
         <Text variant="textLgBold" color="primaryText">
           Invalid conversation
         </Text>
@@ -226,7 +249,7 @@ export default function ChatDetailScreen() {
 
   if (loading) {
     return (
-      <Box flex={1} backgroundColor="primaryBackground" alignItems="center" justifyContent="center">
+      <Box flex={1} backgroundColor="base.black" alignItems="center" justifyContent="center">
         <CircleLoader />
         <Text variant="textMdRegular" color="secondaryText" marginTop="4">
           Loading messages...
@@ -237,7 +260,7 @@ export default function ChatDetailScreen() {
 
   if (error) {
     return (
-      <Box flex={1} backgroundColor="primaryBackground" alignItems="center" justifyContent="center">
+      <Box flex={1} backgroundColor="base.black" alignItems="center" justifyContent="center">
         <Text variant="textLgBold" style={{ color: '#ef4444' }} textAlign="center" marginBottom="4">
           Error loading messages
         </Text>
@@ -262,7 +285,7 @@ export default function ChatDetailScreen() {
   }
 
   return (
-    <Box flex={1} backgroundColor="primaryBackground">
+    <Box flex={1} backgroundColor="base.black">
       <KeyboardAvoidingView flex={1} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         {/* Header */}
         <Box
@@ -281,37 +304,37 @@ export default function ChatDetailScreen() {
           }}
         >
           {/* Back button */}
-          <Pressable
+          <TouchableContainer
             onPress={() => router.back()}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: '#ffffff',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 16,
+            justifyContent={'center'}
+            alignItems={'center'}
+            padding={'4'}
+            borderRadius={'full'}
+            width={48}
+            height={48}
+            defaultBackground={'base.black'}
+            pressedBackgroundColor={'gray.900'}
+            pressableStyles={{
+              flex: undefined,
             }}
+            shadowColor={'base.black'}
+            shadowOffset={{ width: 0, height: 2 }}
+            shadowOpacity={0.25}
+            shadowRadius={3.84}
+            elevation={5}
           >
-            <Text variant="textLgBold" color="primaryText">
-              ←
-            </Text>
-          </Pressable>
+            <LeftArrow width={20} height={20} />
+          </TouchableContainer>
 
           {/* Profile info */}
           <Box flex={1} flexDirection="row" alignItems="center">
-            <Box
-              style={{ width: 40, height: 40 }}
-              borderRadius="full"
-              backgroundColor="blue.500"
-              alignItems="center"
-              justifyContent="center"
+            <ImageBox
+              source={require('@assets/images/profile-pic.png')}
+              width={40}
+              height={40}
+              borderRadius={'full'}
               marginRight="3"
-            >
-              <Text variant="textMdBold" color="primaryBackground">
-                P
-              </Text>
-            </Box>
+            />
             <Box>
               <Text variant="textMdBold" color="primaryBackground">
                 Peroni Alt

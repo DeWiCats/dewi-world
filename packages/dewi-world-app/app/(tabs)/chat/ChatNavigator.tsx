@@ -1,30 +1,28 @@
-import {
-  createNativeStackNavigator,
-  NativeStackNavigationProp,
-} from '@react-navigation/native-stack';
+import { darkTheme } from '@/constants/theme';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ThemeProvider } from '@shopify/restyle';
+import { Stack } from 'expo-router';
 import React from 'react';
-import ChatDetailScreen from './[conversationId]';
-import ChatListScreen from './index';
 
 export type ChatStackParamList = {
   ChatList: undefined;
-  ChatDetail: undefined;
+  Conversation: { conversationId: string };
 };
 
 export type ChatStackNavigationProp = NativeStackNavigationProp<ChatStackParamList>;
 
-const Stack = createNativeStackNavigator();
-
 export default function ChatNavigator() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-        // cardStyle: { backgroundColor: '#000000' },
-      }}
-    >
-      <Stack.Screen name="ChatList" component={ChatListScreen} />
-      <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
-    </Stack.Navigator>
+    <ThemeProvider theme={darkTheme}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          // cardStyle: { backgroundColor: '#000000' },
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="Conversation" />
+      </Stack>
+    </ThemeProvider>
   );
 }

@@ -6,10 +6,11 @@ import { useConversations } from '@/hooks/useMessages';
 import { Conversation } from '@/lib/messagingAPI';
 import { useAppStore } from '@/stores/useAppStore';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ChatStackNavigationProp } from './ChatNavigator';
 
 // Simple date formatting without external dependencies
 const formatTimeAgo = (timestamp: string) => {
@@ -106,6 +107,7 @@ function ConversationCard({
 }
 
 export default function ChatListScreen() {
+  const nav = useNavigation<ChatStackNavigationProp>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,7 +145,8 @@ export default function ChatListScreen() {
   });
 
   const handleConversationPress = (conversation: Conversation) => {
-    router.push(`/(tabs)/chat/${conversation.id}` as any);
+    //TODO fix 
+    nav.push('chat/Conversation' as any, { conversationId: conversation.id });
   };
 
   const toggleMockMode = () => {

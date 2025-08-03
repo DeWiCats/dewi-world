@@ -1,15 +1,14 @@
-import ButtonPressable from '@/components/ButtonPressable';
 import CustomBottomSheet from '@/components/CustomBottomSheet';
 import ImageSlide from '@/components/ImageSlide';
 import { hardwareIconMap } from '@/components/LocationCard';
 import LocationDetail from '@/components/LocationDetail';
 import LocationsHeader from '@/components/LocationsHeader';
-import Box from '@/components/ui/Box';
-import Text from '@/components/ui/Text';
+import PriceAndMessageBox from '@/components/PriceAndMessageBox';
+import { ServiceSheetStackNavigationProp } from '@/components/ServiceSheetLayout';
 import { GeoJSONFeature } from '@/geojson';
 import { wh, ww } from '@/utils/layout';
 import { LocationPost } from '@/utils/mockLocations';
-import { Link } from 'expo-router';
+import { useNavigation } from 'expo-router';
 import { useMemo } from 'react';
 
 interface DetailScreenProps {
@@ -18,6 +17,13 @@ interface DetailScreenProps {
 }
 
 export default function DetailScreen({ location, onExit }: DetailScreenProps) {
+  const nav = useNavigation<ServiceSheetStackNavigationProp>();
+
+  const messageOwnerHandler = () => {
+    onExit()
+    nav.navigate('ChatTab');
+  };
+
   const mapLocationToFeature = (location: LocationPost) => {
     const feature: GeoJSONFeature = {
       type: 'Feature',
@@ -47,34 +53,7 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
       <CustomBottomSheet sheetProps={{ snapPoints: [wh - (ww + 90), wh - 110] }}>
         <LocationDetail location={feature} />
       </CustomBottomSheet>
-      <Box
-        backgroundColor={'primaryBackground'}
-        borderTopWidth={1}
-        borderTopColor={'gray.700'}
-        paddingHorizontal="3xl"
-        paddingVertical="5xl"
-        flexDirection="row"
-        width="100%"
-        justifyContent={'space-between'}
-        alignItems={'center'}
-      >
-        <Text variant="textXlBold" color="text.white">
-          $ {location.price}
-        </Text>
-        <Link
-          href={{
-            pathname: '/(tabs)/chat',
-          }}
-        >
-          <ButtonPressable
-            fontSize={16}
-            innerContainerProps={{ padding: 'xl' }}
-            title="Message Owner"
-            backgroundColor={'pink.500'}
-            backgroundColorPressed="pink.400"
-          />
-        </Link>
-      </Box>
+      <PriceAndMessageBox price={location.price} onMessageOwner={messageOwnerHandler} />
     </>
   );
 }
