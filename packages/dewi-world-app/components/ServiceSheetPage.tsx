@@ -89,7 +89,14 @@ function CustomTabBar({
   }
 
   return (
-    <Box backgroundColor="transparent" position="absolute" bottom={0} left={0} right={0}>
+    <Box
+      backgroundColor="primaryBackground"
+      position="absolute"
+      bottom={0}
+      left={0}
+      right={0}
+      paddingTop="2"
+    >
       <Box
         style={{
           marginBottom: bottom,

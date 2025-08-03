@@ -1,25 +1,26 @@
-import { TouchableOpacityBoxProps } from "@/components/TouchableOpacityBox";
-import { useVerticalHitSlop } from "@/hooks/theme";
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import { Insets, LayoutChangeEvent, LayoutRectangle } from "react-native";
-import { useSharedValue, withSpring } from "react-native-reanimated";
-import { SvgProps } from "react-native-svg";
-import NavBarItem from "./NavBarItem";
-import Box from "./ui/Box";
+import { TouchableOpacityBoxProps } from '@/components/TouchableOpacityBox';
+import { useVerticalHitSlop } from '@/hooks/theme';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Insets, LayoutChangeEvent, LayoutRectangle } from 'react-native';
+import { useSharedValue, withSpring } from 'react-native-reanimated';
+import { SvgProps } from 'react-native-svg';
+import NavBarItem from './NavBarItem';
+import PostLocationButton from './PostLocationButton';
+import Box from './ui/Box';
 
 export type ServiceNavBarOption = {
-  value: string
-  Icon: FC<SvgProps>
-  iconProps?: SvgProps
-}
+  value: string;
+  Icon: FC<SvgProps>;
+  iconProps?: SvgProps;
+};
 
 type NavServiceBarProps = {
-  navBarOptions: Array<ServiceNavBarOption>
-  selectedValue: string
-  onItemSelected: (value: string) => void
-  onItemLongPress: (value: string) => void
-  hitSlop?: Insets
-} & TouchableOpacityBoxProps
+  navBarOptions: Array<ServiceNavBarOption>;
+  selectedValue: string;
+  onItemSelected: (value: string) => void;
+  onItemLongPress: (value: string) => void;
+  hitSlop?: Insets;
+} & TouchableOpacityBoxProps;
 
 export default function ServiceNavBar({
   navBarOptions,
@@ -27,49 +28,49 @@ export default function ServiceNavBar({
   onItemSelected,
   onItemLongPress,
   ...containerProps
-}: NavServiceBarProps)  {
-  const hitSlop = useVerticalHitSlop('6')
-  const [itemRects, setItemRects] = useState<Record<string, LayoutRectangle>>()
+}: NavServiceBarProps) {
+  const hitSlop = useVerticalHitSlop('6');
+  const [itemRects, setItemRects] = useState<Record<string, LayoutRectangle>>();
 
-  const offset = useSharedValue<number | null>(null)
+  const offset = useSharedValue<number | null>(null);
 
   const handleLayout = useCallback(
     (value: string) => (e: LayoutChangeEvent) => {
-      e.persist()
+      e.persist();
 
-      setItemRects((x) => ({ ...x, [value]: e.nativeEvent.layout }))
+      setItemRects(x => ({ ...x, [value]: e.nativeEvent.layout }));
     },
-    [],
-  )
+    []
+  );
 
   const handlePress = useCallback(
     (value: string) => () => {
-      onItemSelected(value)
+      onItemSelected(value);
     },
-    [onItemSelected],
-  )
+    [onItemSelected]
+  );
 
   const handleLongPress = useCallback(
     (value: string) => () => {
-      onItemLongPress(value)
+      onItemLongPress(value);
     },
-    [onItemLongPress],
-  )
+    [onItemLongPress]
+  );
 
   useEffect(() => {
-    const nextOffset = itemRects?.[selectedValue]?.x || 0
+    const nextOffset = itemRects?.[selectedValue]?.x || 0;
 
     if (offset.value === null) {
       // Don't animate on first position update
-      offset.value = nextOffset
-      return
+      offset.value = nextOffset;
+      return;
     }
 
-    offset.value = withSpring(nextOffset, { mass: 0.5 })
-  }, [itemRects, offset, selectedValue])
+    offset.value = withSpring(nextOffset, { mass: 0.5 });
+  }, [itemRects, offset, selectedValue]);
 
   const items = useMemo(() => {
-    return navBarOptions.map((o) => (
+    return navBarOptions.map(o => (
       <NavBarItem
         key={o.value}
         {...o}
@@ -79,38 +80,16 @@ export default function ServiceNavBar({
         onLongPress={handleLongPress(o.value)}
         hitSlop={hitSlop}
       />
-    ))
-  }, [
-    handleLayout,
-    handleLongPress,
-    handlePress,
-    hitSlop,
-    navBarOptions,
-    selectedValue,
-  ])
+    ));
+  }, [handleLayout, handleLongPress, handlePress, hitSlop, navBarOptions, selectedValue]);
 
   return (
-    <Box
-      {...containerProps}
-      paddingHorizontal="2xl"
-      flexDirection="row"
-      flex={1}
-      shadowColor="base.black"
-      shadowOpacity={0.3}
-      shadowOffset={{ width: 0, height: 6 }}
-      shadowRadius={6}
-    >
-      <Box
-        flexDirection="row"
-        justifyContent="space-between"
-        backgroundColor="base.black"
-        borderRadius="full"
-        padding="md"
-        flex={1}
-        gap="2"
-      >
-        {items}
+    <Box {...containerProps} paddingHorizontal="2xl" flexDirection="row" flex={1}>
+      <Box flexDirection="row" justifyContent="space-between" flex={1} gap="2">
+        {items.slice(0, 2)}
+        <PostLocationButton />
+        {items.slice(2, 4)}
       </Box>
     </Box>
-  )
+  );
 }

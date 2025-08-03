@@ -6,11 +6,9 @@ import Text from '@/components/ui/Text';
 import { useLocations } from '@/hooks/useLocations';
 import { LocationPost } from '@/lib/api';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useStepperStore } from '@/stores/useStepperStore';
-import AddIcon from '@assets/svgs/add.svg';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { Alert, FlatList, Pressable, TextInput } from 'react-native';
+import { FlatList, Pressable, TextInput } from 'react-native';
 import { TabsContext } from '../context';
 import DetailScreen from './DetailScreen';
 import { LocationsStackNavigationProp } from './LocationsNavigator';
@@ -23,8 +21,6 @@ export default function LocationsScreen() {
   const { locations, loading, error, refreshLocations } = useLocations();
   const [selectedLocation, setSelectedLocation] = useState<null | LocationPost>();
   const router = useRouter();
-
-  const { showStepper, hideStepper } = useStepperStore();
 
   // Memoized callbacks for delete operations to prevent Reanimated crashes
   const handleDeleteStart = useCallback((locationId: string) => {
@@ -70,17 +66,6 @@ export default function LocationsScreen() {
     setSelectedLocation(null);
   };
 
-  const handleCreateLocation = () => {
-    if (!user) {
-      Alert.alert('Sign In Required', 'Please sign in to create a location.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign In', onPress: () => router.push('/(auth)/WelcomeScreen' as any) },
-      ]);
-      return;
-    }
-    showStepper();
-  };
-
   const handleLocationPress = (location: LocationPost) => {
     // Handle location press (navigate to detail or messaging)
     console.log('Location pressed:', location.title);
@@ -104,25 +89,6 @@ export default function LocationsScreen() {
               : 'Loading...'}
           </Text>
         </Box>
-        <Pressable onPress={handleCreateLocation}>
-          <Box
-            width={44}
-            height={44}
-            borderRadius="full"
-            backgroundColor="blue.500"
-            alignItems="center"
-            justifyContent="center"
-            style={{
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 4,
-            }}
-          >
-            <AddIcon width={24} height={24} color="white" />
-          </Box>
-        </Pressable>
       </Box>
 
       <Box
@@ -190,19 +156,6 @@ export default function LocationsScreen() {
           <Text variant="textMdRegular" color="secondaryText" textAlign="center" marginBottom="6">
             Create your first location to get started
           </Text>
-          <Pressable
-            onPress={handleCreateLocation}
-            style={{
-              backgroundColor: '#3b82f6',
-              paddingHorizontal: 24,
-              paddingVertical: 12,
-              borderRadius: 12,
-            }}
-          >
-            <Text variant="textMdBold" color="primaryBackground">
-              Create Location
-            </Text>
-          </Pressable>
         </>
       )}
     </Box>

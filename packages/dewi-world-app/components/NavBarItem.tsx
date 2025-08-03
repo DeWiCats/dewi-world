@@ -1,10 +1,10 @@
-import TouchableOpacityBox from "@/components/TouchableOpacityBox";
-import Box from "@/components/ui/Box";
-import { useColors } from "@/hooks/theme";
-import { FC } from "react";
-import { Animated, Insets, LayoutChangeEvent } from "react-native";
-import { useAnimatedStyle } from "react-native-reanimated";
-import { SvgProps } from "react-native-svg";
+import Box from '@/components/ui/Box';
+import { useColors } from '@/hooks/theme';
+import { FC } from 'react';
+import { Animated, Insets, LayoutChangeEvent } from 'react-native';
+import { useAnimatedStyle } from 'react-native-reanimated';
+import { SvgProps } from 'react-native-svg';
+import TouchableContainer from './ui/TouchableContainer';
 
 export type NavBarOption = {
   value: string;
@@ -16,7 +16,6 @@ export default function NavBarItem({
   selected,
   onLayout,
   onPress,
-  onLongPress,
   hitSlop,
   Icon,
   value,
@@ -42,33 +41,38 @@ export default function NavBarItem({
   });
 
   return (
-    <TouchableOpacityBox
-      accessibilityRole="button"
-      accessibilityState={selected ? { selected: true } : {}}
-      accessibilityLabel={value}
-      onLongPress={onLongPress}
+    <TouchableContainer
       key={value}
       onPress={onPress}
       onLayout={onLayout}
       marginRight="0"
       hitSlop={hitSlop}
-      alignItems="center"
-      flexGrow={1}
-      flex={1}
+      defaultBackground={'base.black'}
+      pressedBackgroundColor="gray.900"
+      borderColor={'gray.800'}
+      borderWidth={1}
+      height={50}
+      width={50}
+      justifyContent={'center'}
+      alignItems={'center'}
+      borderRadius={'full'}
+      shadowColor="base.black"
+      shadowOpacity={0.3}
+      shadowOffset={{ width: 0, height: 6 }}
+      shadowRadius={6}
+      pressableStyles={{
+        flex: undefined,
+      }}
     >
       <Animated.View style={animatedStyles}></Animated.View>
       <Box
         justifyContent="center"
         alignItems="center"
-        borderRadius={selected ? "full" : "none"}
+        borderRadius={selected ? 'full' : 'none'}
         padding="2"
-        backgroundColor={selected ? "pink.500" : "transparent"}
+        backgroundColor={selected ? 'pink.500' : 'transparent'}
       >
-        <Icon
-          height={25}
-          width={25}
-          color={selected ? colors["base.white"] : colors["gray.600"]}
-        />
+        <Icon height={20} width={20} color={selected ? colors['base.white'] : colors['gray.600']} />
         {hasBadge && (
           <Box
             position="absolute"
@@ -76,13 +80,13 @@ export default function NavBarItem({
             alignItems="center"
             top={6}
             right={2}
-            backgroundColor={selected ? "primaryText" : "primaryBackground"}
+            backgroundColor={selected ? 'primaryText' : 'primaryBackground'}
             borderRadius="full"
             height={10}
             width={10}
           >
             <Box
-              backgroundColor={selected ? "primaryBackground" : "green.500"}
+              backgroundColor={selected ? 'primaryBackground' : 'green.500'}
               borderRadius="full"
               height={6}
               width={6}
@@ -90,6 +94,6 @@ export default function NavBarItem({
           </Box>
         )}
       </Box>
-    </TouchableOpacityBox>
+    </TouchableContainer>
   );
 }

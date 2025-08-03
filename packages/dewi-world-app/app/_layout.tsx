@@ -1,6 +1,8 @@
 import CreateLocationStepper from '@/components/CreateLocationStepper';
+import SettingsBottomSheet from '@/components/SettingsBottomSheet';
 import { darkTheme } from '@/constants/theme';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useStepperStore } from '@/stores/useStepperStore';
 import { PortalProvider } from '@gorhom/portal';
 import { ThemeProvider } from '@shopify/restyle';
@@ -16,6 +18,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 export default function RootLayout() {
   const { hydrated, user, session } = useAuthStore();
   const { isVisible, hideStepper } = useStepperStore();
+  const { isVisible: isSettingsVisible, hideSettings } = useSettingsStore();
 
   /* -------------------------  THEME CONFIG ------------------------- */
   if (Platform.OS === 'android') {
@@ -65,8 +68,8 @@ export default function RootLayout() {
   /* -------------------------  RENDER ------------------------------ */
   return (
     <ThemeProvider theme={darkTheme}>
-      <PortalProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <PortalProvider>
           <SafeAreaProvider>
             <StatusBar barStyle="dark-content" />
             <Slot />
@@ -78,9 +81,17 @@ export default function RootLayout() {
                 hideStepper();
               }}
             />
+
+            {/* Global Settings Bottom Sheet */}
+            <SettingsBottomSheet
+              visible={isSettingsVisible}
+              onClose={() => {
+                hideSettings();
+              }}
+            />
           </SafeAreaProvider>
-        </GestureHandlerRootView>
-      </PortalProvider>
+        </PortalProvider>
+      </GestureHandlerRootView>
     </ThemeProvider>
   );
 }

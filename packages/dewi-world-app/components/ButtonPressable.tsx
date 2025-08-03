@@ -172,7 +172,7 @@ const ButtonPressable = ({
               <Text
                 variant="textXlSemibold"
                 fontSize={fontSize || 19}
-                fontWeight={fontWeight}
+                fontWeight={600}
                 style={titleColorStyle as any}
                 marginHorizontal="xs"
               >

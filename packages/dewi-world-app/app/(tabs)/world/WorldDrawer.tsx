@@ -4,11 +4,13 @@ import LocationDetail from '@/components/LocationDetail';
 import LocationsList from '@/components/LocationsList';
 import { ReAnimatedBox } from '@/components/ui/Box';
 import { GeoJSONFeature } from '@/geojson';
+import { useSpacing } from '@/hooks/theme';
 import { ww } from '@/utils/layout';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, StyleProp, ViewStyle } from 'react-native';
 import { AnimatedStyle } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type WorldDrawerProps = {
   locations: GeoJSONFeature[];
@@ -27,6 +29,8 @@ export default function WorldDrawer({
 }: WorldDrawerProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [panningEnabled, setPanningEnabled] = useState(false);
+  const { bottom } = useSafeAreaInsets();
+  const spacing = useSpacing();
 
   useEffect(() => {
     Keyboard.addListener('keyboardDidShow', () => {
@@ -63,7 +67,13 @@ export default function WorldDrawer({
         )}
       </ReAnimatedBox>
       <CustomBottomSheet
-        sheetProps={{ onAnimate: animateHandler, enableHandlePanningGesture: panningEnabled }}
+        sheetProps={{
+          onAnimate: animateHandler,
+          enableHandlePanningGesture: panningEnabled,
+          containerStyle: {
+            marginBottom: bottom,
+          },
+        }}
         ref={bottomSheetRef}
       >
         <ReAnimatedBox style={style} alignItems={'center'} flex={1} width={'100%'} height="100%">

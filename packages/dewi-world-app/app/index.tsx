@@ -1,6 +1,7 @@
+import Box from '@/components/ui/Box';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Redirect } from 'expo-router';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Text } from 'react-native';
 
 export default function Index() {
   /* -------------------------  AUTH LOGIC -------------------------- */
@@ -10,12 +11,15 @@ export default function Index() {
   // Wait for Zustand to re-hydrate storage before making routing decisions
   if (!hydrated) {
     return (
-      <View
-        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}
+      <Box
+        backgroundColor={'primaryBackground'}
+        flex={1}
+        justifyContent={'center'}
+        alignItems={'center'}
       >
         <ActivityIndicator size="large" color="#3B82F6" />
         <Text style={{ color: '#fff', marginTop: 12, fontSize: 16 }}>Loading...</Text>
-      </View>
+      </Box>
     );
   }
 

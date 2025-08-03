@@ -1,13 +1,13 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import WorldScreen from './WorldScreen';
+import ShoppingScreen from './ShoppingScreen';
 
 const Stack = createNativeStackNavigator();
 
-export default function WorldNavigator() {
+export default function RewardsNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="World" component={WorldScreen} />
+      <Stack.Screen name="Shopping" component={ShoppingScreen} />
     </Stack.Navigator>
   );
 }

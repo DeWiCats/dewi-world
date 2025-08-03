@@ -6,7 +6,6 @@ import { BottomSheetViewProps } from '@gorhom/bottom-sheet/lib/typescript/compon
 import { BottomSheetMethods } from '@gorhom/bottom-sheet/lib/typescript/types';
 import { useTheme } from '@shopify/restyle';
 import { PropsWithChildren, RefObject } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type CustomBottomSheetProps = PropsWithChildren<{
   ref?: RefObject<BottomSheetMethods | null>;
@@ -20,13 +19,11 @@ export default function CustomBottomSheet({
   sheetViewProps,
   children,
 }: CustomBottomSheetProps) {
-  const { bottom } = useSafeAreaInsets();
   const colors = useColors();
   const { borderRadii } = useTheme<Theme>();
 
   return (
     <BottomSheet
-      bottomInset={bottom}
       snapPoints={[150, wh - ww + 20, wh - 110]}
       index={0}
       role="alert"
