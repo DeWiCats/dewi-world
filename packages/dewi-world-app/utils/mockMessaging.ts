@@ -122,6 +122,8 @@ const generateTimestamp = (minutesAgo: number) => {
   return new Date(Date.now() - minutesAgo * 60 * 1000).toISOString();
 };
 
+let mockCallback = (message: Message) => {};
+
 let mockConversations: Conversation[] = [
   {
     id: 'conv-1',
@@ -417,7 +419,7 @@ export class MockMessagingAPI {
     const newMessage: Message = {
       id: generateUUID(),
       conversation_id: messageData.conversation_id,
-      sender_id: 'current-user',
+      sender_id: messageData.sender_id,
       receiver_id: messageData.receiver_id,
       message: messageData.message,
       created_at: new Date().toISOString(),
@@ -433,6 +435,9 @@ export class MockMessagingAPI {
       conversation.last_message_at = new Date().toISOString();
       conversation.updated_at = new Date().toISOString();
     }
+
+    // Update messages using mock subscription callback
+    mockCallback(newMessage);
 
     return {
       success: true,
@@ -473,10 +478,12 @@ export class MockMessagingAPI {
   subscribeToMessages(conversationId: string, callback: (message: Message) => void) {
     // Mock real-time subscription
     console.log(`Subscribed to messages for conversation: ${conversationId}`);
+    mockCallback = callback;
 
     // Return unsubscribe function
     return () => {
       console.log(`Unsubscribed from messages for conversation: ${conversationId}`);
+      mockCallback = () => {};
     };
   }
 
