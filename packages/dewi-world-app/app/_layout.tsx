@@ -8,8 +8,9 @@ import { PortalProvider } from '@gorhom/portal';
 import { ThemeProvider } from '@shopify/restyle';
 import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Platform, StatusBar, UIManager } from 'react-native';
+import { Platform, UIManager } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import 'react-native-reanimated';
@@ -71,7 +72,7 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <PortalProvider>
           <SafeAreaProvider>
-            <StatusBar barStyle="dark-content" />
+            <StatusBar style="light" />
             <Slot />
 
             {/* Global Stepper */}

@@ -1,10 +1,14 @@
-import CircleLoader from '@/components/CircleLoader';
+import ButtonPressable from '@/components/ButtonPressable';
+import SafeAreaBox from '@/components/SafeAreaBox';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
+import TouchableContainer from '@/components/ui/TouchableContainer';
+import { useColors } from '@/hooks/theme';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, TextInput } from 'react-native';
+import { Alert, TextInput } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export default function CreateAccountScreen() {
   const router = useRouter();
@@ -12,23 +16,11 @@ export default function CreateAccountScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  // Debug auth state
-  useEffect(() => {
-    console.log('📝 CreateAccountScreen - Auth State:', {
-      hydrated,
-      hasUser: !!user,
-      hasSession: !!session,
-      hasToken: !!session?.access_token,
-      userEmail: user?.email,
-      emailConfirmed: user?.email_confirmed_at,
-    });
-  }, [hydrated, user, session]);
+  const colors = useColors();
 
   // Redirect if already logged in
   useEffect(() => {
     if (hydrated && user && session?.access_token) {
-      console.log('✅ User already logged in, redirecting...');
       router.replace('/(tabs)/world/WorldScreen');
     }
   }, [hydrated, user, session, router]);
@@ -60,158 +52,179 @@ export default function CreateAccountScreen() {
     }
 
     try {
-      console.log('📝 Attempting email registration for:', email);
-
       const result = await registerWithEmail(email, password);
 
       if (result.needsVerification) {
-        console.log('📧 Registration successful, navigating to verification');
         router.push('/(auth)/VerifyEmailScreen');
       } else {
         // Registration complete - user should be logged in
         const state = useAuthStore.getState();
         if (state.user && state.session?.access_token) {
-          console.log('✅ Registration complete, redirecting to app');
           router.replace('/(tabs)/world/WorldScreen');
         } else if (state.error) {
           Alert.alert('Registration Failed', state.error);
         }
       }
     } catch (error) {
-      console.error('❌ Registration failed:', error);
+      console.error('Registration failed:', error);
       Alert.alert('Registration Failed', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
   return (
-    <Box flex={1} backgroundColor="primaryBackground" padding="6" justifyContent="center">
-      <Text variant="textXlBold" color="primaryText" textAlign="center" marginBottom="8">
-        Create Account
-      </Text>
-
-      {/* Debug info */}
-      <Box marginBottom="4" backgroundColor="cardBackground" padding="3" borderRadius="lg">
-        <Text variant="textXsRegular" color="secondaryText">
-          Debug: {hydrated ? '✅ Hydrated' : '⏳ Loading'} | User: {user ? '✅' : '❌'} | Session:{' '}
-          {session ? '✅' : '❌'} | Token: {session?.access_token ? '✅' : '❌'}
-        </Text>
-      </Box>
-
-      <Box marginBottom="4">
-        <Text variant="textMdRegular" color="primaryText" marginBottom="2">
-          Email Address
-        </Text>
-        <Box
-          backgroundColor="inputBackground"
-          borderRadius="xl"
-          paddingHorizontal="4"
-          paddingVertical="3"
-        >
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter your email"
-            placeholderTextColor="#888"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={{
-              fontSize: 16,
-              color: '#ffffff',
-              fontFamily: 'Figtree',
-            }}
-          />
-        </Box>
-        <Text variant="textXsRegular" color="secondaryText" marginTop="1">
-          We'll send you a 6-digit verification code
-        </Text>
-      </Box>
-
-      <Box marginBottom="4">
-        <Text variant="textMdRegular" color="primaryText" marginBottom="2">
-          Password
-        </Text>
-        <Box
-          backgroundColor="inputBackground"
-          borderRadius="xl"
-          paddingHorizontal="4"
-          paddingVertical="3"
-        >
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Enter your password (min 6 characters)"
-            placeholderTextColor="#888"
-            secureTextEntry
-            style={{
-              fontSize: 16,
-              color: '#ffffff',
-              fontFamily: 'Figtree',
-            }}
-          />
-        </Box>
-      </Box>
-
-      <Box marginBottom="6">
-        <Text variant="textMdRegular" color="primaryText" marginBottom="2">
-          Confirm Password
-        </Text>
-        <Box
-          backgroundColor="inputBackground"
-          borderRadius="xl"
-          paddingHorizontal="4"
-          paddingVertical="3"
-        >
-          <TextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Confirm your password"
-            placeholderTextColor="#888"
-            secureTextEntry
-            style={{
-              fontSize: 16,
-              color: '#ffffff',
-              fontFamily: 'Figtree',
-            }}
-          />
-        </Box>
-      </Box>
-
-      {error && (
-        <Box marginBottom="4" backgroundColor="error.500" padding="3" borderRadius="lg">
-          <Text variant="textSmRegular" color="primaryBackground" textAlign="center">
-            {error}
+    <ScrollView
+      style={{
+        backgroundColor: colors['primaryBackground'],
+      }}
+    >
+      <SafeAreaBox flex={1} backgroundColor="primaryBackground" paddingHorizontal="6">
+        {/* Header */}
+        <Box marginTop="4xl" marginBottom="12" alignItems="center">
+          <Text variant="riolaTitle" color="primaryText" marginBottom="2">
+            Create Account
+          </Text>
+          <Text variant="textLgRegular" color="text.quaternary-500" textAlign="center">
+            Join the adventure and start exploring
           </Text>
         </Box>
-      )}
 
-      <Pressable
-        onPress={handleRegister}
-        disabled={loading}
-        style={{
-          backgroundColor: loading ? '#374151' : '#3b82f6',
-          borderRadius: 12,
-          paddingVertical: 16,
-          alignItems: 'center',
-        }}
-      >
-        {loading ? (
-          <CircleLoader color="#ffffff" />
-        ) : (
-          <Text variant="textMdBold" color="primaryBackground">
-            Send Verification Code
-          </Text>
-        )}
-      </Pressable>
+        {/* Registration Form */}
+        <Box gap="6">
+          {/* Email Input */}
+          <Box>
+            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+              Email Address
+            </Text>
+            <Box
+              backgroundColor="cardBackground"
+              borderRadius="2xl"
+              paddingHorizontal="4"
+              paddingVertical="4"
+              borderWidth={1}
+              borderColor="gray.800"
+            >
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={{
+                  fontSize: 16,
+                  color: '#ffffff',
+                  fontFamily: 'Figtree',
+                }}
+              />
+            </Box>
+            <Text variant="textSmRegular" color="text.quaternary-500" marginTop="2">
+              We&apos;ll send you a verification code
+            </Text>
+          </Box>
 
-      <Pressable
-        onPress={() => router.push('/(auth)/LoginScreen')}
-        style={{ marginTop: 16, alignItems: 'center' }}
-      >
-        <Text variant="textMdRegular" color="blue.500">
-          Already have an account? Sign in
-        </Text>
-      </Pressable>
-    </Box>
+          {/* Password Input */}
+          <Box>
+            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+              Password
+            </Text>
+            <Box
+              backgroundColor="cardBackground"
+              borderRadius="2xl"
+              paddingHorizontal="4"
+              paddingVertical="4"
+              borderWidth={1}
+              borderColor="gray.800"
+            >
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Create a password (min 6 characters)"
+                placeholderTextColor="#9CA3AF"
+                secureTextEntry
+                style={{
+                  fontSize: 16,
+                  color: '#ffffff',
+                  fontFamily: 'Figtree',
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Confirm Password Input */}
+          <Box>
+            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+              Confirm Password
+            </Text>
+            <Box
+              backgroundColor="cardBackground"
+              borderRadius="2xl"
+              paddingHorizontal="4"
+              paddingVertical="4"
+              borderWidth={1}
+              borderColor="gray.800"
+            >
+              <TextInput
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirm your password"
+                placeholderTextColor="#9CA3AF"
+                secureTextEntry
+                style={{
+                  fontSize: 16,
+                  color: '#ffffff',
+                  fontFamily: 'Figtree',
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Error Message */}
+          {error && (
+            <Box
+              backgroundColor="error.900"
+              padding="4"
+              borderRadius="xl"
+              borderWidth={1}
+              borderColor="error.500"
+            >
+              <Text variant="textSmMedium" color="error.500" textAlign="center">
+                {error}
+              </Text>
+            </Box>
+          )}
+
+          {/* Create Account Button */}
+          <ButtonPressable
+            onPress={handleRegister}
+            disabled={loading}
+            backgroundColor={loading ? 'gray.700' : 'base.white'}
+            title={loading ? 'Creating Account...' : 'Create Account'}
+            titleColor="primaryBackground"
+            fontSize={16}
+            fontWeight="bold"
+            marginTop="4"
+          />
+
+          {/* Sign In Link */}
+          <TouchableContainer
+            onPress={() => router.push('/(auth)/LoginScreen')}
+            alignItems="center"
+            paddingVertical="4"
+            marginTop="4"
+            defaultBackground="primaryBackground"
+            pressedBackgroundColor="gray.900"
+            borderRadius={'full'}
+          >
+            <Text variant="textMdRegular" color="blue.500">
+              Already have an account?{' '}
+              <Text variant="textMdMedium" color="blue.400">
+                Sign in
+              </Text>
+            </Text>
+          </TouchableContainer>
+        </Box>
+      </SafeAreaBox>
+    </ScrollView>
   );
 }

@@ -18,7 +18,7 @@ interface SettingsBottomSheetProps {
 
 export default function SettingsBottomSheet({ visible, onClose }: SettingsBottomSheetProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const { hideSettings } = useSettingsStore();
   const router = useRouter();
 
@@ -29,6 +29,11 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
       bottomSheetRef.current?.snapToIndex(0);
     }
   }, [visible]);
+
+  // Don't render if user is not logged in
+  if (!user) {
+    return null;
+  }
 
   const animateHandler = (fromIndex: number, toIndex: number) => {
     if (toIndex === 0) {
@@ -74,7 +79,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
         sheetProps={{
           onAnimate: animateHandler,
           snapPoints: [1, 350],
-          index: 1,
+          index: 0,
           backdropComponent: props => (
             <BottomSheetBackdrop
               {...props}

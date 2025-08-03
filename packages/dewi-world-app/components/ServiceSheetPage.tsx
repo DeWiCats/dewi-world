@@ -2,6 +2,7 @@ import { Color } from '@/constants/theme';
 import { useColors } from '@/hooks/theme';
 import useHaptic from '@hooks/useHaptic';
 import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { StatusBar } from 'expo-status-bar';
 import React, { FC, useCallback, useMemo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgProps } from 'react-native-svg';
@@ -85,31 +86,38 @@ function CustomTabBar({
   );
 
   if (options?.length <= 1) {
-    return null;
+    return (
+      <>
+        <StatusBar style="light" />
+      </>
+    );
   }
 
   return (
-    <Box
-      backgroundColor="primaryBackground"
-      position="absolute"
-      bottom={0}
-      left={0}
-      right={0}
-      paddingTop="2"
-    >
+    <>
+      <StatusBar style={selectedValue === 'WorldTab' ? 'dark' : 'light'} />
       <Box
-        style={{
-          marginBottom: bottom,
-        }}
+        backgroundColor="primaryBackground"
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
+        paddingTop="2"
       >
-        <ServiceNavBar
-          navBarOptions={tabData}
-          selectedValue={selectedValue}
-          onItemSelected={onPress}
-          onItemLongPress={onLongPress}
-        />
+        <Box
+          style={{
+            marginBottom: bottom,
+          }}
+        >
+          <ServiceNavBar
+            navBarOptions={tabData}
+            selectedValue={selectedValue}
+            onItemSelected={onPress}
+            onItemLongPress={onLongPress}
+          />
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 }
 
