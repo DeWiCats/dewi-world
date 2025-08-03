@@ -1,5 +1,8 @@
 {
   "ios": {
     "bundleIdentifier": "com.peronif5.-dewimonorepo"
+  },
+  "android": {
+    "package": "com.peronif5.dewimonorepo"
   }
 }

@@ -335,11 +335,14 @@ export const useAuthStore = create<AuthStore>()(
         } else {
           supabase.auth.signOut();
         }
-
-        // Reset the flag after a brief delay
-        setTimeout(() => {
-          set({ _isInternalUpdate: false });
-        }, 100);
+        /*
+         * @Peronif5 This block of code triggers the render loop hell
+         *
+         *  // Reset the flag after a brief delay
+         *  setTimeout(() => {
+         *    set({ _isInternalUpdate: false });
+         *  }, 100);
+         */
       },
       setPendingEmail: email => set({ pendingEmail: email }),
     }),

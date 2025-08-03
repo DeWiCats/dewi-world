@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "yarn workspace @dewi/server dev",
+    "dev": "yarn workspace @dewi/api dev",
     "dev:app": "yarn workspace @dewi/world-app start",
     "dev:server": "yarn workspace @dewi/server dev",
     "start": "yarn workspace @dewi/world-app start",
