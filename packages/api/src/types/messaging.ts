@@ -38,7 +38,7 @@ export interface CreateConversationRequest {
 
 export interface CreateMessageRequest {
   conversation_id: string;
-  content: string;
+  message: string;
 }
 
 export interface ConversationQueryParams {

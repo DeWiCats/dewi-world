@@ -143,6 +143,7 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
         if (loadMore) {
           setLoadingMore(true);
         }
+        console.log('loading messages');
 
         const currentMessages = loadMore ? messages : [];
         const offset = loadMore ? currentMessages.length : 0;
@@ -151,6 +152,7 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
           ...params,
           offset,
         });
+        console.log('new Messages', response);
 
         if (response.success) {
           const newMessages = response.data;

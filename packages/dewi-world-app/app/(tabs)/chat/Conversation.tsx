@@ -147,6 +147,8 @@ export default function ChatDetailScreen() {
     markAsRead,
   } = useMessages(conversationId || '');
 
+  useEffect(() => {console.log("conversation messages", messages)}, [])
+
   const { isTyping, typingUsers, startTyping, stopTyping } = useTypingIndicator(
     conversationId || ''
   );

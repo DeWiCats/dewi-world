@@ -2,8 +2,6 @@ import { FastifyInstance, FastifyReply } from 'fastify';
 import { supabase } from '../lib/supabase';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
 import {
-  createConversationSchema,
-  createMessageSchema,
   getConversationsSchema,
   getMessagesSchema,
   markMessagesReadSchema,
@@ -193,7 +191,6 @@ export default async function messagingController(fastify: FastifyInstance) {
   fastify.post(
     '/conversations',
     {
-      schema: createConversationSchema,
       preHandler: authMiddleware,
     },
     async (request: AuthenticatedRequest, reply: FastifyReply) => {
@@ -381,14 +378,13 @@ export default async function messagingController(fastify: FastifyInstance) {
   fastify.post(
     '/messages',
     {
-      schema: createMessageSchema,
       preHandler: authMiddleware,
     },
     async (request: AuthenticatedRequest, reply: FastifyReply) => {
       console.log('Creating new message from conversation...');
       try {
         const body = request.body as CreateMessageRequest;
-        const userId = request.user_id!;
+        const userId = request.user_id;
 
         // Verify conversation exists and user is part of it
         const { data: conversation, error: convError } = await supabase
@@ -398,6 +394,7 @@ export default async function messagingController(fastify: FastifyInstance) {
           .single();
 
         if (convError || !conversation) {
+          console.error('ERROR', convError);
           return reply.status(404).send({
             success: false,
             message: 'Conversation not found',
@@ -417,7 +414,7 @@ export default async function messagingController(fastify: FastifyInstance) {
           .insert({
             conversation_id: body.conversation_id,
             sender_id: userId,
-            content: body.content,
+            content: body.message,
           })
           .select()
           .single();

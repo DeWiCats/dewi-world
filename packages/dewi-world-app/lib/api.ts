@@ -213,5 +213,6 @@ export type {
   LocationPost,
   LocationQueryParams,
   LocationResponse,
-  UpdateLocationRequest,
+  UpdateLocationRequest
 };
+
