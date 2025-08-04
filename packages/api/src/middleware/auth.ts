@@ -8,6 +8,7 @@ export interface AuthenticatedRequest extends FastifyRequest {
 
 export async function authMiddleware(request: AuthenticatedRequest, reply: FastifyReply) {
   try {
+    console.log("Authentication middleware running")
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

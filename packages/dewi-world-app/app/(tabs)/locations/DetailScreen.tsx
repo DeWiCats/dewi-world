@@ -6,11 +6,12 @@ import LocationsHeader from '@/components/LocationsHeader';
 import PriceAndMessageBox from '@/components/PriceAndMessageBox';
 import { ServiceSheetStackNavigationProp } from '@/components/ServiceSheetLayout';
 import { GeoJSONFeature } from '@/geojson';
+import { useConversations } from '@/hooks/useMessages';
 import { wh, ww } from '@/utils/layout';
 import { LocationPost } from '@/utils/mockLocations';
+import { CreateConversationRequest } from '@/utils/mockMessaging';
 import { useNavigation } from 'expo-router';
 import { useMemo } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DetailScreenProps {
   location: LocationPost;
@@ -19,14 +20,33 @@ interface DetailScreenProps {
 
 export default function DetailScreen({ location, onExit }: DetailScreenProps) {
   const nav = useNavigation<ServiceSheetStackNavigationProp>();
-  const { top } = useSafeAreaInsets();
+  const { createConversation } = useConversations();
 
-  const messageOwnerHandler = () => {
-    onExit();
-    nav.navigate('ChatTab');
+  const messageOwnerHandler = async () => {
+    try {
+      console.log('Attempting to message owner...');
+      
+      const request: CreateConversationRequest = {
+        receiver_id: location.owner_id,
+        location_id: location.id,
+        initial_message:
+          "Hello, I'm interested in your location post at " +
+          location.address +
+          ". Happy to chat if the timing's right!",
+      };
+
+      const response = await createConversation(request);
+
+      console.log('Successfully created the following conversation:', response);
+
+      nav.navigate('ChatTab');
+      onExit();
+    } catch (error) {
+      console.error('Error while trying to message location owner:', error);
+    }
   };
 
-  const mapLocationToFeature = (location: LocationPost) => {
+  const mapLocationToLegacyFeature = (location: LocationPost) => {
     const feature: GeoJSONFeature = {
       type: 'Feature',
       geometry: { coordinates: [0, 0], type: 'Point' },
@@ -38,15 +58,18 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
           name: hardware,
           Icon: hardwareIconMap[hardware as keyof typeof hardwareIconMap],
         })),
+        owner_id: location.owner_id,
+        distance: location.distance,
         deployment_cost: location.price.toString(),
         photos: location.gallery,
         extras: [],
+        is_negotiable: location.is_negotiable,
       },
     };
     return feature;
   };
 
-  const feature = useMemo(() => mapLocationToFeature(location), [location]);
+  const feature = useMemo(() => mapLocationToLegacyFeature(location), [location]);
 
   return (
     <>
@@ -55,7 +78,11 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
       <CustomBottomSheet sheetProps={{ snapPoints: [wh - ww + 20, wh - 110] }}>
         <LocationDetail location={feature} />
       </CustomBottomSheet>
-      <PriceAndMessageBox price={location.price} onMessageOwner={messageOwnerHandler} />
+      <PriceAndMessageBox
+        isNegotiable={location.is_negotiable}
+        price={location.price}
+        onMessageOwner={messageOwnerHandler}
+      />
     </>
   );
 }

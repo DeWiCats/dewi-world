@@ -178,11 +178,9 @@ export default function ChatDetailScreen() {
     try {
       // Find the other user in the conversation (we need this for the API)
       const otherUserId = 'other-user-id'; // This should come from conversation data
-      const senderId = user?.email as string;
 
       await sendMessage({
         receiver_id: otherUserId,
-        sender_id: senderId,
         message: messageText,
       });
     } catch (error) {
@@ -207,7 +205,7 @@ export default function ChatDetailScreen() {
 
   const renderMessage = ({ item: message, index }: { item: Message; index: number }) => {
     console.log('message', message);
-    const isOwn = message.sender_id === user?.email;
+    const isOwn = message.sender_id === user?.id;
     console.log('isOwn', isOwn);
 
     // Show timestamp if it's the first message or if there's a significant time gap

@@ -136,7 +136,14 @@ class RealMessagingAPI {
         throw new Error('No authentication token');
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/messaging/messages`, {
+      const url = `${API_BASE_URL}/api/v1/messaging/messages`;
+
+      console.log('Sending conversation message with following parameters:');
+      console.log('URL', url);
+      console.log('Body', messageData);
+      console.log('Headers', headers);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -356,5 +363,6 @@ export type {
   Message,
   MessageQueryParams,
   MessageResponse,
-  MessagesResponse,
+  MessagesResponse
 };
+

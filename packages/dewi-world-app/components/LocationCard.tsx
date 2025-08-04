@@ -41,6 +41,13 @@ export const hardwareIconMap = {
   marine: IconMarine,
 };
 
+export const formatDistance = (distance: number) => {
+  if (distance < 1000) {
+    return `${distance}m away`;
+  }
+  return `${(distance / 1000).toFixed(1)}km away`;
+};
+
 export default function LocationCard({
   location,
   onPress,
@@ -98,13 +105,6 @@ export default function LocationCard({
         </Box>
       );
     });
-  };
-
-  const formatDistance = (distance: number) => {
-    if (distance < 1000) {
-      return `${distance}m away`;
-    }
-    return `${(distance / 1000).toFixed(1)}km away`;
   };
 
   const handleDelete = () => {

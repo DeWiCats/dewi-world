@@ -38,7 +38,6 @@ export interface Message {
 
 export interface CreateMessageRequest {
   conversation_id: string;
-  sender_id: string;
   receiver_id: string;
   message: string;
 }
@@ -419,7 +418,7 @@ export class MockMessagingAPI {
     const newMessage: Message = {
       id: generateUUID(),
       conversation_id: messageData.conversation_id,
-      sender_id: messageData.sender_id,
+      sender_id: "sender-id",
       receiver_id: messageData.receiver_id,
       message: messageData.message,
       created_at: new Date().toISOString(),

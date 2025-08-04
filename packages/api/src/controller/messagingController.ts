@@ -385,6 +385,7 @@ export default async function messagingController(fastify: FastifyInstance) {
       preHandler: authMiddleware,
     },
     async (request: AuthenticatedRequest, reply: FastifyReply) => {
+      console.log('Creating new message from conversation...');
       try {
         const body = request.body as CreateMessageRequest;
         const userId = request.user_id!;

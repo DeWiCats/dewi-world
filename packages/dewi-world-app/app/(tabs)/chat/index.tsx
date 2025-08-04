@@ -10,6 +10,7 @@ import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LocationsStackNavigationProp } from '../locations/LocationsNavigator';
 import { ChatStackNavigationProp } from './ChatNavigator';
 
 // Simple date formatting without external dependencies
@@ -108,6 +109,7 @@ function ConversationCard({
 
 export default function ChatListScreen() {
   const nav = useNavigation<ChatStackNavigationProp>();
+  const locationsNav = useNavigation<LocationsStackNavigationProp>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,7 +147,7 @@ export default function ChatListScreen() {
   });
 
   const handleConversationPress = (conversation: Conversation) => {
-    //TODO fix 
+    //TODO fix
     nav.push('chat/Conversation' as any, { conversationId: conversation.id });
   };
 
@@ -170,7 +172,7 @@ export default function ChatListScreen() {
         Start a conversation by messaging someone about a location post
       </Text>
       <Pressable
-        onPress={() => router.push('/(tabs)/locations' as any)}
+        onPress={() => locationsNav.push('Locations')}
         style={{
           backgroundColor: '#3b82f6',
           paddingHorizontal: 24,

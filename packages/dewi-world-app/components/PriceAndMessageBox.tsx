@@ -4,10 +4,15 @@ import Text from './ui/Text';
 
 interface PriceAndMessageBoxProps {
   price: number;
+  isNegotiable: boolean;
   onMessageOwner: () => void;
 }
 
-export default function PriceAndMessageBox({ price, onMessageOwner }: PriceAndMessageBoxProps) {
+export default function PriceAndMessageBox({
+  price,
+  isNegotiable,
+  onMessageOwner,
+}: PriceAndMessageBoxProps) {
   return (
     <Box
       backgroundColor={'primaryBackground'}
@@ -21,7 +26,8 @@ export default function PriceAndMessageBox({ price, onMessageOwner }: PriceAndMe
       alignItems={'center'}
     >
       <Text variant="textXlBold" color="text.white">
-        $ {price}
+        ${price}
+        {isNegotiable ? '/mo' : '/mo (fixed)'}
       </Text>
       <ButtonPressable
         onPress={onMessageOwner}

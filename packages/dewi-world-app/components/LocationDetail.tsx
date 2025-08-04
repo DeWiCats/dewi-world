@@ -1,4 +1,5 @@
 import { GeoJSONFeature } from '@/geojson';
+import { formatDistance } from './LocationCard';
 import ProfileDisplay from './ProfileDisplay';
 import Box from './ui/Box';
 import Text from './ui/Text';
@@ -16,7 +17,7 @@ export default function LocationDetail({ location }: LocationDetailProps) {
           {location.properties.address}
         </Text>
         <Text variant="textSmLight" color="brand.600">
-          500m away
+          {formatDistance(location.properties.distance)}
         </Text>
       </Box>
       <Box gap="sm">

@@ -193,6 +193,7 @@ export default async function geojsonController(fastify: FastifyInstance) {
         };
 
         reply.send(geoJsonResponse);
+        console.log("fetched geojson locations")
       } catch (error) {
         console.error('Unexpected error:', error);
         reply.status(500).send({

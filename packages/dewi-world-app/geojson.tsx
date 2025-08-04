@@ -2,6 +2,8 @@ export type GeoJSONFeature = {
   type: 'Feature';
   geometry: GeoJSON.Point;
   properties: {
+    owner_id: string;
+    distance: number;
     name: string;
     description: string;
     deployment_cost: string;
@@ -9,6 +11,7 @@ export type GeoJSONFeature = {
     address: string;
     photos: string[] | any[];
     depin_hardware: { name: string; Icon: FC<SvgProps> }[];
+    is_negotiable: boolean
   };
 };
 
