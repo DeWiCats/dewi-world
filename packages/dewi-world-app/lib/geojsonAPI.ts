@@ -12,6 +12,7 @@ export interface LocationProperties {
   rating?: number;
   distance?: number;
   created_at?: string;
+  owner_id: string
 }
 
 export interface GeoJSONLocation {

@@ -82,6 +82,7 @@ export interface GeoJSONLocation {
     rating?: number;
     distance?: number;
     created_at?: string;
+    owner_id: string;
   };
 }
 

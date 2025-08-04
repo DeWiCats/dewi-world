@@ -3,7 +3,12 @@ import Box from './ui/Box';
 import ImageBox from './ui/ImageBox';
 import Text from './ui/Text';
 
-export default function ProfileDisplay() {
+type ProfileDisplayProps = {
+  name: string;
+  rating?: number;
+};
+
+export default function ProfileDisplay({ name, rating }: ProfileDisplayProps) {
   return (
     <Box flexDirection={'row'} alignItems={'center'} justifyContent={'flex-start'} gap="sm">
       <ImageBox
@@ -14,12 +19,12 @@ export default function ProfileDisplay() {
       />
       <Box justifyContent={'center'} alignItems={'flex-start'}>
         <Text variant="textLgLight" color="text.white">
-          Peronif5
+          {name}
         </Text>
         <Box justifyContent={'center'} alignItems={'center'} flexDirection={'row'} gap="0.5">
           <Star width={15} height={15} />
           <Text variant="textSmLight" color="text.white">
-            4.28
+            {rating || '-'}
           </Text>
         </Box>
       </Box>

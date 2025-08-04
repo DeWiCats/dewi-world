@@ -22,6 +22,7 @@ function formatGeoJSONFeature(row: LocationRow): GeoJSONLocation {
       gallery: row.gallery,
       rating: row.rating ? Number(row.rating) : undefined,
       created_at: row.created_at,
+      owner_id: row.owner_id,
     },
   };
 }
@@ -107,6 +108,7 @@ export default async function geojsonController(fastify: FastifyInstance) {
                         },
                         created_at: { type: 'string' },
                         distance: { type: 'number' },
+                        owner_id: { type: 'string' },
                       },
                     },
                   },

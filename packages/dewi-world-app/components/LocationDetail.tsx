@@ -12,7 +12,7 @@ export default function LocationDetail({ location }: LocationDetailProps) {
   return (
     <Box padding={'3xl'} gap="3xl" width="100%">
       <Box gap="md">
-        <ProfileDisplay />
+        <ProfileDisplay name={location.properties.name} rating={location.properties.rating} />
         <Text variant="textXsLight" color="gray.400">
           {location.properties.address}
         </Text>

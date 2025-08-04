@@ -3,13 +3,9 @@ import ImageSlide from '@/components/ImageSlide';
 import LocationDetail from '@/components/LocationDetail';
 import LocationsHeader from '@/components/LocationsHeader';
 import PriceAndMessageBox from '@/components/PriceAndMessageBox';
-import { ServiceSheetStackNavigationProp } from '@/components/ServiceSheetLayout';
-import { useConversations } from '@/hooks/useMessages';
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
 import { wh, ww } from '@/utils/layout';
 import { LocationPost } from '@/utils/mockLocations';
-import { CreateConversationRequest } from '@/utils/mockMessaging';
-import { useNavigation } from 'expo-router';
 import { useMemo } from 'react';
 
 interface DetailScreenProps {
@@ -18,33 +14,6 @@ interface DetailScreenProps {
 }
 
 export default function DetailScreen({ location, onExit }: DetailScreenProps) {
-  const nav = useNavigation<ServiceSheetStackNavigationProp>();
-  const { createConversation } = useConversations();
-
-  const messageOwnerHandler = async () => {
-    try {
-      console.log('Attempting to message owner...');
-
-      const request: CreateConversationRequest = {
-        receiver_id: location.owner_id,
-        location_id: location.id,
-        initial_message:
-          "Hello, I'm interested in your location post at " +
-          location.address +
-          ". Happy to chat if the timing's right!",
-      };
-
-      const response = await createConversation(request);
-
-      console.log('Successfully created the following conversation:', response);
-
-      nav.navigate('ChatTab');
-      onExit();
-    } catch (error) {
-      console.error('Error while trying to message location owner:', error);
-    }
-  };
-
   const mapLocationPostToGeoJson = (location: LocationPost) => {
     return {
       geometry: { type: 'Point', coordinates: [0, 0] },
@@ -61,6 +30,7 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
         created_at: location.created_at,
         distance: location.distance,
         rating: location.rating,
+        owner_id: location.owner_id,
       },
     } as GeoJSONLocation;
   };
@@ -77,7 +47,7 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
       <PriceAndMessageBox
         isNegotiable={location.is_negotiable}
         price={location.price}
-        onMessageOwner={messageOwnerHandler}
+        onMessageOwner={() => {}}
       />
     </>
   );
