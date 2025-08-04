@@ -27,7 +27,7 @@ export default function WorldDrawer({
   onSelect = () => {},
 }: WorldDrawerProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const [panningEnabled, setPanningEnabled] = useState(false);
+  const [panningEnabled, setPanningEnabled] = useState(true);
   const { bottom } = useSafeAreaInsets();
 
   useEffect(() => {

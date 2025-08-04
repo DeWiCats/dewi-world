@@ -14,6 +14,7 @@ import { OnPressEvent } from '@rnmapbox/maps/lib/typescript/src/types/OnPressEve
 import * as Location from 'expo-location';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabsContext } from '../context';
 import WorldDrawer from './WorldDrawer';
 
@@ -48,6 +49,7 @@ export default function WorldScreen() {
   const [lastFetchCenter, setLastFetchCenter] = useState<{ lat: number; lng: number } | null>(null);
 
   const animationDelay = 400;
+  const { top } = useSafeAreaInsets();
   const fadeInStyle = useAnimatedStyle(() => {
     if (fadeIn) {
       return {
@@ -124,6 +126,7 @@ export default function WorldScreen() {
         console.log('🌍 Fetching locations with params:', params);
         const geoJson = await fetchLocationsGeoJSON(params);
         console.log('✅ Locations fetched successfully:', geoJson.features.length, 'locations');
+
         setGeoJsonData(geoJson);
 
         if (centerLat && centerLng) {
@@ -189,7 +192,7 @@ export default function WorldScreen() {
       }
 
       // Adjust radius based on zoom level
-      const dynamicRadius = zoom > 15 ? 125 : zoom > 10 ? 250 : 500;
+      const dynamicRadius = 1000;
 
       await fetchLocations(center[1], center[0], dynamicRadius);
     } catch (error) {
@@ -249,51 +252,12 @@ export default function WorldScreen() {
     setTimeout(() => setSelectedLocation(null), animationDelay);
   }, []);
 
-  // Convert GeoJSONLocation to legacy format for drawer compatibility
-  const convertToLegacyFormat = (location: GeoJSONLocation) => {
-    if (!location || !location.properties) {
-      const fallbackId = Math.random().toString(36).substring(7);
-      console.warn('⚠️ Invalid location data in convertToLegacyFormat:', location);
-      return {
-        type: 'Feature' as const,
-        geometry: { type: 'Point', coordinates: [0, 0] },
-        properties: {
-          name: `Unknown Location ${fallbackId}`,
-          description: '',
-          deployment_cost: '$0/month',
-          extras: [],
-          address: '',
-          photos: [],
-          depin_hardware: [],
-        },
-      };
-    }
-
-    return {
-      type: 'Feature' as const,
-      geometry: location.geometry || { type: 'Point', coordinates: [0, 0] },
-      properties: {
-        name:
-          location.properties.name ||
-          `Unknown Location ${location.properties.id || Math.random().toString(36).substring(7)}`,
-        description: location.properties.description || '',
-        deployment_cost: `$${location.properties.price || 0}/month`,
-        extras: [], // Could be derived from deployable_hardware
-        address: location.properties.address || '',
-        photos: location.properties.gallery || [],
-        depin_hardware: (location.properties.deployable_hardware || []).map((hw, index) => ({
-          name: hw || `Unknown Hardware ${index}`,
-          Icon: null,
-        })),
-      },
-    };
-  };
-
   return (
     <Box width="100%" height="100%" position={'relative'}>
-      {selectedLocation && <LocationsHeader onExit={onCloseDrawer} onLike={() => {}} />}
+      {selectedLocation && (
+        <LocationsHeader style={{ marginTop: top }} onExit={onCloseDrawer} onLike={() => {}} />
+      )}
       <MapView
-        styleURL="mapbox://styles/mapbox/standard-beta"
         ref={map}
         style={{ flex: 1 }}
         scaleBarEnabled={false}
@@ -348,9 +312,7 @@ export default function WorldScreen() {
         locations={geoJsonData.features || []}
         onSelect={location => onSelectFromDrawer(location)}
         onClose={onCloseDrawer}
-        selectedLocation={
-          selectedLocation ? (convertToLegacyFormat(selectedLocation) as any) : null
-        }
+        selectedLocation={selectedLocation}
       />
     </Box>
   );

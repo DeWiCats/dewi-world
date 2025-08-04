@@ -24,7 +24,7 @@ export default function CustomBottomSheet({
 
   return (
     <BottomSheet
-      snapPoints={[150, wh - ww + 20, wh - 110]}
+      snapPoints={[150, wh - ww + 65, wh - 110]}
       index={0}
       role="alert"
       ref={ref}
