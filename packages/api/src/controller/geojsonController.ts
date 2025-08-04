@@ -116,7 +116,7 @@ export default async function geojsonController(fastify: FastifyInstance) {
           },
         },
       },
-      //preHandler: authMiddleware,
+      preHandler: authMiddleware,
     },
     async (request: AuthenticatedRequest, reply: FastifyReply) => {
       try {
