@@ -51,10 +51,10 @@ export default async function locationController(fastify: FastifyInstance) {
       try {
         const query = request.query as LocationQueryParams;
 
-        // Start building the Supabase query
-        let supabaseQuery = supabase.from('locations').select('*');
+        // Start building the Supabase query - filter by owner_id first
+        let supabaseQuery = supabase.from('locations').select('*').eq('owner_id', request.user_id!);
 
-        // Apply filters
+        // Apply additional filters
         if (query.hardware) {
           supabaseQuery = supabaseQuery.contains('deployable_hardware', [query.hardware]);
         }
