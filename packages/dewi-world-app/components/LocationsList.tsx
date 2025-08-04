@@ -1,5 +1,5 @@
 import { Theme } from '@/constants/theme';
-import { GeoJSONFeature } from '@/geojson';
+import { GeoJSONLocation } from '@/lib/geojsonAPI';
 import { useTheme } from '@shopify/restyle';
 import { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -8,8 +8,8 @@ import SearchInput from './SearchInput';
 import Box from './ui/Box';
 
 interface LocationsListProps {
-  locations: GeoJSONFeature[];
-  onSelect: (location: GeoJSONFeature) => void;
+  locations: GeoJSONLocation[];
+  onSelect: (location: GeoJSONLocation) => void;
 }
 
 export default function LocationsList({ locations, onSelect }: LocationsListProps) {

@@ -1,12 +1,11 @@
 import CustomBottomSheet from '@/components/CustomBottomSheet';
 import ImageSlide from '@/components/ImageSlide';
-import { hardwareIconMap } from '@/components/LocationCard';
 import LocationDetail from '@/components/LocationDetail';
 import LocationsHeader from '@/components/LocationsHeader';
 import PriceAndMessageBox from '@/components/PriceAndMessageBox';
 import { ServiceSheetStackNavigationProp } from '@/components/ServiceSheetLayout';
-import { GeoJSONFeature } from '@/geojson';
 import { useConversations } from '@/hooks/useMessages';
+import { GeoJSONLocation } from '@/lib/geojsonAPI';
 import { wh, ww } from '@/utils/layout';
 import { LocationPost } from '@/utils/mockLocations';
 import { CreateConversationRequest } from '@/utils/mockMessaging';
@@ -25,7 +24,7 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
   const messageOwnerHandler = async () => {
     try {
       console.log('Attempting to message owner...');
-      
+
       const request: CreateConversationRequest = {
         receiver_id: location.owner_id,
         location_id: location.id,
@@ -46,37 +45,34 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
     }
   };
 
-  const mapLocationToLegacyFeature = (location: LocationPost) => {
-    const feature: GeoJSONFeature = {
+  const mapLocationPostToGeoJson = (location: LocationPost) => {
+    return {
+      geometry: { type: 'Point', coordinates: [0, 0] },
       type: 'Feature',
-      geometry: { coordinates: [0, 0], type: 'Point' },
       properties: {
-        name: location.title,
         address: location.address,
+        deployable_hardware: location.deployable_hardware,
         description: location.description,
-        depin_hardware: location.deployable_hardware.slice(0, 5).map(hardware => ({
-          name: hardware,
-          Icon: hardwareIconMap[hardware as keyof typeof hardwareIconMap],
-        })),
-        owner_id: location.owner_id,
-        distance: location.distance,
-        deployment_cost: location.price.toString(),
-        photos: location.gallery,
-        extras: [],
+        gallery: location.gallery,
+        id: location.id,
         is_negotiable: location.is_negotiable,
+        name: location.title,
+        price: location.price,
+        created_at: location.created_at,
+        distance: location.distance,
+        rating: location.rating,
       },
-    };
-    return feature;
+    } as GeoJSONLocation;
   };
 
-  const feature = useMemo(() => mapLocationToLegacyFeature(location), [location]);
+  const geoJson = useMemo(() => mapLocationPostToGeoJson(location), [location]);
 
   return (
     <>
       <LocationsHeader paddingTop="7xl" onExit={onExit} onLike={() => {}} />
       <ImageSlide imageSize={ww} srcURIs={location.gallery} />
-      <CustomBottomSheet sheetProps={{ snapPoints: [wh - ww + 20, wh - 110] }}>
-        <LocationDetail location={feature} />
+      <CustomBottomSheet sheetProps={{ snapPoints: [wh - ww + 70, wh - 80] }}>
+        <LocationDetail location={geoJson} />
       </CustomBottomSheet>
       <PriceAndMessageBox
         isNegotiable={location.is_negotiable}

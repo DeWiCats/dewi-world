@@ -84,7 +84,31 @@ export default async function geojsonController(fastify: FastifyInstance) {
                         },
                       },
                     },
-                    properties: { type: 'object' },
+                    properties: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                        description: { type: 'string' },
+                        address: { type: 'string' },
+                        price: { type: 'number' },
+                        is_negotiable: { type: 'boolean' },
+                        deployable_hardware: {
+                          type: 'array',
+                          items: { type: 'string' },
+                        },
+                        gallery: {
+                          type: 'array',
+                          items: { type: 'string' },
+                        },
+                        rating: {
+                          type: 'number',
+                          nullable: true,
+                        },
+                        created_at: { type: 'string' },
+                        distance: { type: 'number' },
+                      },
+                    },
                   },
                 },
               },
@@ -92,7 +116,7 @@ export default async function geojsonController(fastify: FastifyInstance) {
           },
         },
       },
-      preHandler: authMiddleware,
+      //preHandler: authMiddleware,
     },
     async (request: AuthenticatedRequest, reply: FastifyReply) => {
       try {
@@ -193,7 +217,6 @@ export default async function geojsonController(fastify: FastifyInstance) {
         };
 
         reply.send(geoJsonResponse);
-        console.log("fetched geojson locations")
       } catch (error) {
         console.error('Unexpected error:', error);
         reply.status(500).send({

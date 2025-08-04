@@ -6,23 +6,19 @@ import Text from '@/components/ui/Text';
 import { useLocations } from '@/hooks/useLocations';
 import { LocationPost } from '@/lib/api';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useNavigation, useRouter } from 'expo-router';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { FlatList, Pressable, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabsContext } from '../context';
 import DetailScreen from './DetailScreen';
-import { LocationsStackNavigationProp } from './LocationsNavigator';
 
 export default function LocationsScreen() {
   const context = useContext(TabsContext);
-  const nav = useNavigation<LocationsStackNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   const { user, session, hydrated } = useAuthStore();
   const { locations, loading, error, refreshLocations } = useLocations();
   const [selectedLocation, setSelectedLocation] = useState<null | LocationPost>();
-  const router = useRouter();
-  const { top } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
 
   // Memoized callbacks for delete operations to prevent Reanimated crashes
   const handleDeleteStart = useCallback((locationId: string) => {
@@ -176,7 +172,11 @@ export default function LocationsScreen() {
   }
 
   return (
-    <Box flex={1} backgroundColor="primaryBackground" style={{ paddingTop: top }}>
+    <Box
+      flex={1}
+      backgroundColor="primaryBackground"
+      style={{ paddingTop: top, paddingBottom: bottom }}
+    >
       {selectedLocation ? (
         <DetailScreen onExit={handleExitDetail} location={selectedLocation} />
       ) : (

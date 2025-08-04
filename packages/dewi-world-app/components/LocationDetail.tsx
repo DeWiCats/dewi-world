@@ -1,11 +1,11 @@
-import { GeoJSONFeature } from '@/geojson';
-import { formatDistance } from './LocationCard';
+import { GeoJSONLocation } from '@/lib/geojsonAPI';
+import { formatDistance, hardwareIconMap } from './LocationCard';
 import ProfileDisplay from './ProfileDisplay';
 import Box from './ui/Box';
 import Text from './ui/Text';
 
 interface LocationDetailProps {
-  location: GeoJSONFeature;
+  location: GeoJSONLocation;
 }
 
 export default function LocationDetail({ location }: LocationDetailProps) {
@@ -17,7 +17,7 @@ export default function LocationDetail({ location }: LocationDetailProps) {
           {location.properties.address}
         </Text>
         <Text variant="textSmLight" color="brand.600">
-          {formatDistance(location.properties.distance)}
+          {formatDistance(location.properties.distance || 0)}
         </Text>
       </Box>
       <Box gap="sm">
@@ -27,18 +27,18 @@ export default function LocationDetail({ location }: LocationDetailProps) {
         <Text variant={'textXsLight'} color="gray.400">
           {location.properties.description}
         </Text>
-        <Text variant="textXsLight" color="gray.400">
-          {location.properties.extras.join(', ')}
-        </Text>
       </Box>
       <Box gap="md">
         <Text fontWeight={'bold'} variant={'textMdLight'} color="text.white">
           Deployable Hardware
         </Text>
         <Box flexDirection={'row'} gap="md" alignItems={'center'}>
-          {location.properties.depin_hardware.map(({ name, Icon }) => (
-            <Icon key={name + location.properties.name} width={25} height={25} />
-          ))}
+          {location.properties.deployable_hardware.map(hardware => {
+            const IconComponent = hardwareIconMap[hardware as keyof typeof hardwareIconMap];
+            return (
+              <IconComponent key={hardware + location.properties.name} width={25} height={25} />
+            );
+          })}
         </Box>
       </Box>
     </Box>

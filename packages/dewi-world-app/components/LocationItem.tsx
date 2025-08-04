@@ -1,12 +1,13 @@
-import { GeoJSONFeature } from '@/geojson';
+import { GeoJSONLocation } from '@/lib/geojsonAPI';
 import { Image, Pressable } from 'react-native';
+import { formatDistance, hardwareIconMap } from './LocationCard';
 import ProfileDisplay from './ProfileDisplay';
 import Box from './ui/Box';
 import Text from './ui/Text';
 
 interface LocationItemProps {
-  location: GeoJSONFeature;
-  onSelect?: (location: GeoJSONFeature) => void;
+  location: GeoJSONLocation;
+  onSelect?: (location: GeoJSONLocation) => void;
 }
 
 export default function LocationItem({ location, onSelect = () => {} }: LocationItemProps) {
@@ -23,11 +24,11 @@ export default function LocationItem({ location, onSelect = () => {} }: Location
           width={100}
           height={100}
           style={{ width: '100%', height: 220 }}
-          source={
-            location.properties.photos && location.properties.photos[0]
-              ? location.properties.photos[0]
-              : { uri: 'https://via.placeholder.com/220x220?text=No+Image' }
-          }
+          source={{
+            uri:
+              location.properties.gallery.at(0) ||
+              'https://via.placeholder.com/220x220?text=No+Image',
+          }}
         />
       </Pressable>
       <ProfileDisplay />
@@ -35,12 +36,13 @@ export default function LocationItem({ location, onSelect = () => {} }: Location
         {location.properties.address}
       </Text>
       <Text variant="textSmLight" color="brand.600">
-        500m away
+        {formatDistance(location.properties.distance || 0)}
       </Text>
       <Box flexDirection={'row'} gap="sm" alignItems={'center'}>
-        {location.properties.depin_hardware.map(({ name, Icon }, index) => (
-          <Icon key={`${name}-${location.properties.name}-${index}`} width={25} height={25} />
-        ))}
+        {location.properties.deployable_hardware.map(hardware => {
+          const IconComponent = hardwareIconMap[hardware as keyof typeof hardwareIconMap];
+          return <IconComponent key={hardware + location.properties.name} width={25} height={25} />;
+        })}
       </Box>
     </Box>
   );

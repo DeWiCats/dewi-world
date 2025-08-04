@@ -189,7 +189,7 @@ export default function WorldScreen() {
       }
 
       // Adjust radius based on zoom level
-      const dynamicRadius = zoom > 15 ? 25 : zoom > 10 ? 50 : 100;
+      const dynamicRadius = zoom > 15 ? 125 : zoom > 10 ? 250 : 500;
 
       await fetchLocations(center[1], center[0], dynamicRadius);
     } catch (error) {
@@ -293,8 +293,8 @@ export default function WorldScreen() {
     <Box width="100%" height="100%" position={'relative'}>
       {selectedLocation && <LocationsHeader onExit={onCloseDrawer} onLike={() => {}} />}
       <MapView
-        ref={map}
         styleURL="mapbox://styles/mapbox/standard-beta"
+        ref={map}
         style={{ flex: 1 }}
         scaleBarEnabled={false}
         compassEnabled={false}
@@ -345,18 +345,8 @@ export default function WorldScreen() {
       </MapView>
       <WorldDrawer
         style={fadeInStyle}
-        locations={(geoJsonData.features || []).filter(Boolean).map(convertToLegacyFormat) as any}
-        onSelect={(legacyLocation: any) => {
-          if (!legacyLocation || !legacyLocation.properties || !legacyLocation.properties.name) {
-            console.warn('⚠️ Invalid legacyLocation in onSelect:', legacyLocation);
-            return;
-          }
-
-          const geoJsonLocation = (geoJsonData.features || []).find(
-            loc => loc && loc.properties && loc.properties.name === legacyLocation.properties.name
-          );
-          if (geoJsonLocation) onSelectFromDrawer(geoJsonLocation);
-        }}
+        locations={geoJsonData.features || []}
+        onSelect={location => onSelectFromDrawer(location)}
         onClose={onCloseDrawer}
         selectedLocation={
           selectedLocation ? (convertToLegacyFormat(selectedLocation) as any) : null

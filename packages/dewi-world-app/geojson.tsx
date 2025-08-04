@@ -1,3 +1,46 @@
+export const mapLocationToLegacyFeature = (location: LocationPost) => {
+  const feature: GeoJSONFeature = {
+    type: 'Feature',
+    geometry: { coordinates: [0, 0], type: 'Point' },
+    properties: {
+      name: location.title,
+      address: location.address,
+      description: location.description,
+      depin_hardware: location.deployable_hardware.slice(0, 5).map(hardware => ({
+        name: hardware,
+        Icon: hardwareIconMap[hardware as keyof typeof hardwareIconMap],
+      })),
+      owner_id: location.owner_id,
+      distance: location.distance,
+      deployment_cost: location.price.toString(),
+      photos: location.gallery,
+      extras: [],
+      is_negotiable: location.is_negotiable,
+    },
+  };
+  return feature;
+};
+
+export const mapLegacyFeatureToLocation = ({ properties }: GeoJSONFeature) => {
+  const location: LocationPost = {
+    address: properties.address,
+    deployable_hardware: properties.depin_hardware.map(hardware => hardware.name),
+    description: properties.description,
+    distance: properties.distance,
+    gallery: properties.photos,
+    id: 'locationPost' + Math.random() * 1000,
+    is_negotiable: false,
+    owner_id: '',
+    price: 100,
+    title: properties.name,
+    created_at: '',
+    rating: 5,
+    updated_at: '',
+  };
+
+  return location;
+};
+
 export type GeoJSONFeature = {
   type: 'Feature';
   geometry: GeoJSON.Point;
@@ -9,9 +52,9 @@ export type GeoJSONFeature = {
     deployment_cost: string;
     extras: string[];
     address: string;
-    photos: string[] | any[];
+    photos: string[];
     depin_hardware: { name: string; Icon: FC<SvgProps> }[];
-    is_negotiable: boolean
+    is_negotiable: boolean;
   };
 };
 
@@ -24,6 +67,8 @@ import WeatherLogo from '@/assets/svgs/weather-logo.svg';
 import WifiLogo from '@/assets/svgs/wifi-logo.svg';
 import { FC } from 'react';
 import { SvgProps } from 'react-native-svg';
+import { hardwareIconMap } from './components/LocationCard';
+import { LocationPost } from './utils/mockLocations';
 
 export default {
   type: 'FeatureCollection',
@@ -39,11 +84,11 @@ export default {
         extras: ['360° city views', 'Tourist hotspot', '24/7 security'],
         address: '20 W 34th St, New York, NY 10001, USA',
         photos: [
-          require('@/assets/images/locations/empire/1.png'),
-          require('@/assets/images/locations/empire/2.png'),
-          require('@/assets/images/locations/empire/3.png'),
-          require('@/assets/images/locations/empire/4.png'),
-          require('@/assets/images/locations/empire/5.png'),
+          '@/assets/images/locations/empire/1.png',
+          '@/assets/images/locations/empire/2.png',
+          '@/assets/images/locations/empire/3.png',
+          '@/assets/images/locations/empire/4.png',
+          '@/assets/images/locations/empire/5.png',
         ],
         depin_hardware: [
           { name: 'Helium Hotspot', Icon: HeliumLogo },
@@ -62,11 +107,11 @@ export default {
         extras: ['High consumer density', 'Entertainment district', 'Valet parking available'],
         address: '189 The Grove Dr, Los Angeles, CA 90036, USA',
         photos: [
-          require('@/assets/images/locations/grove/1.png'),
-          require('@/assets/images/locations/grove/2.png'),
-          require('@/assets/images/locations/grove/3.png'),
-          require('@/assets/images/locations/grove/4.png'),
-          require('@/assets/images/locations/grove/5.png'),
+          '@/assets/images/locations/grove/1.png',
+          '@/assets/images/locations/grove/2.png',
+          '@/assets/images/locations/grove/3.png',
+          '@/assets/images/locations/grove/4.png',
+          '@/assets/images/locations/grove/5.png',
         ],
         depin_hardware: [
           { name: '5G Small Cell', Icon: Logo5G },
@@ -85,11 +130,11 @@ export default {
         extras: ['Panoramic coverage potential', 'Business district location', 'ADA compliant'],
         address: '233 S Wacker Dr, Chicago, IL 60606, USA',
         photos: [
-          require('@/assets/images/locations/willis/1.png'),
-          require('@/assets/images/locations/willis/2.png'),
-          require('@/assets/images/locations/willis/3.png'),
-          require('@/assets/images/locations/willis/4.png'),
-          require('@/assets/images/locations/willis/5.png'),
+          '@/assets/images/locations/willis/1.png',
+          '@/assets/images/locations/willis/2.png',
+          '@/assets/images/locations/willis/3.png',
+          '@/assets/images/locations/willis/4.png',
+          '@/assets/images/locations/willis/5.png',
         ],
         depin_hardware: [
           { name: 'Weather Sensor Array', Icon: WeatherLogo },
@@ -108,11 +153,11 @@ export default {
         extras: ['Public transit hub', 'Frequent tech events', 'Solar-powered sections'],
         address: '865 Market St, San Francisco, CA 94103, USA',
         photos: [
-          require('@/assets/images/locations/westfield/1.png'),
-          require('@/assets/images/locations/westfield/2.png'),
-          require('@/assets/images/locations/westfield/3.png'),
-          require('@/assets/images/locations/westfield/4.png'),
-          require('@/assets/images/locations/westfield/5.png'),
+          '@/assets/images/locations/westfield/1.png',
+          '@/assets/images/locations/westfield/2.png',
+          '@/assets/images/locations/westfield/3.png',
+          '@/assets/images/locations/westfield/4.png',
+          '@/assets/images/locations/westfield/5.png',
         ],
         depin_hardware: [
           { name: 'Air Quality Monitor', Icon: AirLogo },
@@ -131,10 +176,10 @@ export default {
         extras: ['Coastal location', 'Outdoor/indoor spaces', 'Cruise passenger access'],
         address: '401 Biscayne Blvd, Miami, FL 33132, USA',
         photos: [
-          require('@/assets/images/locations/bayside/1.png'),
-          require('@/assets/images/locations/bayside/2.png'),
-          require('@/assets/images/locations/bayside/3.png'),
-          require('@/assets/images/locations/bayside/4.png'),
+          '@/assets/images/locations/bayside/1.png',
+          '@/assets/images/locations/bayside/2.png',
+          '@/assets/images/locations/bayside/3.png',
+          '@/assets/images/locations/bayside/4.png',
         ],
         depin_hardware: [
           { name: 'Marine Traffic Monitor', Icon: MarineLogo },
