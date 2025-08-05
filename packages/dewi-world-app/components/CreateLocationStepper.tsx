@@ -1,3 +1,4 @@
+import MobileWalletAdapterButton from '@/components/MobileWalletAdapterButton';
 import PlaceAutocomplete from '@/components/PlaceAutocomplete';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
@@ -16,7 +17,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// Import hardware icons
+// Import hardware icons and Solana functionality
 import { useStepperStore } from '@/stores/useStepperStore';
 import Icon5G from '@assets/svgs/5g-logo.svg';
 import IconAir from '@assets/svgs/air-logo.svg';
@@ -37,6 +38,16 @@ const hardwareOptions = [
   { id: 'air', name: 'Air Quality', Icon: IconAir },
   { id: 'marine', name: 'Marine', Icon: IconMarine },
 ];
+
+// Solana configuration
+const RECIPIENT_ADDRESS = 'nipBsDsozuLnFZ4uKRMprsEsbi7WtQcRJu8NZZogPnJ'; // Valid base58 Solana address (System Program)
+const PAYMENT_AMOUNT_SOL = 0.1;
+
+const APP_IDENTITY = {
+  name: 'DeWiWorld',
+  uri: 'https://dewicats.com',
+  icon: '/favicon.ico',
+};
 
 interface StepperProps {
   onComplete: () => void;
@@ -64,11 +75,17 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       deployable_hardware: [],
       gallery: [],
     });
+    setPaymentStatus('pending');
+    setTransactionSignature(null);
     onComplete();
   };
 
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<
+    'pending' | 'processing' | 'completed' | 'failed'
+  >('pending');
+  const [transactionSignature, setTransactionSignature] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -121,6 +138,11 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       subtitle: 'Show off your location with high-quality images',
       icon: '📸',
     },
+    {
+      title: 'Connect & pay to create location',
+      subtitle: `Pay ${PAYMENT_AMOUNT_SOL} SOL to publish your location and make it discoverable`,
+      icon: '💳',
+    },
   ];
 
   const nextStep = () => {
@@ -163,14 +185,30 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
         return formData.deployable_hardware.length > 0;
       case 5:
         return selectedImages.length > 0;
+      case 6:
+        return paymentStatus === 'completed';
       default:
         return false;
     }
   };
 
-  const handleFinish = async () => {
-    if (!canProceed()) return;
+  const handlePaymentSuccess = async (signature: string) => {
+    setTransactionSignature(signature);
+    setPaymentStatus('processing');
 
+    // Show a brief success message before creating location
+    setTimeout(async () => {
+      setPaymentStatus('completed');
+      await createLocationAfterPayment();
+    }, 1500);
+  };
+
+  const handlePaymentFailure = (error: string) => {
+    setPaymentStatus('failed');
+    console.error('Payment failed:', error);
+  };
+
+  const createLocationAfterPayment = async () => {
     try {
       setLoading(true);
 
@@ -203,18 +241,44 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       await createLocation(locationData);
       await refreshLocations();
 
-      // Success animation and callback
-      opacity.value = withTiming(0, { duration: 500 }, finished => {
-        if (finished) {
-          runOnJS(onCompleteHandler)();
-        }
-      });
+      Alert.alert(
+        'Location Created Successfully!',
+        'Your location has been published and is now discoverable by hosts.',
+        [
+          {
+            text: 'Great!',
+            onPress: () => {
+              // Success animation and callback
+              opacity.value = withTiming(0, { duration: 500 }, finished => {
+                if (finished) {
+                  runOnJS(onCompleteHandler)();
+                }
+              });
+            },
+          },
+        ]
+      );
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Failed to create location');
+      setPaymentStatus('failed');
     } finally {
       setLoading(false);
       setUploadProgress({ completed: 0, total: 0 });
     }
+  };
+
+  const handleFinish = async () => {
+    if (!canProceed()) return;
+
+    // For the payment step, the MobileWalletAdapterButton handles the payment
+    // and calls handlePaymentSuccess which automatically creates the location
+    if (currentStep === 6) {
+      // Payment is handled by the MobileWalletAdapterButton
+      return;
+    }
+
+    // Continue to next step for other steps
+    nextStep();
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -229,7 +293,7 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
           <Box
             height={4}
             borderRadius="xs"
-            backgroundColor={index <= currentStep ? 'blue.500' : 'inputBackground'}
+            backgroundColor={index <= currentStep ? 'base.white' : 'inputBackground'}
             style={{
               opacity: index <= currentStep ? 1 : 0.3,
             }}
@@ -300,6 +364,18 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
             isLoading={loading}
           />
         );
+      case 6:
+        return (
+          <PaymentStep
+            paymentStatus={paymentStatus}
+            transactionSignature={transactionSignature}
+            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentFailure={handlePaymentFailure}
+            isLoading={loading}
+            amount={PAYMENT_AMOUNT_SOL}
+            recipientAddress={RECIPIENT_ADDRESS}
+          />
+        );
       default:
         return null;
     }
@@ -348,7 +424,7 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
             marginBottom="4"
           >
             <Pressable onPress={() => (currentStep > 0 ? prevStep() : onExit())}>
-              <Text variant="textMdRegular" color="blue.500">
+              <Text variant="textMdRegular" color="base.white">
                 {currentStep > 0 ? '← Back' : '✕ Cancel'}
               </Text>
             </Pressable>
@@ -398,30 +474,29 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
             elevation: 10,
           }}
         >
-          <Pressable
-            onPress={currentStep === steps.length - 1 ? handleFinish : nextStep}
-            disabled={!canProceed() || loading}
-            style={({ pressed }) => ({
-              backgroundColor: canProceed() && !loading ? '#3b82f6' : '#555',
-              paddingVertical: 16,
-              paddingHorizontal: 24,
-              borderRadius: 16,
-              opacity: pressed ? 0.8 : 1,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 8,
-            })}
-          >
-            <Text variant="textLgBold" color="primaryBackground" textAlign="center">
-              {loading
-                ? 'Creating...'
-                : currentStep === steps.length - 1
-                  ? 'Create Location'
-                  : 'Continue'}
-            </Text>
-          </Pressable>
+          {/* Hide the bottom button on payment step since MobileWalletAdapterButton handles it */}
+          {currentStep !== 6 && (
+            <Pressable
+              onPress={handleFinish}
+              disabled={!canProceed() || loading}
+              style={({ pressed }) => ({
+                backgroundColor: canProceed() && !loading ? 'white' : '#555',
+                paddingVertical: 16,
+                paddingHorizontal: 24,
+                borderRadius: 500,
+                opacity: pressed ? 0.8 : 1,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 8,
+              })}
+            >
+              <Text variant="textLgBold" color="primaryBackground" textAlign="center">
+                {loading ? 'Processing...' : 'Continue'}
+              </Text>
+            </Pressable>
+          )}
         </Box>
       </Box>
     </Portal>
@@ -476,13 +551,7 @@ const LocationStep = ({
   <Box>
     <PlaceAutocomplete onPlaceSelected={onPlaceSelected} />
     {selectedAddress && (
-      <Box
-        marginTop="4"
-        padding="4"
-        backgroundColor="green.500"
-        borderRadius="xl"
-        style={{ opacity: 0.1 }}
-      >
+      <Box marginTop="4" padding="4" backgroundColor="green.100" borderRadius="xl">
         <Text variant="textMdRegular" color="green.500" textAlign="center">
           ✓ {selectedAddress}
         </Text>
@@ -634,8 +703,7 @@ const HardwareStep = ({
             <Box
               borderRadius="xl"
               borderWidth={3}
-              borderColor={isSelected ? 'blue.500' : 'inputBackground'}
-              backgroundColor={isSelected ? 'blue.500' : 'inputBackground'}
+              backgroundColor={isSelected ? 'base.white' : 'inputBackground'}
               paddingHorizontal="4"
               paddingVertical="4"
               alignItems="center"
@@ -650,7 +718,7 @@ const HardwareStep = ({
               }}
             >
               <Box marginBottom="2">
-                <hardware.Icon width={32} height={32} />
+                <hardware.Icon width={32} height={32} color={isSelected ? 'black' : 'white'} />
               </Box>
               <Text
                 variant="textMdMedium"
@@ -742,11 +810,10 @@ const PhotosStep = ({
       {selectedImages.length < 5 && (
         <Pressable onPress={handleImagePicker} disabled={isLoading}>
           <Box
-            backgroundColor="inputBackground"
+            backgroundColor="gray.700"
             borderRadius="xl"
             borderWidth={3}
             borderStyle="dashed"
-            borderColor="blue.500"
             padding="6"
             alignItems="center"
             justifyContent="center"
@@ -785,6 +852,231 @@ const PhotosStep = ({
               width={`${(uploadProgress.completed / uploadProgress.total) * 100}%`}
             />
           </Box>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+const PaymentStep = ({
+  paymentStatus,
+  transactionSignature,
+  onPaymentSuccess,
+  onPaymentFailure,
+  isLoading,
+  amount,
+  recipientAddress,
+}: {
+  paymentStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  transactionSignature: string | null;
+  onPaymentSuccess: (signature: string) => Promise<void>;
+  onPaymentFailure: (error: string) => void;
+  isLoading: boolean;
+  amount: number;
+  recipientAddress: string;
+}) => {
+  const getStatusDisplay = () => {
+    switch (paymentStatus) {
+      case 'completed':
+        return {
+          icon: '🎉',
+          title: 'Payment Successful!',
+          subtitle: 'Your location is being created...',
+          color: '#10b981', // emerald-500
+          bgColor: 'rgba(16, 185, 129, 0.1)',
+        };
+      case 'failed':
+        return {
+          icon: '💫',
+          title: 'Payment Issue',
+          subtitle: "Let's try that again",
+          color: '#f59e0b', // amber-500
+          bgColor: 'rgba(245, 158, 11, 0.1)',
+        };
+      case 'processing':
+        return {
+          icon: '⚡',
+          title: transactionSignature ? 'Creating Location...' : 'Processing Payment...',
+          subtitle: transactionSignature
+            ? 'Uploading images and finalizing...'
+            : 'Please confirm in your wallet',
+          color: '#3b82f6', // blue-500
+          bgColor: 'white',
+        };
+      default:
+        return {
+          icon: '💳',
+          title: 'Ready to Create Location',
+          subtitle: `Connect your wallet to pay ${amount} SOL`,
+          color: '#3b82f6', // blue-500
+          bgColor: 'white',
+        };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay();
+
+  return (
+    <Box>
+      {/* Main Status Card */}
+      <Box
+        backgroundColor="inputBackground"
+        borderRadius="3xl"
+        padding="8"
+        marginBottom="6"
+        alignItems="center"
+        style={{
+          backgroundColor: statusDisplay.bgColor,
+          borderWidth: 1,
+          borderColor: statusDisplay.color + '20',
+          shadowColor: statusDisplay.color,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 8,
+        }}
+      >
+        <Text style={{ fontSize: 72 }} marginBottom="4">
+          {statusDisplay.icon}
+        </Text>
+        <Text variant="textXlBold" marginBottom="2" style={{ color: statusDisplay.color }}>
+          {statusDisplay.title}
+        </Text>
+        <Text
+          variant="textMdRegular"
+          color="secondaryText"
+          textAlign="center"
+          style={{ opacity: 0.8 }}
+        >
+          {statusDisplay.subtitle}
+        </Text>
+      </Box>
+
+      {/* Payment Details */}
+      <Box
+        backgroundColor="inputBackground"
+        borderRadius="2xl"
+        padding="6"
+        marginBottom="6"
+        style={{
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 3,
+        }}
+      >
+        <Box
+          flexDirection="row"
+          justifyContent="space-between"
+          alignItems="center"
+          marginBottom="4"
+        >
+          <Text variant="textMdMedium" color="secondaryText">
+            Amount
+          </Text>
+          <Text variant="textLgBold" color="primaryText">
+            {amount} SOL
+          </Text>
+        </Box>
+
+        <Box
+          flexDirection="row"
+          justifyContent="space-between"
+          alignItems="center"
+          marginBottom="4"
+        >
+          <Text variant="textMdMedium" color="secondaryText">
+            Network
+          </Text>
+          <Box
+            backgroundColor="base.white"
+            paddingHorizontal="3"
+            paddingVertical="1"
+            borderRadius="full"
+            style={{ opacity: 0.9 }}
+          >
+            <Text variant="textSmMedium" color="base.black">
+              Devnet
+            </Text>
+          </Box>
+        </Box>
+
+        {transactionSignature && (
+          <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+            <Text variant="textMdMedium" color="secondaryText">
+              Transaction
+            </Text>
+            <Text variant="textMdRegular" color="blue.500" style={{ fontFamily: 'monospace' }}>
+              {transactionSignature.slice(0, 6)}...{transactionSignature.slice(-4)}
+            </Text>
+          </Box>
+        )}
+      </Box>
+
+      {/* Action Button */}
+      {paymentStatus === 'pending' || paymentStatus === 'failed' ? (
+        <Box>
+          <MobileWalletAdapterButton
+            paymentMode={true}
+            paymentAmount={amount}
+            recipientAddress={recipientAddress}
+            onPaymentSuccess={onPaymentSuccess}
+            onPaymentFailure={onPaymentFailure}
+            verifying={isLoading}
+            paymentDescription="Location Creation Payment"
+          />
+
+          {/* Helpful tip */}
+          <Box
+            marginTop="4"
+            padding="4"
+            backgroundColor="inputBackground"
+            borderRadius="xl"
+            style={{ opacity: 0.7 }}
+          >
+            <Text variant="textSmRegular" color="secondaryText" textAlign="center">
+              💡 Make sure you have a Solana wallet app installed (Phantom, Solflare, etc.)
+            </Text>
+          </Box>
+        </Box>
+      ) : paymentStatus === 'processing' ? (
+        <Box
+          backgroundColor="blue.500"
+          paddingVertical="5"
+          paddingHorizontal="6"
+          borderRadius="2xl"
+          alignItems="center"
+          style={{
+            shadowColor: '#3b82f6',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
+        >
+          <Text variant="textLgBold" color="primaryBackground">
+            {transactionSignature ? '🏗️ Creating Location...' : '⚡ Processing Payment...'}
+          </Text>
+        </Box>
+      ) : (
+        <Box
+          backgroundColor="green.500"
+          paddingVertical="5"
+          paddingHorizontal="6"
+          borderRadius="2xl"
+          alignItems="center"
+          style={{
+            shadowColor: '#10b981',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
+        >
+          <Text variant="textLgBold" color="primaryBackground">
+            🎉 Payment Complete!
+          </Text>
         </Box>
       )}
     </Box>

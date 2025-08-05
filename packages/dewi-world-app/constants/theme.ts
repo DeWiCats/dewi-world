@@ -1,7 +1,7 @@
 import { createTheme } from '@shopify/restyle';
 
-import darkThemeTokens from '@novalabsxyz/mobile-theme/build/dark-theme.json';
-import lightThemeTokens from '@novalabsxyz/mobile-theme/build/light-theme.json';
+import darkThemeTokens from './dark-theme.json';
+import lightThemeTokens from './light-theme.json';
 
 const NovaFont = {
   bold: 'Figtree',

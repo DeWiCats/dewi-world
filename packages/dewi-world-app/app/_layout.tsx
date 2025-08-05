@@ -10,11 +10,14 @@ import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Platform, UIManager } from 'react-native';
+import { LogBox, Platform, UIManager } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+// Hide all LogBox warnings for demo recording
+LogBox.ignoreAllLogs();
 
 export default function RootLayout() {
   const { hydrated, user, session } = useAuthStore();
