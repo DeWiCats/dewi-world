@@ -3,8 +3,7 @@ import Box from '@/components/ui/Box';
 import ImageBox from '@/components/ui/ImageBox';
 import Text from '@/components/ui/Text';
 import { useConversations } from '@/hooks/useMessages';
-import { Conversation } from '@/lib/messagingAPI';
-import { useAppStore } from '@/stores/useAppStore';
+import { Conversation } from '@/lib/messagingTypes';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -114,7 +113,6 @@ export default function ChatListScreen() {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const { user, session, hydrated } = useAuthStore();
-  const { mockMode, setMockMode } = useAppStore();
 
   const { conversations, loading, error, refreshing, refreshConversations } = useConversations();
 
@@ -126,11 +124,10 @@ export default function ChatListScreen() {
       hasSession: !!session,
       hasToken: !!session?.access_token,
       userEmail: user?.email,
-      mockMode,
       loading,
       error,
     });
-  }, [hydrated, user, session, mockMode, loading, error]);
+  }, [hydrated, user, session, loading, error]);
 
   // Filter conversations based on search
   const filteredConversations = conversations.filter(conv => {
@@ -151,39 +148,14 @@ export default function ChatListScreen() {
     nav.push('chat/Conversation' as any, { conversationId: conversation.id });
   };
 
-  const toggleMockMode = () => {
-    console.log('🔄 Toggling mock mode from', mockMode, 'to', !mockMode);
-    setMockMode(!mockMode);
-    refreshConversations();
-  };
-
   const renderEmptyState = () => (
-    <Box
-      flex={1}
-      alignItems="center"
-      justifyContent="center"
-      paddingHorizontal="8"
-      style={{ marginTop: 100 }}
-    >
-      <Text variant="textLgBold" color="primaryBackground" textAlign="center" marginBottom="2">
+    <Box flex={1} alignItems="center" justifyContent="center" paddingHorizontal="8">
+      <Text variant="textLgBold" color="primaryText" textAlign="center" marginBottom="2">
         💬 No conversations yet
       </Text>
       <Text variant="textMdRegular" color="secondaryText" textAlign="center" marginBottom="6">
         Start a conversation by messaging someone about a location post
       </Text>
-      <Pressable
-        onPress={() => locationsNav.push('Locations')}
-        style={{
-          backgroundColor: '#3b82f6',
-          paddingHorizontal: 24,
-          paddingVertical: 12,
-          borderRadius: 12,
-        }}
-      >
-        <Text variant="textMdBold" color="primaryBackground">
-          Browse Locations
-        </Text>
-      </Pressable>
     </Box>
   );
 
@@ -305,18 +277,6 @@ export default function ChatListScreen() {
             }}
           />
         </Box>
-
-        {/* Debug info */}
-        <Box marginTop="2">
-          <Text variant="textXsRegular" color="secondaryText">
-            Auth: {hydrated ? (user ? '✅ Signed In' : '❌ Not Signed In') : '⏳ Loading...'}
-          </Text>
-          <Pressable onPress={toggleMockMode}>
-            <Text variant="textXsRegular" color="blue.500">
-              {mockMode ? 'Mock Mode' : 'Live Mode'} • Tap to toggle
-            </Text>
-          </Pressable>
-        </Box>
       </Box>
 
       {/* Conversations list */}
@@ -338,7 +298,7 @@ export default function ChatListScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={refreshConversations}
-              tintColor="#3b82f6"
+              tintColor="white"
             />
           }
         />

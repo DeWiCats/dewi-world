@@ -9,7 +9,6 @@ export const createLocationSchema = {
       'price',
       'is_negotiable',
       'gallery',
-      'distance',
     ],
     properties: {
       title: { type: 'string', minLength: 1, maxLength: 200 },
@@ -27,7 +26,6 @@ export const createLocationSchema = {
         items: { type: 'string', format: 'uri' },
       },
       rating: { type: 'number', minimum: 0, maximum: 5 },
-      distance: { type: 'number', minimum: 0 },
     },
   },
   response: {

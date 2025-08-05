@@ -9,7 +9,7 @@ import { GeoJSONLocation } from '@/lib/geojsonAPI';
 import { ww } from '@/utils/layout';
 import { CreateConversationRequest } from '@/utils/mockMessaging';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, StyleProp, ViewStyle } from 'react-native';
 import { AnimatedStyle } from 'react-native-reanimated';
@@ -36,6 +36,7 @@ export default function WorldDrawer({
   const { bottom } = useSafeAreaInsets();
 
   const nav = useNavigation<ChatStackNavigationProp>();
+  const router = useRouter();
   const { createConversation } = useConversations();
 
   const messageOwnerHandler = async (location: GeoJSONLocation) => {
@@ -56,7 +57,11 @@ export default function WorldDrawer({
       console.log('Successfully created the following conversation:', response);
 
       //TODO fix
-      nav.push('chat/Conversation' as any, { conversationId: response.id });
+      // nav.push('chat/index', { conversationId: response.id });
+      router.push({
+        pathname: '/(tabs)/chat',
+        params: { conversationId: response.id },
+      });
 
       onClose();
     } catch (error) {

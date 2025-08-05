@@ -27,7 +27,6 @@ export interface CreateLocationRequest {
   is_negotiable: boolean;
   gallery: string[];
   rating?: number;
-  distance: number;
 }
 
 export interface UpdateLocationRequest {
@@ -39,7 +38,6 @@ export interface UpdateLocationRequest {
   is_negotiable?: boolean;
   gallery?: string[];
   rating?: number;
-  distance?: number;
 }
 
 export interface LocationQueryParams {

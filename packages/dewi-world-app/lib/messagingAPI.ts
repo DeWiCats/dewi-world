@@ -1,5 +1,5 @@
-import { useAppStore } from '@/stores/useAppStore';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { supabase } from '@/utils/supabase';
 import {
   Conversation,
   ConversationQueryParams,
@@ -11,9 +11,7 @@ import {
   MessageQueryParams,
   MessageResponse,
   MessagesResponse,
-  mockMessagingAPI,
-} from '@/utils/mockMessaging';
-import { supabase } from '@/utils/supabase';
+} from './messagingTypes';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3006';
 
@@ -22,6 +20,35 @@ class RealMessagingAPI {
   private getAuthHeaders(): { Authorization: string } {
     const { getAuthHeaders } = require('@/lib/authHelpers');
     return getAuthHeaders();
+  }
+
+  async getConversation(conversationId: string): Promise<ConversationResponse> {
+    try {
+      const headers = await this.getAuthHeaders();
+      if (!headers) {
+        throw new Error('No authentication token');
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/messaging/conversations/${conversationId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      throw error;
+    }
   }
 
   async getConversations(params?: ConversationQueryParams): Promise<ConversationsResponse> {
@@ -96,36 +123,42 @@ class RealMessagingAPI {
     conversationId: string,
     params?: MessageQueryParams
   ): Promise<MessagesResponse> {
+    const headers = await this.getAuthHeaders();
+
     try {
-      const headers = await this.getAuthHeaders();
-      if (!headers) {
-        throw new Error('No authentication token');
-      }
-
-      const searchParams = new URLSearchParams();
-      if (params?.limit) searchParams.append('limit', params.limit.toString());
-      if (params?.offset) searchParams.append('offset', params.offset.toString());
-      if (params?.before) searchParams.append('before', params.before);
-
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/messaging/conversations/${conversationId}/messages?${searchParams}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...headers,
-          },
-        }
+      const url = new URL(
+        `${API_BASE_URL}/api/v1/messaging/conversations/${conversationId}/messages`
       );
+
+      if (params?.limit) url.searchParams.append('limit', params.limit.toString());
+      if (params?.offset) url.searchParams.append('offset', params.offset.toString());
+      if (params?.before) url.searchParams.append('before', params.before);
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers,
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      return {
+        success: true,
+        data: data.data,
+        total: data.total,
+        message: 'Messages fetched successfully',
+      };
     } catch (error) {
       console.error('Error fetching messages:', error);
-      throw error;
+      return {
+        success: false,
+        data: [],
+        total: 0,
+        message: error instanceof Error ? error.message : 'Failed to fetch messages',
+      };
     }
   }
 
@@ -138,7 +171,7 @@ class RealMessagingAPI {
 
       const url = `${API_BASE_URL}/api/v1/messaging/messages`;
 
-      console.log('Sending conversation message with following parameters:');
+      console.log('📤 Sending conversation message with following parameters:');
       console.log('URL', url);
       console.log('Body', messageData);
       console.log('Headers', headers);
@@ -166,18 +199,14 @@ class RealMessagingAPI {
   async markMessagesAsRead(
     conversationId: string
   ): Promise<{ success: boolean; message: string; updated_count: number }> {
-    try {
-      const headers = await this.getAuthHeaders();
-      if (!headers) {
-        throw new Error('No authentication token');
-      }
+    const headers = await this.getAuthHeaders();
 
+    try {
       const response = await fetch(
         `${API_BASE_URL}/api/v1/messaging/conversations/${conversationId}/read`,
         {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
             ...headers,
           },
         }
@@ -187,10 +216,20 @@ class RealMessagingAPI {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      return {
+        success: true,
+        message: data.message,
+        updated_count: data.updated_count,
+      };
     } catch (error) {
       console.error('Error marking messages as read:', error);
-      throw error;
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to mark messages as read',
+        updated_count: 0,
+      };
     }
   }
 
@@ -239,7 +278,7 @@ class RealMessagingAPI {
           event: '*',
           schema: 'public',
           table: 'conversations',
-          filter: `or(user_one_id.eq.${user.id},user_two_id.eq.${user.id})`,
+          filter: `participant_ids.cs.{${user.id}}`,
         },
         async payload => {
           console.log('Conversation updated:', payload);
@@ -263,94 +302,8 @@ class RealMessagingAPI {
   }
 }
 
-const realAPI = new RealMessagingAPI();
-
-// Unified API that switches between mock and real based on mockMode
-export class MessagingAPI {
-  async getConversations(params?: ConversationQueryParams): Promise<ConversationsResponse> {
-    const { mockMode } = useAppStore.getState();
-    if (mockMode) {
-      return mockMessagingAPI.getConversations(params);
-    } else {
-      try {
-        const { user } = useAuthStore.getState();
-        if (!user) {
-          throw new Error('Please log in to view conversations');
-        }
-        return realAPI.getConversations(params);
-      } catch (error) {
-        console.error('Error fetching conversations:', error);
-        if (error instanceof Error && error.message.includes('log in')) {
-          throw error;
-        }
-        throw new Error('Failed to load conversations. Please try again.');
-      }
-    }
-  }
-
-  async createConversation(
-    conversationData: CreateConversationRequest
-  ): Promise<ConversationResponse> {
-    const { mockMode } = useAppStore.getState();
-    if (mockMode) {
-      return mockMessagingAPI.createConversation(conversationData);
-    } else {
-      return realAPI.createConversation(conversationData);
-    }
-  }
-
-  async getMessages(
-    conversationId: string,
-    params?: MessageQueryParams
-  ): Promise<MessagesResponse> {
-    const { mockMode } = useAppStore.getState();
-    if (mockMode) {
-      return mockMessagingAPI.getMessages(conversationId, params);
-    } else {
-      return realAPI.getMessages(conversationId, params);
-    }
-  }
-
-  async sendMessage(messageData: CreateMessageRequest): Promise<MessageResponse> {
-    const { mockMode } = useAppStore.getState();
-    if (mockMode) {
-      return mockMessagingAPI.sendMessage(messageData);
-    } else {
-      return realAPI.sendMessage(messageData);
-    }
-  }
-
-  async markMessagesAsRead(
-    conversationId: string
-  ): Promise<{ success: boolean; message: string; updated_count: number }> {
-    const { mockMode } = useAppStore.getState();
-    if (mockMode) {
-      return mockMessagingAPI.markMessagesAsRead(conversationId);
-    } else {
-      return realAPI.markMessagesAsRead(conversationId);
-    }
-  }
-
-  subscribeToMessages(conversationId: string, callback: (message: Message) => void) {
-    const { mockMode } = useAppStore.getState();
-    if (mockMode) {
-      return mockMessagingAPI.subscribeToMessages(conversationId, callback);
-    } else {
-      return realAPI.subscribeToMessages(conversationId, callback);
-    }
-  }
-
-  subscribeToConversations(callback: (conversations: Conversation[]) => void) {
-    const { mockMode } = useAppStore.getState();
-    if (mockMode) {
-      return mockMessagingAPI.subscribeToConversations(callback);
-    } else {
-      return realAPI.subscribeToConversations(callback);
-    }
-  }
-}
-
-export const messagingAPI = new MessagingAPI();
+// Export the real API directly - no more mock mode
+export const messagingAPI = new RealMessagingAPI();
 
 // Export types for convenience
 export type {
@@ -363,6 +316,5 @@ export type {
   Message,
   MessageQueryParams,
   MessageResponse,
-  MessagesResponse
+  MessagesResponse,
 };
-

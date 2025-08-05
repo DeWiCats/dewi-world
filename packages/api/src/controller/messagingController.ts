@@ -61,6 +61,80 @@ function formatMessageResponse(row: any): Message {
 }
 
 export default async function messagingController(fastify: FastifyInstance) {
+  // GET /conversations/:conversationId - Get single conversation
+  fastify.get(
+    '/conversations/:conversationId',
+    {
+      preHandler: authMiddleware,
+    },
+    async (request: AuthenticatedRequest, reply: FastifyReply) => {
+      try {
+        const { conversationId } = request.params as { conversationId: string };
+        const userId = request.user_id!;
+
+        // Get conversation and verify user is participant
+        const { data: conversation, error } = await supabase
+          .from('conversations')
+          .select('*')
+          .eq('id', conversationId)
+          .contains('participant_ids', [userId])
+          .single();
+
+        if (error || !conversation) {
+          return reply.status(404).send({
+            success: false,
+            message: 'Conversation not found or access denied',
+          });
+        }
+
+        // Get other user ID (the participant who is not the current user)
+        const otherUserId = conversation.participant_ids.find((id: string) => id !== userId);
+        let otherUser = { id: otherUserId, email: 'user@example.com' }; // Fallback
+
+        // Try to get user email from auth.users (if accessible)
+        if (otherUserId) {
+          const { data: userData } = await supabase
+            .from('auth.users')
+            .select('email')
+            .eq('id', otherUserId)
+            .single();
+
+          if (userData) {
+            otherUser = { id: otherUserId, email: userData.email };
+          }
+        }
+
+        // Get location data if exists
+        let location = null;
+        if (conversation.location_id) {
+          const { data: locationData } = await supabase
+            .from('locations')
+            .select('id, title, address, gallery')
+            .eq('id', conversation.location_id)
+            .single();
+          location = locationData;
+        }
+
+        const formattedConversation = formatConversationResponse(
+          conversation,
+          otherUser,
+          location,
+          0
+        );
+
+        reply.send({
+          success: true,
+          data: formattedConversation,
+        });
+      } catch (error) {
+        reply.status(500).send({
+          success: false,
+          message: 'Internal server error',
+        });
+      }
+    }
+  );
+
   // GET /conversations - List user's conversations
   fastify.get(
     '/conversations',
@@ -72,8 +146,6 @@ export default async function messagingController(fastify: FastifyInstance) {
       try {
         const query = request.query as ConversationQueryParams;
         const userId = request.user_id!;
-
-        console.log('🔍 Fetching conversations for user:', userId);
 
         // Build query to get conversations where user is a participant
         let supabaseQuery = supabase
@@ -95,13 +167,7 @@ export default async function messagingController(fastify: FastifyInstance) {
 
         const { data: conversations, error, count } = await supabaseQuery;
 
-        console.log('📋 Conversations query result:', {
-          count: conversations?.length,
-          error: error?.message,
-        });
-
         if (error) {
-          console.error('Error fetching conversations:', error);
           return reply.status(500).send({
             success: false,
             message: 'Failed to fetch conversations',
@@ -117,7 +183,6 @@ export default async function messagingController(fastify: FastifyInstance) {
             .from('messages')
             .select('conversation_id')
             .in('conversation_id', conversationIds)
-            .eq('sender_id', userId)
             .neq('sender_id', userId) // Messages not sent by current user
             .eq('is_read', false);
 
@@ -170,15 +235,12 @@ export default async function messagingController(fastify: FastifyInstance) {
           }
         }
 
-        console.log('✅ Returning conversations:', formattedConversations.length);
-
         reply.send({
           success: true,
           data: formattedConversations,
           total: count || formattedConversations.length,
         });
       } catch (error) {
-        console.error('Unexpected error:', error);
         reply.status(500).send({
           success: false,
           message: 'Internal server error',
@@ -205,12 +267,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           });
         }
 
-        console.log('🆕 Creating conversation:', {
-          userId,
-          receiverId: body.receiver_id,
-          locationId: body.location_id,
-        });
-
         // Use the database function to get or create conversation
         const { data: conversationId, error: funcError } = await supabase.rpc(
           'get_or_create_conversation',
@@ -222,7 +278,6 @@ export default async function messagingController(fastify: FastifyInstance) {
         );
 
         if (funcError) {
-          console.error('Error creating conversation:', funcError);
           return reply.status(500).send({
             success: false,
             message: 'Failed to create conversation',
@@ -238,7 +293,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           });
 
           if (messageError) {
-            console.error('Error sending initial message:', messageError);
             // Don't fail the conversation creation, just log the error
           }
         }
@@ -251,7 +305,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           .single();
 
         if (fetchError || !conversation) {
-          console.error('Error fetching conversation:', fetchError);
           return reply.status(500).send({
             success: false,
             message: 'Failed to fetch conversation details',
@@ -286,7 +339,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           message: 'Conversation created successfully',
         });
       } catch (error) {
-        console.error('Unexpected error:', error);
         reply.status(500).send({
           success: false,
           message: 'Internal server error',
@@ -350,7 +402,6 @@ export default async function messagingController(fastify: FastifyInstance) {
         const { data: messages, error, count } = await supabaseQuery;
 
         if (error) {
-          console.error('Error fetching messages:', error);
           return reply.status(500).send({
             success: false,
             message: 'Failed to fetch messages',
@@ -365,7 +416,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           total: count || formattedMessages.length,
         });
       } catch (error) {
-        console.error('Unexpected error:', error);
         reply.status(500).send({
           success: false,
           message: 'Internal server error',
@@ -381,7 +431,6 @@ export default async function messagingController(fastify: FastifyInstance) {
       preHandler: authMiddleware,
     },
     async (request: AuthenticatedRequest, reply: FastifyReply) => {
-      console.log('Creating new message from conversation...');
       try {
         const body = request.body as CreateMessageRequest;
         const userId = request.user_id;
@@ -394,7 +443,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           .single();
 
         if (convError || !conversation) {
-          console.error('ERROR', convError);
           return reply.status(404).send({
             success: false,
             message: 'Conversation not found',
@@ -420,7 +468,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           .single();
 
         if (error) {
-          console.error('Error sending message:', error);
           return reply.status(500).send({
             success: false,
             message: 'Failed to send message',
@@ -435,7 +482,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           message: 'Message sent successfully',
         });
       } catch (error) {
-        console.error('Unexpected error:', error);
         reply.status(500).send({
           success: false,
           message: 'Internal server error',
@@ -487,7 +533,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           .select('id');
 
         if (error) {
-          console.error('Error marking messages as read:', error);
           return reply.status(500).send({
             success: false,
             message: 'Failed to mark messages as read',
@@ -500,7 +545,6 @@ export default async function messagingController(fastify: FastifyInstance) {
           updated_count: data?.length || 0,
         });
       } catch (error) {
-        console.error('Unexpected error:', error);
         reply.status(500).send({
           success: false,
           message: 'Internal server error',

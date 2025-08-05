@@ -1,3 +1,4 @@
+import { messagingAPI } from '@/lib/messagingAPI';
 import {
   Conversation,
   ConversationQueryParams,
@@ -5,10 +6,55 @@ import {
   CreateMessageRequest,
   Message,
   MessageQueryParams,
-  messagingAPI,
-} from '@/lib/messagingAPI';
+} from '@/lib/messagingTypes';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { supabase } from '@/utils/supabase';
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+// Hook for getting a single conversation
+export function useConversation(conversationId: string) {
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthStore();
+
+  const fetchConversation = useCallback(async () => {
+    if (!user || !conversationId) {
+      setConversation(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setError(null);
+      setLoading(true);
+      const response = await messagingAPI.getConversation(conversationId);
+
+      if (response.success) {
+        setConversation(response.data);
+      } else {
+        throw new Error(response.message || 'Failed to fetch conversation');
+      }
+    } catch (err) {
+      console.error('Error fetching conversation:', err);
+      const message = err instanceof Error ? err.message : 'Failed to fetch conversation';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, conversationId]);
+
+  useEffect(() => {
+    fetchConversation();
+  }, [fetchConversation]);
+
+  return {
+    conversation,
+    loading,
+    error,
+    refetch: fetchConversation,
+  };
+}
 
 // Hook for managing conversations list
 export function useConversations(params?: ConversationQueryParams) {
@@ -97,6 +143,16 @@ export function useConversations(params?: ConversationQueryParams) {
   );
 
   const markConversationAsRead = useCallback(async (conversationId: string) => {
+    if (!conversationId) {
+      return;
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(conversationId)) {
+      return;
+    }
+
     try {
       await messagingAPI.markMessagesAsRead(conversationId);
 
@@ -143,7 +199,6 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
         if (loadMore) {
           setLoadingMore(true);
         }
-        console.log('loading messages');
 
         const currentMessages = loadMore ? messages : [];
         const offset = loadMore ? currentMessages.length : 0;
@@ -152,7 +207,6 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
           ...params,
           offset,
         });
-        console.log('new Messages', response);
 
         if (response.success) {
           const newMessages = response.data;
@@ -180,7 +234,7 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
         setLoadingMore(false);
       }
     },
-    [user, conversationId, params, messages]
+    [user, conversationId, params?.limit, params?.offset, params?.before]
   );
 
   // Initial fetch
@@ -188,6 +242,7 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
     setMessages([]);
     setLoading(true);
     setHasMore(true);
+
     fetchMessages();
   }, [conversationId, user]);
 
@@ -200,7 +255,9 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
       setMessages(prev => {
         // Check if message already exists (avoid duplicates)
         const exists = prev.some(m => m.id === newMessage.id);
-        if (exists) return prev;
+        if (exists) {
+          return prev;
+        }
 
         // Add new message to the beginning (newest first)
         return [newMessage, ...prev];
@@ -251,7 +308,15 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
   }, [hasMore, loadingMore, fetchMessages]);
 
   const markAsRead = useCallback(async () => {
-    if (!conversationId) return;
+    if (!conversationId) {
+      return;
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(conversationId)) {
+      return;
+    }
 
     try {
       await messagingAPI.markMessagesAsRead(conversationId);
@@ -272,20 +337,76 @@ export function useMessages(conversationId: string, params?: MessageQueryParams)
   };
 }
 
-// Hook for managing typing indicators
+// Hook for managing typing indicators with Supabase Presence
 export function useTypingIndicator(conversationId: string) {
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { user } = useAuthStore();
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const channelRef = useRef<any>(null);
 
-  const startTyping = useCallback(() => {
-    if (!user || isTyping) return;
+  // Setup presence channel for typing indicators
+  useEffect(() => {
+    if (!user || !conversationId) return;
+
+    const channel = supabase.channel(`typing:${conversationId}`, {
+      config: {
+        presence: {
+          key: user.id,
+        },
+      },
+    });
+
+    // Track presence changes (users joining/leaving typing)
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const newState = channel.presenceState();
+        const typingUserIds = Object.keys(newState).filter(userId => userId !== user.id);
+        setTypingUsers(typingUserIds);
+      })
+      .on(
+        'presence',
+        { event: 'join' },
+        ({ key, newPresences }: { key: any; newPresences: any }) => {
+          // User started typing
+        }
+      )
+      .on(
+        'presence',
+        { event: 'leave' },
+        ({ key, leftPresences }: { key: any; leftPresences: any }) => {
+          // User stopped typing
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [user, conversationId]);
+
+  const startTyping = useCallback(async () => {
+    if (!user || isTyping || !channelRef.current) {
+      return;
+    }
 
     setIsTyping(true);
 
-    // TODO: Implement real typing indicator with Supabase Presence
-    console.log(`User ${user.id} started typing in conversation ${conversationId}`);
+    try {
+      // Track typing presence
+      await channelRef.current.track({
+        user_id: user.id,
+        typing: true,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('❌ Error tracking typing presence:', error);
+    }
 
     // Clear existing timeout
     if (typingTimeoutRef.current) {
@@ -298,13 +419,19 @@ export function useTypingIndicator(conversationId: string) {
     }, 3000);
   }, [user, isTyping, conversationId]);
 
-  const stopTyping = useCallback(() => {
-    if (!user || !isTyping) return;
+  const stopTyping = useCallback(async () => {
+    if (!user || !isTyping || !channelRef.current) {
+      return;
+    }
 
     setIsTyping(false);
 
-    // TODO: Implement real typing indicator with Supabase Presence
-    console.log(`User ${user.id} stopped typing in conversation ${conversationId}`);
+    try {
+      // Stop tracking typing presence
+      await channelRef.current.untrack();
+    } catch (error) {
+      console.error('❌ Error untracking typing presence:', error);
+    }
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
@@ -317,6 +444,9 @@ export function useTypingIndicator(conversationId: string) {
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
+      }
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
       }
     };
   }, []);

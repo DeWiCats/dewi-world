@@ -60,7 +60,6 @@ export const createLocationExample = async () => {
     is_negotiable: true,
     gallery: ['https://example.com/image1.jpg'],
     rating: 4.0,
-    distance: 800,
   };
 
   try {

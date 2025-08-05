@@ -157,11 +157,15 @@ export default async function locationController(fastify: FastifyInstance) {
     async (request: AuthenticatedRequest, reply: FastifyReply) => {
       try {
         const locationData = request.body as CreateLocationRequest;
+        console.log('📍 Creating location with data:', JSON.stringify(locationData, null, 2));
 
         // Validate and geocode the address
+        console.log('🗺️ Geocoding address:', locationData.address);
         const geocodingResult = await validateAndGeocodeAddress(locationData.address);
+        console.log('🗺️ Geocoding result:', JSON.stringify(geocodingResult, null, 2));
 
         if (!geocodingResult.success || !geocodingResult.data) {
+          console.error('❌ Geocoding failed:', geocodingResult.error);
           return reply.status(400).send({
             success: false,
             message: geocodingResult.error || 'Invalid address provided',

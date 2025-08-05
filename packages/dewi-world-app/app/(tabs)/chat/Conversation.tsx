@@ -4,8 +4,8 @@ import Box from '@/components/ui/Box';
 import ImageBox from '@/components/ui/ImageBox';
 import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
-import { useMessages, useTypingIndicator } from '@/hooks/useMessages';
-import { Message } from '@/lib/messagingAPI';
+import { useConversation, useMessages, useTypingIndicator } from '@/hooks/useMessages';
+import { Message } from '@/lib/messagingTypes';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -17,7 +17,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  StyleSheet,
   TextInput,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabsContext } from '../context';
@@ -37,52 +39,54 @@ const formatMessageTime = (timestamp: string) => {
   });
 };
 
-// Message bubble component
-function MessageBubble({
-  message,
-  isOwn,
-  showTimestamp,
-}: {
+interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   showTimestamp: boolean;
-}) {
-  return (
-    <Box marginBottom="2">
-      {/* Timestamp */}
-      {showTimestamp && (
-        <Box alignItems="center" marginBottom="2">
-          <Text variant="textXsRegular" color="secondaryText">
-            {formatMessageTime(message.created_at)}
-          </Text>
-        </Box>
-      )}
+}
 
-      {/* Message bubble */}
-      <Box alignItems={isOwn ? 'flex-end' : 'flex-start'} paddingHorizontal="4">
-        <Box
-          backgroundColor={isOwn ? 'base.white' : 'primaryBackground'}
-          borderRadius="lg"
-          paddingHorizontal="4"
-          paddingVertical="3"
-          style={{
-            maxWidth: screenWidth * 0.75,
-            borderTopLeftRadius: isOwn ? 16 : 4,
-            borderTopRightRadius: isOwn ? 4 : 16,
-            borderBottomLeftRadius: 16,
-            borderBottomRightRadius: 16,
-          }}
-        >
-          <Text
-            variant="textMdRegular"
-            color={isOwn ? 'base.black' : 'text.white'}
-            style={{ lineHeight: 20 }}
-          >
-            {message.message}
-          </Text>
-        </Box>
-      </Box>
-    </Box>
+const MessageBubble = ({ message, isOwn, showTimestamp }: MessageBubbleProps) => {
+  const messageContent = message.content || '[Empty message]';
+  const hasContent = !!message.content;
+  const contentLength = message.content?.length || 0;
+
+  return (
+    <View style={[styles.messageBubble, isOwn ? styles.ownMessage : styles.otherMessage]}>
+      <Text style={[styles.messageText, isOwn ? styles.ownMessageText : styles.otherMessageText]}>
+        {messageContent}
+      </Text>
+      {showTimestamp && (
+        <Text style={styles.timestamp}>{new Date(message.created_at).toLocaleTimeString()}</Text>
+      )}
+      {isOwn && (
+        <View
+          style={[
+            styles.readReceipt,
+            { backgroundColor: message.is_read ? 'transparent' : '#007AFF' },
+          ]}
+        />
+      )}
+    </View>
+  );
+};
+
+// Animated typing dots component
+function AnimatedTypingDots() {
+  const [dotCount, setDotCount] = React.useState(1);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setDotCount(prev => (prev >= 3 ? 1 : prev + 1));
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Text variant="textMdRegular" color="secondaryText">
+      {'.'.repeat(dotCount)}
+      {' '.repeat(3 - dotCount)}
+    </Text>
   );
 }
 
@@ -97,6 +101,8 @@ function TypingIndicator({ typingUsers }: { typingUsers: string[] }) {
         borderRadius="lg"
         paddingHorizontal="4"
         paddingVertical="3"
+        flexDirection="row"
+        alignItems="center"
         style={{
           maxWidth: screenWidth * 0.6,
           borderTopLeftRadius: 4,
@@ -105,9 +111,7 @@ function TypingIndicator({ typingUsers }: { typingUsers: string[] }) {
           borderBottomRightRadius: 16,
         }}
       >
-        <Text variant="textSmRegular" color="secondaryText" style={{ fontStyle: 'italic' }}>
-          {typingUsers.length === 1 ? 'Typing...' : `${typingUsers.length} people typing...`}
-        </Text>
+        <AnimatedTypingDots />
       </Box>
     </Box>
   );
@@ -136,6 +140,9 @@ export default function ChatDetailScreen() {
     };
   }, []);
 
+  // Get conversation data to find the other participant
+  const { conversation, loading: conversationLoading } = useConversation(conversationId || '');
+
   const {
     messages,
     loading,
@@ -147,7 +154,9 @@ export default function ChatDetailScreen() {
     markAsRead,
   } = useMessages(conversationId || '');
 
-  useEffect(() => {console.log("conversation messages", messages)}, [])
+  useEffect(() => {
+    console.log('conversation messages', messages);
+  }, []);
 
   const { isTyping, typingUsers, startTyping, stopTyping } = useTypingIndicator(
     conversationId || ''
@@ -170,7 +179,7 @@ export default function ChatDetailScreen() {
   }, [messages.length]);
 
   const handleSendMessage = async () => {
-    if (!inputText.trim() || !conversationId || isSending) return;
+    if (!inputText.trim() || !conversationId || isSending || !conversation?.other_user?.id) return;
 
     const messageText = inputText.trim();
     setInputText('');
@@ -178,11 +187,8 @@ export default function ChatDetailScreen() {
     stopTyping();
 
     try {
-      // Find the other user in the conversation (we need this for the API)
-      const otherUserId = 'other-user-id'; // This should come from conversation data
-
       await sendMessage({
-        receiver_id: otherUserId,
+        receiver_id: conversation.other_user.id,
         message: messageText,
       });
     } catch (error) {
@@ -206,9 +212,20 @@ export default function ChatDetailScreen() {
   };
 
   const renderMessage = ({ item: message, index }: { item: Message; index: number }) => {
-    console.log('message', message);
+    console.log('📱 Rendering message:', {
+      id: message.id,
+      content: message.content,
+      sender_id: message.sender_id,
+      created_at: message.created_at,
+      is_read: message.is_read,
+    });
+
     const isOwn = message.sender_id === user?.id;
-    console.log('isOwn', isOwn);
+    console.log('👤 Message ownership:', {
+      isOwn,
+      messageSender: message.sender_id,
+      currentUser: user?.id,
+    });
 
     // Show timestamp if it's the first message or if there's a significant time gap
     const previousMessage = index < messages.length - 1 ? messages[index + 1] : null;
@@ -247,7 +264,7 @@ export default function ChatDetailScreen() {
     );
   }
 
-  if (loading) {
+  if (loading || conversationLoading) {
     return (
       <Box flex={1} backgroundColor="base.black" alignItems="center" justifyContent="center">
         <CircleLoader />
@@ -286,7 +303,10 @@ export default function ChatDetailScreen() {
 
   return (
     <Box flex={1} backgroundColor="base.black">
-      <KeyboardAvoidingView flex={1} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         {/* Header */}
         <Box
           flexDirection="row"
@@ -337,10 +357,10 @@ export default function ChatDetailScreen() {
             />
             <Box>
               <Text variant="textMdBold" color="primaryBackground">
-                Peroni Alt
+                {conversation?.other_user?.email?.split('@')[0] || 'Unknown User'}
               </Text>
               <Text variant="textSmRegular" color="secondaryText">
-                $100
+                {conversation?.location?.title || 'General'}
               </Text>
             </Box>
           </Box>
@@ -353,9 +373,19 @@ export default function ChatDetailScreen() {
             alignItems="center"
             justifyContent="center"
           >
-            <Text variant="textSmBold" color="primaryBackground">
-              📍
-            </Text>
+            {conversation?.location?.gallery?.[0] ? (
+              <ImageBox
+                source={{ uri: conversation.location.gallery[0] }}
+                borderRadius="lg"
+                width={50}
+                height={40}
+                style={{ width: 50, height: 40 }}
+              />
+            ) : (
+              <Text variant="textSmBold" color="primaryBackground">
+                📍
+              </Text>
+            )}
           </Box>
         </Box>
 
@@ -442,7 +472,7 @@ export default function ChatDetailScreen() {
                 }}
               >
                 {isSending ? (
-                  <CircleLoader color="#ffffff" size={20} />
+                  <CircleLoader />
                 ) : (
                   <Text style={{ fontSize: 18, color: '#ffffff' }}>→</Text>
                 )}
@@ -454,3 +484,52 @@ export default function ChatDetailScreen() {
     </Box>
   );
 }
+
+const styles = StyleSheet.create({
+  messageBubble: {
+    maxWidth: screenWidth * 0.75,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 8,
+    marginHorizontal: 20,
+  },
+  ownMessage: {
+    backgroundColor: '#212121', // Purple/pink color from the design
+    alignSelf: 'flex-end',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 4,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  otherMessage: {
+    backgroundColor: '#DD46F8', // Blue color from the design
+    alignSelf: 'flex-start',
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  messageText: {
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  ownMessageText: {
+    color: '#ffffff',
+  },
+  otherMessageText: {
+    color: '#ffffff',
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#fff',
+    opacity: 0.5,
+    marginTop: 4,
+  },
+  readReceipt: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginBottom: 4,
+  },
+});

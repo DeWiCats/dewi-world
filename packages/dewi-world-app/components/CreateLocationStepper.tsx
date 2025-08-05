@@ -63,7 +63,6 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       is_negotiable: true,
       deployable_hardware: [],
       gallery: [],
-      distance: 0,
     });
     onComplete();
   };
@@ -82,7 +81,6 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
     is_negotiable: true,
     deployable_hardware: [] as string[],
     gallery: [] as string[],
-    distance: 0,
   });
 
   const [selectedImages, setSelectedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
@@ -200,7 +198,6 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
         is_negotiable: formData.is_negotiable,
         deployable_hardware: formData.deployable_hardware,
         gallery: uploadResult.urls,
-        distance: formData.distance,
       };
 
       await createLocation(locationData);
@@ -322,7 +319,6 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       is_negotiable: true,
       deployable_hardware: [],
       gallery: [],
-      distance: 0,
     });
     hideStepper();
   };

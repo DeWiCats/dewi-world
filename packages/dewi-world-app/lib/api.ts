@@ -72,6 +72,17 @@ class RealLocationsAPI {
 
   async createLocation(locationData: CreateLocationRequest): Promise<LocationResponse> {
     try {
+      console.log('🔐 Creating location - Auth debug:');
+      const { user, session, hydrated } = useAuthStore.getState();
+      console.log('Auth state:', {
+        hydrated,
+        hasUser: !!user,
+        hasSession: !!session,
+        hasToken: !!session?.access_token,
+        userEmail: user?.email,
+        tokenPreview: session?.access_token?.substring(0, 30) + '...',
+      });
+
       requireAuth();
 
       const headers = this.getAuthHeaders();
@@ -90,6 +101,7 @@ class RealLocationsAPI {
 
       return await response.json();
     } catch (error) {
+      console.log('🔴 Error creating location:', error);
       console.error('Error creating location:', error);
       handleAuthError(error);
       throw error;
@@ -213,6 +225,5 @@ export type {
   LocationPost,
   LocationQueryParams,
   LocationResponse,
-  UpdateLocationRequest
+  UpdateLocationRequest,
 };
-

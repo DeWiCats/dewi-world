@@ -39,7 +39,7 @@ export default function LocationsList({ locations, onSelect }: LocationsListProp
         backgroundColor={'secondaryBackground'}
         placeholder="Search for a location"
         textInputProps={{
-          style: { height: 50, fontWeight: 'bold' },
+          style: { height: 50, fontWeight: 'bold', color: 'white' },
         }}
       />
       <ScrollView
