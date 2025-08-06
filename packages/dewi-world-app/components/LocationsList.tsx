@@ -2,6 +2,7 @@ import { GeoJSONLocation } from '@/lib/geojsonAPI';
 import { useEffect, useState } from 'react';
 import { FlatList } from 'react-native';
 import LocationItem from './LocationItem';
+import { LocationSkeletonList } from './LocationSkeleton';
 import SearchInput from './SearchInput';
 import Box from './ui/Box';
 
@@ -44,6 +45,8 @@ export default function LocationsList({ locations, onSelect }: LocationsListProp
       <FlatList
         style={{ width: '100%' }}
         data={filteredLocations}
+        refreshing={!locations}
+        ListEmptyComponent={<LocationSkeletonList count={3} />}
         renderItem={({ item }) => (
           <LocationItem onSelect={onSelect} key={item.properties.name} location={item} />
         )}

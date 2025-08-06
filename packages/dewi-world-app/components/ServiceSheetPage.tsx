@@ -1,5 +1,6 @@
 import { Color } from '@/constants/theme';
 import { useColors } from '@/hooks/theme';
+import { useTabsStore } from '@/stores/useTabsStore';
 import useHaptic from '@hooks/useHaptic';
 import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
@@ -19,7 +20,6 @@ export type ServiceNavBarOption = {
 };
 
 export type ServiceSheetProps = {
-  showTabBar: boolean;
   options: ServiceNavBarOption[];
 };
 
@@ -29,9 +29,11 @@ function CustomTabBar({
   options,
 }: BottomTabBarProps & {
   options: ServiceNavBarOption[];
+  showTabBar?: boolean;
 }) {
   const { triggerImpact } = useHaptic();
   const { bottom } = useSafeAreaInsets();
+  const { tabBarVisible } = useTabsStore();
 
   const tabData = useMemo((): {
     value: string;
@@ -106,7 +108,7 @@ function CustomTabBar({
       >
         <Box
           style={{
-            marginBottom: bottom,
+            marginBottom: tabBarVisible ? bottom : 20,
           }}
         >
           <ServiceNavBar
@@ -121,15 +123,17 @@ function CustomTabBar({
   );
 }
 
-const ServiceSheetPage = ({ options, showTabBar }: ServiceSheetProps) => {
+const ServiceSheetPage = ({ options }: ServiceSheetProps) => {
   const colors = useColors();
+
+  const tabBarComponent = (props: BottomTabBarProps) => (
+    <CustomTabBar {...props} options={options} />
+  );
 
   return (
     <Box height="100%" flexDirection="row" flex={1} zIndex={1}>
       <Tab.Navigator
-        tabBar={(props: BottomTabBarProps) => (
-          <>{showTabBar && <CustomTabBar {...props} options={options} />}</>
-        )}
+        tabBar={tabBarComponent}
         screenOptions={{
           sceneStyle: {
             height: '100%',
@@ -147,8 +151,8 @@ const ServiceSheetPage = ({ options, showTabBar }: ServiceSheetProps) => {
   );
 };
 
-const ServiceSheetPageWrapper = ({ options, showTabBar }: ServiceSheetProps) => {
-  return <ServiceSheetPage showTabBar={showTabBar} options={options} />;
+const ServiceSheetPageWrapper = ({ options }: ServiceSheetProps) => {
+  return <ServiceSheetPage options={options} />;
 };
 
 export default ServiceSheetPageWrapper;

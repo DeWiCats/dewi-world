@@ -2,19 +2,14 @@ import CustomBottomSheet from '@/components/CustomBottomSheet';
 import ImageSlide from '@/components/ImageSlide';
 import LocationDetail from '@/components/LocationDetail';
 import LocationsList from '@/components/LocationsList';
-import PriceAndMessageBox from '@/components/PriceAndMessageBox';
 import { ReAnimatedBox } from '@/components/ui/Box';
-import { useConversations } from '@/hooks/useMessages';
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
-import { CreateConversationRequest } from '@/lib/messagingTypes';
 import { ww } from '@/utils/layout';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, StyleProp, ViewStyle } from 'react-native';
 import { AnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChatStackNavigationProp } from '../chat/ChatNavigator';
 
 type WorldDrawerProps = {
   locations: GeoJSONLocation[];
@@ -34,40 +29,6 @@ export default function WorldDrawer({
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [panningEnabled, setPanningEnabled] = useState(true);
   const { bottom } = useSafeAreaInsets();
-
-  const nav = useNavigation<ChatStackNavigationProp>();
-  const router = useRouter();
-  const { createConversation } = useConversations();
-
-  const messageOwnerHandler = async (location: GeoJSONLocation) => {
-    try {
-      console.log('Attempting to message owner...');
-
-      const request: CreateConversationRequest = {
-        receiver_id: location.properties.owner_id,
-        location_id: location.properties.id,
-        initial_message:
-          "Hello, I'm interested in your location post at " +
-          location.properties.address +
-          ". Happy to chat if the timing's right!",
-      };
-
-      const response = await createConversation(request);
-
-      console.log('Successfully created the following conversation:', response);
-
-      //TODO fix
-      // nav.push('chat/index', { conversationId: response.id });
-      router.push({
-        pathname: '/(tabs)/chat',
-        params: { conversationId: response.id },
-      });
-
-      onClose();
-    } catch (error) {
-      console.error('Error while trying to message location owner:', error);
-    }
-  };
 
   useEffect(() => {
     Keyboard.addListener('keyboardDidShow', () => {
@@ -121,15 +82,6 @@ export default function WorldDrawer({
           )}
         </ReAnimatedBox>
       </CustomBottomSheet>
-
-      {selectedLocation && (
-        <PriceAndMessageBox
-          style={{ paddingBottom: bottom, paddingTop: 20 }}
-          isNegotiable={selectedLocation.properties.is_negotiable}
-          price={selectedLocation.properties.price}
-          onMessageOwner={() => messageOwnerHandler(selectedLocation)}
-        />
-      )}
     </>
   );
 }

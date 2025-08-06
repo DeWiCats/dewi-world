@@ -29,9 +29,9 @@ export default function CustomBottomSheet({
       role="alert"
       ref={ref}
       maxDynamicContentSize={wh - 110}
-      handleIndicatorStyle={{ backgroundColor: colors['gray.700'] }}
+      handleIndicatorStyle={{ width: 100, backgroundColor: colors['gray.700'] }}
       backgroundStyle={{
-        backgroundColor: colors['primaryBackground'],
+        
         borderTopRightRadius: borderRadii.full,
         borderTopLeftRadius: borderRadii.full,
       }}

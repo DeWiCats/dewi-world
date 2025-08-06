@@ -19,7 +19,7 @@ export type ServiceSheetStackParamList = {
 
 export type ServiceSheetStackNavigationProp = BottomTabNavigationProp<ServiceSheetStackParamList>;
 
-export default function ServiceSheetLayout({ showTabBar }: { showTabBar: boolean }) {
+export default function ServiceSheetLayout() {
   const options = useMemo((): ServiceNavBarOption[] => {
     return [
       { name: 'WorldTab', Icon: World, component: WorldNavigator },
@@ -29,5 +29,5 @@ export default function ServiceSheetLayout({ showTabBar }: { showTabBar: boolean
     ];
   }, []);
 
-  return <ServiceSheetPageWrapper options={options} showTabBar={showTabBar} />;
+  return <ServiceSheetPageWrapper options={options} />;
 }

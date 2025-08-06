@@ -1,5 +1,7 @@
 import { TouchableOpacityBoxProps } from '@/components/TouchableOpacityBox';
 import { useVerticalHitSlop } from '@/hooks/theme';
+import { useTabsStore } from '@/stores/useTabsStore';
+import { PortalHost } from '@gorhom/portal';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Insets, LayoutChangeEvent, LayoutRectangle } from 'react-native';
 import { useSharedValue, withSpring } from 'react-native-reanimated';
@@ -29,6 +31,7 @@ export default function ServiceNavBar({
   onItemLongPress,
   ...containerProps
 }: NavServiceBarProps) {
+  const { tabBarVisible } = useTabsStore();
   const hitSlop = useVerticalHitSlop('6');
   const [itemRects, setItemRects] = useState<Record<string, LayoutRectangle>>();
 
@@ -85,11 +88,14 @@ export default function ServiceNavBar({
 
   return (
     <Box {...containerProps} paddingHorizontal="2xl" flexDirection="row" flex={1}>
-      <Box flexDirection="row" justifyContent="space-between" flex={1} gap="2">
-        {items.slice(0, 2)}
-        <PostLocationButton />
-        {items.slice(2, 4)}
-      </Box>
+      <PortalHost name="tabBarHost" />
+      {tabBarVisible && (
+        <Box flexDirection="row" justifyContent="space-between" flex={1} gap="2">
+          {items.slice(0, 2)}
+          <PostLocationButton />
+          {items.slice(2, 4)}
+        </Box>
+      )}
     </Box>
   );
 }

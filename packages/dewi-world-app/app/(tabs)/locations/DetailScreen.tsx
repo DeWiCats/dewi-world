@@ -9,11 +9,11 @@ import { LocationPost } from '@/utils/mockLocations';
 import { useMemo } from 'react';
 
 interface DetailScreenProps {
-  location: LocationPost;
   onExit: () => void;
+  location: LocationPost;
 }
 
-export default function DetailScreen({ location, onExit }: DetailScreenProps) {
+export default function DetailScreen({ onExit, location }: DetailScreenProps) {
   const mapLocationPostToGeoJson = (location: LocationPost) => {
     return {
       geometry: { type: 'Point', coordinates: [0, 0] },
@@ -39,16 +39,12 @@ export default function DetailScreen({ location, onExit }: DetailScreenProps) {
 
   return (
     <>
-      <LocationsHeader paddingTop="7xl" onExit={onExit} onLike={() => {}} />
+      <LocationsHeader onExit={onExit} onLike={() => {}} />
       <ImageSlide imageSize={ww} srcURIs={location.gallery} />
       <CustomBottomSheet sheetProps={{ snapPoints: [wh - ww + 70, wh - 80] }}>
         <LocationDetail location={geoJson} />
       </CustomBottomSheet>
-      <PriceAndMessageBox
-        isNegotiable={location.is_negotiable}
-        price={location.price}
-        onMessageOwner={() => {}}
-      />
+      <PriceAndMessageBox location={geoJson} />
     </>
   );
 }

@@ -7,9 +7,10 @@ import TouchableContainer from '@/components/ui/TouchableContainer';
 import { useConversation, useMessages, useTypingIndicator } from '@/hooks/useMessages';
 import { Message } from '@/lib/messagingTypes';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useTabsStore } from '@/stores/useTabsStore';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -22,7 +23,6 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TabsContext } from '../context';
 import { ChatStackParamList } from './ChatNavigator';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -129,14 +129,14 @@ export default function ChatDetailScreen() {
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-  const context = useContext(TabsContext);
+  const { hideHeader, hideTabBar, showHeader, showTabBar } = useTabsStore();
 
   useEffect(() => {
-    context.hideHeader();
-    context.hideTabBar();
+    hideHeader();
+    hideTabBar();
     return () => {
-      context.showHeader();
-      context.showTabBar();
+      showHeader();
+      showTabBar();
     };
   }, []);
 

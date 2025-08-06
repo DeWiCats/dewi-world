@@ -1,6 +1,8 @@
 import { Theme } from '@/constants/theme';
 // import DrawerMenu from '@assets/svgs/drawer-menu.svg';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useTabsStore } from '@/stores/useTabsStore';
+import { PortalHost } from '@gorhom/portal';
 import { BoxProps } from '@shopify/restyle';
 import React from 'react';
 import Box from './ui/Box';
@@ -9,6 +11,7 @@ import TouchableContainer from './ui/TouchableContainer';
 
 export default function TabsHeader(props: BoxProps<Theme>) {
   const { showSettings } = useSettingsStore();
+  const { headerVisible } = useTabsStore();
 
   return (
     <Box
@@ -26,34 +29,37 @@ export default function TabsHeader(props: BoxProps<Theme>) {
       {...props}
     >
       <Box>
-        <TouchableContainer
-          justifyContent={'center'}
-          alignItems={'center'}
-          padding={'4'}
-          borderRadius={'full'}
-          width={48}
-          height={48}
-          defaultBackground={'base.black'}
-          pressedBackgroundColor={'gray.900'}
-          pressableStyles={{
-            flex: undefined,
-          }}
-          shadowColor={'base.black'}
-          shadowOffset={{ width: 0, height: 2 }}
-          shadowOpacity={0.25}
-          shadowRadius={3.84}
-          elevation={5}
-          borderWidth={1}
-          borderColor="dewiPink"
-          onPress={showSettings}
-        >
-          <ImageBox
-            source={require('@assets/images/profile-pic.png')}
-            width={30}
-            height={30}
+        <PortalHost name="headerHost" />
+        {headerVisible && (
+          <TouchableContainer
+            justifyContent={'center'}
+            alignItems={'center'}
+            padding={'4'}
             borderRadius={'full'}
-          />
-        </TouchableContainer>
+            width={48}
+            height={48}
+            defaultBackground={'base.black'}
+            pressedBackgroundColor={'gray.900'}
+            pressableStyles={{
+              flex: undefined,
+            }}
+            shadowColor={'base.black'}
+            shadowOffset={{ width: 0, height: 2 }}
+            shadowOpacity={0.25}
+            shadowRadius={3.84}
+            elevation={5}
+            borderWidth={1}
+            borderColor="dewiPink"
+            onPress={showSettings}
+          >
+            <ImageBox
+              source={require('@assets/images/profile-pic.png')}
+              width={30}
+              height={30}
+              borderRadius={'full'}
+            />
+          </TouchableContainer>
+        )}
       </Box>
     </Box>
   );

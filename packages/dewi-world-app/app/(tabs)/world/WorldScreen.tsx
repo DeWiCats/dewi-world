@@ -1,6 +1,9 @@
 import LocationsHeader from '@/components/LocationsHeader';
-import Box from '@/components/ui/Box';
+import PriceAndMessageBox from '@/components/PriceAndMessageBox';
+import Box, { ReAnimatedBox } from '@/components/ui/Box';
 import { fetchLocationsGeoJSON, GeoJSONLocation, GeoJSONResponse } from '@/lib/geojsonAPI';
+import { useTabsStore } from '@/stores/useTabsStore';
+import { Portal } from '@gorhom/portal';
 import {
   Camera,
   CircleLayer,
@@ -12,10 +15,9 @@ import {
 } from '@rnmapbox/maps';
 import { OnPressEvent } from '@rnmapbox/maps/lib/typescript/src/types/OnPressEvent';
 import * as Location from 'expo-location';
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TabsContext } from '../context';
 import WorldDrawer from './WorldDrawer';
 
 setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN as string);
@@ -24,17 +26,11 @@ const DEFAULT_ZOOM_LEVEL = 17;
 const DEFAULT_RADIUS_KM = 50; // Default radius for location fetching
 
 export default function WorldScreen() {
-  // Use simple fallback colors to prevent theme errors
-  const colors = {
-    'pink.500': '#ec4899',
-    'base.white': '#ffffff',
-  };
-
   // Control globe camera
   const camera = useRef<Camera>(null);
   const map = useRef<MapView>(null);
 
-  const context = useContext(TabsContext);
+  const { showHeader, showTabBar, hideHeader, hideTabBar } = useTabsStore();
 
   const [selectedLocation, setSelectedLocation] = useState<null | GeoJSONLocation>();
   const [fadeIn, setFadeIn] = useState(true);
@@ -46,10 +42,10 @@ export default function WorldScreen() {
     null
   );
   const [loading, setLoading] = useState(true);
+  const { bottom } = useSafeAreaInsets();
   const [lastFetchCenter, setLastFetchCenter] = useState<{ lat: number; lng: number } | null>(null);
 
   const animationDelay = 400;
-  const { top } = useSafeAreaInsets();
   const fadeInStyle = useAnimatedStyle(() => {
     if (fadeIn) {
       return {
@@ -206,13 +202,13 @@ export default function WorldScreen() {
 
   useEffect(() => {
     if (selectedLocation) {
-      context.hideHeader();
-      context.hideTabBar();
+      hideHeader();
+      hideTabBar();
     }
 
     return () => {
-      context.showHeader();
-      context.showTabBar();
+      showHeader();
+      showTabBar();
     };
   }, [selectedLocation]);
 
@@ -244,7 +240,7 @@ export default function WorldScreen() {
 
   const onSelectFromDrawer = (location: GeoJSONLocation) => {
     setFadeIn(false);
-    setSelectedLocation(location);
+    setTimeout(() => setSelectedLocation(location), animationDelay);
   };
 
   const onCloseDrawer = useCallback(() => {
@@ -254,9 +250,11 @@ export default function WorldScreen() {
 
   return (
     <Box width="100%" height="100%" position={'relative'}>
-      {selectedLocation && (
-        <LocationsHeader style={{ marginTop: top }} onExit={onCloseDrawer} onLike={() => {}} />
-      )}
+      <Portal hostName="headerHost">
+        <ReAnimatedBox width="100%" style={fadeInStyle}>
+          <LocationsHeader paddingTop="7xl" onExit={onCloseDrawer} onLike={() => {}} />
+        </ReAnimatedBox>
+      </Portal>
       <MapView
         ref={map}
         style={{ flex: 1 }}
@@ -314,6 +312,13 @@ export default function WorldScreen() {
         onClose={onCloseDrawer}
         selectedLocation={selectedLocation}
       />
+      <Portal hostName="tabBarHost">
+        <PriceAndMessageBox
+          animatedStyle={fadeInStyle}
+          style={{ paddingBottom: bottom, paddingTop: 20 }}
+          location={selectedLocation}
+        />
+      </Portal>
     </Box>
   );
 }

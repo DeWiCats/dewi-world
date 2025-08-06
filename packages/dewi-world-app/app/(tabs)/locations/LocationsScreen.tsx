@@ -6,14 +6,14 @@ import Text from '@/components/ui/Text';
 import { useLocations } from '@/hooks/useLocations';
 import { LocationPost } from '@/lib/api';
 import { useAuthStore } from '@/stores/useAuthStore';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useTabsStore } from '@/stores/useTabsStore';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TabsContext } from '../context';
 import DetailScreen from './DetailScreen';
 
 export default function LocationsScreen() {
-  const context = useContext(TabsContext);
+  const { hideHeader, hideTabBar, showHeader, showTabBar } = useTabsStore();
   const [searchQuery, setSearchQuery] = useState('');
   const { user, session, hydrated } = useAuthStore();
   const { locations, loading, error, refreshLocations } = useLocations();
@@ -59,16 +59,16 @@ export default function LocationsScreen() {
   });
 
   const handleExitDetail = () => {
-    context.showHeader();
-    context.showTabBar();
+    showHeader();
+    showTabBar();
     setSelectedLocation(null);
   };
 
   const handleLocationPress = (location: LocationPost) => {
     // Handle location press (navigate to detail or messaging)
     console.log('Location pressed:', location.title);
-    context.hideHeader();
-    context.hideTabBar();
+    hideHeader();
+    hideTabBar();
     setSelectedLocation(location);
   };
 
