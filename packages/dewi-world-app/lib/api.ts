@@ -8,7 +8,7 @@ import {
   UpdateLocationRequest,
 } from '@/utils/mockLocations';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.0.133:3006';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3006';
 
 // Real API functions
 class RealLocationsAPI {
