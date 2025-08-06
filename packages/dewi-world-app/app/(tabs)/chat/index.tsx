@@ -1,4 +1,3 @@
-import CircleLoader from '@/components/CircleLoader';
 import Box from '@/components/ui/Box';
 import ImageBox from '@/components/ui/ImageBox';
 import Text from '@/components/ui/Text';
@@ -191,7 +190,6 @@ export default function ChatListScreen() {
 
   const renderLoadingState = () => (
     <Box flex={1} alignItems="center" justifyContent="center" style={{ marginTop: 100 }}>
-      <CircleLoader />
       <Text variant="textMdRegular" color="secondaryText" marginTop="4">
         Loading conversations...
       </Text>
@@ -202,7 +200,6 @@ export default function ChatListScreen() {
   if (!hydrated) {
     return (
       <Box flex={1} backgroundColor="primaryBackground" alignItems="center" justifyContent="center">
-        <CircleLoader />
         <Text variant="textMdRegular" color="secondaryText" marginTop="4">
           Loading auth state...
         </Text>
@@ -296,7 +293,7 @@ export default function ChatListScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={loading || refreshing}
               onRefresh={refreshConversations}
               tintColor="white"
             />

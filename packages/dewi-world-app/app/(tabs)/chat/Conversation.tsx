@@ -373,7 +373,7 @@ export default function ChatDetailScreen() {
             alignItems="center"
             justifyContent="center"
           >
-            {conversation?.location?.gallery?.[0] ? (
+            {conversation?.location?.gallery?.at(0) ? (
               <ImageBox
                 source={{ uri: conversation.location.gallery[0] }}
                 borderRadius="lg"

@@ -1,8 +1,6 @@
-import { Theme } from '@/constants/theme';
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
-import { useTheme } from '@shopify/restyle';
 import { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native-gesture-handler';
+import { FlatList } from 'react-native';
 import LocationItem from './LocationItem';
 import SearchInput from './SearchInput';
 import Box from './ui/Box';
@@ -13,7 +11,6 @@ interface LocationsListProps {
 }
 
 export default function LocationsList({ locations, onSelect }: LocationsListProps) {
-  const { spacing } = useTheme<Theme>();
   const [filteredLocations, setFilteredLocations] = useState(locations);
   const [searchValue, setSearchValue] = useState('');
 
@@ -21,7 +18,7 @@ export default function LocationsList({ locations, onSelect }: LocationsListProp
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (!searchValue) setFilteredLocations(locations);
+      if (searchValue.trim().length == 0) setFilteredLocations(locations);
       setFilteredLocations(
         locations.filter(location =>
           location.properties.address.toLowerCase().includes(searchValue.toLowerCase())
@@ -29,7 +26,9 @@ export default function LocationsList({ locations, onSelect }: LocationsListProp
       );
     }, 500);
     return () => clearTimeout(timeout);
-  }, [searchValue]);
+  }, [searchValue, locations]);
+
+  useEffect(() => console.log('filteredLocations', filteredLocations), [filteredLocations]);
 
   return (
     <Box paddingHorizontal={'3xl'} paddingVertical="md" alignItems="center" gap="md" width="100%">
@@ -42,14 +41,13 @@ export default function LocationsList({ locations, onSelect }: LocationsListProp
           style: { height: 50, fontWeight: 'bold', color: 'white' },
         }}
       />
-      <ScrollView
+      <FlatList
         style={{ width: '100%' }}
-        contentContainerStyle={{ gap: spacing.md, paddingBottom: spacing['11xl'] }}
-      >
-        {filteredLocations.map(location => (
-          <LocationItem onSelect={onSelect} key={location.properties.name} location={location} />
-        ))}
-      </ScrollView>
+        data={filteredLocations}
+        renderItem={({ item }) => (
+          <LocationItem onSelect={onSelect} key={item.properties.name} location={item} />
+        )}
+      />
     </Box>
   );
 }
