@@ -136,20 +136,9 @@ export default function WorldScreen() {
           console.log('🔐 Auth error detected, trying fallback...');
         }
 
-        // Fallback: Try to use legacy static data if API fails
-        try {
-          console.log('🔄 Attempting fallback to static data...');
-          // Import the static geojson as fallback
-          const { default: staticGeojson } = await import('@/geojson');
-          const { convertLegacyGeoJSON } = await import('@/lib/geojsonAPI');
-          const fallbackData = convertLegacyGeoJSON(staticGeojson);
-          console.log('✅ Using fallback static data:', fallbackData.features.length, 'locations');
-          setGeoJsonData(fallbackData);
-        } catch (fallbackError) {
-          console.error('❌ Fallback also failed:', fallbackError);
-          // Ultimate fallback: empty data
-          setGeoJsonData({ type: 'FeatureCollection', features: [] });
-        }
+        setGeoJsonData(prev => prev);
+        return
+        
       } finally {
         setLoading(false);
       }
@@ -306,6 +295,7 @@ export default function WorldScreen() {
         </ShapeSource>
       </MapView>
       <WorldDrawer
+        loading={loading}
         style={fadeInStyle}
         locations={geoJsonData.features || []}
         onSelect={location => onSelectFromDrawer(location)}

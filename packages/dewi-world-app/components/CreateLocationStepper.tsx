@@ -6,9 +6,8 @@ import { useLocations } from '@/hooks/useLocations';
 import { CreateLocationRequest } from '@/lib/api';
 import { pickImages, uploadMultipleImages } from '@/lib/imageUpload';
 import * as ImagePicker from 'expo-image-picker';
-import { useNavigation, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, Switch, TextInput } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Image, Pressable, Switch, TextInput } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -19,6 +18,7 @@ import Animated, {
 
 // Import hardware icons and Solana functionality
 import { useStepperStore } from '@/stores/useStepperStore';
+import { wh } from '@/utils/layout';
 import Icon5G from '@assets/svgs/5g-logo.svg';
 import IconAir from '@assets/svgs/air-logo.svg';
 import IconHelium from '@assets/svgs/helium-logo.svg';
@@ -26,8 +26,11 @@ import IconLorawan from '@assets/svgs/lorawan-logo.svg';
 import IconMarine from '@assets/svgs/marine-logo.svg';
 import IconWeather from '@assets/svgs/weather-logo.svg';
 import IconWifi from '@assets/svgs/wifi-logo.svg';
+import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { Portal } from '@gorhom/portal';
-import { ServiceSheetStackNavigationProp } from './ServiceSheetLayout';
+import { ScrollView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CustomBottomSheet from './CustomBottomSheet';
 
 const hardwareOptions = [
   { id: '5g', name: '5G', Icon: Icon5G },
@@ -55,8 +58,6 @@ interface StepperProps {
 }
 
 export default function CreateLocationStepper({ onComplete, visible }: StepperProps) {
-  const nav = useNavigation<ServiceSheetStackNavigationProp>();
-  const router = useRouter();
   const { createLocation, refreshLocations } = useLocations();
   const { hideStepper } = useStepperStore();
 
@@ -396,150 +397,183 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       deployable_hardware: [],
       gallery: [],
     });
-    hideStepper();
+    bottomSheet.current?.forceClose();
+
+    // Give time for the closing animation to complete before hiding the stepper
+    setTimeout(hideStepper, 500);
   };
 
+  const { bottom } = useSafeAreaInsets();
+
+  const bottomSheet = useRef<null | BottomSheet>(null);
+
+  // We should be able to control visibility using only the bottom sheet
+  // However removing this line of code causes an infinite render loop
+  // So for now just leave it as a TODO
   if (!visible) return null;
 
   return (
     <Portal>
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        backgroundColor="primaryBackground"
-        zIndex={9999}
-        style={{
-          elevation: 1000, // For Android
+      <CustomBottomSheet
+        ref={bottomSheet}
+        sheetProps={{
+          backdropComponent: props => (
+            <BottomSheetBackdrop {...props} style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} />
+          ),
+          snapPoints: [wh - 110],
+          onClose: onExit,
         }}
       >
-        {/* Header */}
-        <Box paddingTop="7xl" paddingHorizontal="4" paddingBottom="4">
-          <Box
-            flexDirection="row"
-            alignItems="center"
-            justifyContent="space-between"
-            marginBottom="4"
-          >
-            <Pressable onPress={() => (currentStep > 0 ? prevStep() : onExit())}>
-              <Text variant="textMdRegular" color="base.white">
-                {currentStep > 0 ? '← Back' : '✕ Cancel'}
-              </Text>
-            </Pressable>
-            <Text variant="textMdMedium" color="secondaryText">
-              {currentStep + 1} of {steps.length}
-            </Text>
-          </Box>
-
-          {renderProgressBar()}
-        </Box>
-
-        {/* Content */}
-        <Animated.View style={[{ flex: 1 }, animatedStyle]}>
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Step Header */}
-            <Box alignItems="center" marginBottom="6">
-              <Text style={{ fontSize: 60 }} marginBottom="4">
-                {steps[currentStep].icon}
-              </Text>
-              <Text variant="textXlBold" color="primaryText" textAlign="center" marginBottom="2">
-                {steps[currentStep].title}
-              </Text>
-              <Text variant="textMdRegular" color="secondaryText" textAlign="center">
-                {steps[currentStep].subtitle}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          backgroundColor="primaryBackground"
+          zIndex={9999}
+          style={{
+            elevation: 1000, // For Android
+          }}
+        >
+          {/* Header */}
+          <Box paddingTop="4xl" paddingHorizontal="4" paddingBottom="4">
+            <Box
+              flexDirection="row"
+              alignItems="center"
+              justifyContent="space-between"
+              marginBottom="4"
+            >
+              <Pressable onPress={() => (currentStep > 0 ? prevStep() : onExit())}>
+                <Text variant="textMdRegular" color="base.white">
+                  {currentStep > 0 ? '← Back' : '✕ Cancel'}
+                </Text>
+              </Pressable>
+              <Text variant="textMdMedium" color="secondaryText">
+                {currentStep + 1} of {steps.length}
               </Text>
             </Box>
 
-            {renderStepContent()}
-          </ScrollView>
-        </Animated.View>
+            {renderProgressBar()}
+          </Box>
 
-        {/* Bottom Button */}
-        <Box
-          paddingHorizontal="4"
-          paddingBottom="8"
-          paddingTop="4"
-          backgroundColor="primaryBackground"
-          style={{
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 10,
-          }}
-        >
-          {/* Hide the bottom button on payment step since MobileWalletAdapterButton handles it */}
-          {currentStep !== 6 && (
-            <Pressable
-              onPress={handleFinish}
-              disabled={!canProceed() || loading}
-              style={({ pressed }) => ({
-                backgroundColor: canProceed() && !loading ? 'white' : '#555',
-                paddingVertical: 16,
-                paddingHorizontal: 24,
-                borderRadius: 500,
-                opacity: pressed ? 0.8 : 1,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 8,
-              })}
+          {/* Content */}
+          <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+              showsVerticalScrollIndicator={false}
             >
-              <Text variant="textLgBold" color="primaryBackground" textAlign="center">
-                {loading ? 'Processing...' : 'Continue'}
-              </Text>
-            </Pressable>
-          )}
+              {/* Step Header */}
+              <Box alignItems="center" marginBottom="6">
+                <Text style={{ fontSize: 60 }} marginBottom="4">
+                  {steps[currentStep].icon}
+                </Text>
+                <Text variant="textXlBold" color="primaryText" textAlign="center" marginBottom="2">
+                  {steps[currentStep].title}
+                </Text>
+                <Text variant="textMdRegular" color="secondaryText" textAlign="center">
+                  {steps[currentStep].subtitle}
+                </Text>
+              </Box>
+
+              {renderStepContent()}
+            </ScrollView>
+          </Animated.View>
+
+          {/* Bottom Button */}
+          <Box
+            paddingHorizontal="4"
+            paddingBottom="8"
+            paddingTop="4"
+            backgroundColor="primaryBackground"
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+              elevation: 10,
+            }}
+          >
+            {/* Hide the bottom button on payment step since MobileWalletAdapterButton handles it */}
+            {currentStep !== 6 && (
+              <Pressable
+                onPress={handleFinish}
+                disabled={!canProceed() || loading}
+                style={({ pressed }) => ({
+                  backgroundColor: canProceed() && !loading ? 'white' : '#555',
+                  paddingVertical: 16,
+                  paddingHorizontal: 24,
+                  borderRadius: 500,
+                  opacity: pressed ? 0.8 : 1,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  marginBottom: bottom,
+                })}
+              >
+                <Text variant="textLgBold" color="primaryBackground" textAlign="center">
+                  {loading ? 'Processing...' : 'Continue'}
+                </Text>
+              </Pressable>
+            )}
+          </Box>
         </Box>
-      </Box>
+      </CustomBottomSheet>
     </Portal>
   );
 }
 
 // Individual Step Components
-const TitleStep = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
-  <Box>
-    <Box
-      backgroundColor="inputBackground"
-      borderRadius="xl"
-      paddingHorizontal="4"
-      paddingVertical="4"
-      style={{
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 3,
-      }}
-    >
-      <TextInput
-        placeholder="e.g., Downtown Office with Rooftop Access"
-        placeholderTextColor="#888"
-        value={value}
-        onChangeText={onChange}
+const TitleStep = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+  const [initialRender, setInitialRender] = useState(true);
+
+  // Prevent keyboard from showing up on initial render
+  useEffect(() => {
+    const timeout = setTimeout(() => setInitialRender(false), 500);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return (
+    <Box>
+      <Box
+        backgroundColor="inputBackground"
+        borderRadius="xl"
+        paddingHorizontal="4"
+        paddingVertical="4"
         style={{
-          fontSize: 18,
-          color: '#ffffff',
-          fontFamily: 'Figtree',
-          textAlign: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 3,
         }}
-        maxLength={200}
-        autoFocus
-        returnKeyType="next"
-      />
+      >
+        <TextInput
+          showSoftInputOnFocus={!initialRender}
+          placeholder="e.g., Downtown Office with Rooftop Access"
+          placeholderTextColor="#888"
+          value={value}
+          onChangeText={onChange}
+          style={{
+            fontSize: 18,
+            color: '#ffffff',
+            fontFamily: 'Figtree',
+            textAlign: 'center',
+          }}
+          maxLength={200}
+          autoFocus
+          returnKeyType="next"
+        />
+      </Box>
+      <Text variant="textSmRegular" color="secondaryText" textAlign="center" marginTop="3">
+        Make it descriptive and memorable
+      </Text>
     </Box>
-    <Text variant="textSmRegular" color="secondaryText" textAlign="center" marginTop="3">
-      Make it descriptive and memorable
-    </Text>
-  </Box>
-);
+  );
+};
 
 const LocationStep = ({
   onPlaceSelected,
@@ -695,7 +729,14 @@ const HardwareStep = ({
   };
 
   return (
-    <Box flexDirection="row" flexWrap="wrap" gap="3" justifyContent="center">
+    <ScrollView
+      contentContainerStyle={{
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 5,
+        justifyContent: 'center',
+      }}
+    >
       {hardwareOptions.map(hardware => {
         const isSelected = selectedHardware.includes(hardware.id);
         return (
@@ -731,7 +772,7 @@ const HardwareStep = ({
           </Pressable>
         );
       })}
-    </Box>
+    </ScrollView>
   );
 };
 

@@ -31,7 +31,6 @@ export default function CustomBottomSheet({
       maxDynamicContentSize={wh - 110}
       handleIndicatorStyle={{ width: 100, backgroundColor: colors['gray.700'] }}
       backgroundStyle={{
-        
         borderTopRightRadius: borderRadii.full,
         borderTopLeftRadius: borderRadii.full,
       }}
@@ -43,13 +42,14 @@ export default function CustomBottomSheet({
       {...sheetProps}
     >
       <BottomSheetView
+        {...sheetViewProps}
         style={{
           backgroundColor: colors['primaryBackground'],
           flex: 1,
           alignItems: 'center',
           height: wh - 110,
+          ...(sheetViewProps?.style as any),
         }}
-        {...sheetViewProps}
       >
         {children}
       </BottomSheetView>

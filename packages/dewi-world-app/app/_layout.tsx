@@ -79,19 +79,12 @@ export default function RootLayout() {
             <Slot />
 
             {/* Global Stepper */}
-            <CreateLocationStepper
-              visible={isVisible}
-              onComplete={() => {
-                hideStepper();
-              }}
-            />
+            <CreateLocationStepper visible={isVisible} onComplete={hideStepper} />
 
             {/* Global Settings Bottom Sheet */}
             <SettingsBottomSheet
               visible={isSettingsVisible}
-              onClose={() => {
-                hideSettings();
-              }}
+              onClose={hideSettings}
             />
           </SafeAreaProvider>
         </PortalProvider>

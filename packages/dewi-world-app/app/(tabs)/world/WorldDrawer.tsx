@@ -12,6 +12,7 @@ import { AnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type WorldDrawerProps = {
+  loading?: boolean;
   locations: GeoJSONLocation[];
   selectedLocation?: null | GeoJSONLocation;
   style: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
@@ -20,6 +21,7 @@ type WorldDrawerProps = {
 };
 
 export default function WorldDrawer({
+  loading,
   locations,
   selectedLocation,
   style,
@@ -78,7 +80,7 @@ export default function WorldDrawer({
           {selectedLocation ? (
             <LocationDetail location={selectedLocation} />
           ) : (
-            <LocationsList onSelect={onSelect} locations={locations} />
+            <LocationsList loading={loading} onSelect={onSelect} locations={locations} />
           )}
         </ReAnimatedBox>
       </CustomBottomSheet>

@@ -1,6 +1,7 @@
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
+import CircleLoader from './CircleLoader';
 import LocationItem from './LocationItem';
 import { LocationSkeletonList } from './LocationSkeleton';
 import SearchInput from './SearchInput';
@@ -9,9 +10,14 @@ import Box from './ui/Box';
 interface LocationsListProps {
   locations: GeoJSONLocation[];
   onSelect: (location: GeoJSONLocation) => void;
+  loading?: boolean;
 }
 
-export default function LocationsList({ locations, onSelect }: LocationsListProps) {
+export default function LocationsList({
+  locations,
+  onSelect,
+  loading = false,
+}: LocationsListProps) {
   const [filteredLocations, setFilteredLocations] = useState(locations);
   const [searchValue, setSearchValue] = useState('');
 
@@ -31,6 +37,16 @@ export default function LocationsList({ locations, onSelect }: LocationsListProp
 
   useEffect(() => console.log('filteredLocations', filteredLocations), [filteredLocations]);
 
+  const emptyComponent = useMemo(
+    () => (
+      <Box width="100%" gap="md" marginTop="md">
+        {loading && <CircleLoader />}
+        <LocationSkeletonList count={3} />
+      </Box>
+    ),
+    [loading]
+  );
+
   return (
     <Box paddingHorizontal={'3xl'} paddingVertical="md" alignItems="center" gap="md" width="100%">
       <SearchInput
@@ -45,8 +61,8 @@ export default function LocationsList({ locations, onSelect }: LocationsListProp
       <FlatList
         style={{ width: '100%' }}
         data={filteredLocations}
-        refreshing={!locations}
-        ListEmptyComponent={<LocationSkeletonList count={3} />}
+        refreshing={locations.length === 0}
+        ListEmptyComponent={emptyComponent}
         renderItem={({ item }) => (
           <LocationItem onSelect={onSelect} key={item.properties.name} location={item} />
         )}
