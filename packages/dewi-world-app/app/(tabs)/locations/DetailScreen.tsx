@@ -3,10 +3,14 @@ import ImageSlide from '@/components/ImageSlide';
 import LocationDetail from '@/components/LocationDetail';
 import LocationsHeader from '@/components/LocationsHeader';
 import PriceAndMessageBox from '@/components/PriceAndMessageBox';
+import FadeInBox from '@/components/ui/FadeInBox';
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
 import { wh, ww } from '@/utils/layout';
 import { LocationPost } from '@/utils/mockLocations';
+import { Portal } from '@gorhom/portal';
+import { usePathname } from 'expo-router';
 import { useMemo } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DetailScreenProps {
   onExit: () => void;
@@ -14,6 +18,9 @@ interface DetailScreenProps {
 }
 
 export default function DetailScreen({ onExit, location }: DetailScreenProps) {
+  const pathname = usePathname();
+  const { bottom } = useSafeAreaInsets();
+
   const mapLocationPostToGeoJson = (location: LocationPost) => {
     return {
       geometry: { type: 'Point', coordinates: [0, 0] },
@@ -39,12 +46,30 @@ export default function DetailScreen({ onExit, location }: DetailScreenProps) {
 
   return (
     <>
-      <LocationsHeader onExit={onExit} onLike={() => {}} />
+      <Portal hostName="headerHost">
+        {pathname.toLowerCase().includes('locations') && (
+          <FadeInBox width="100%" delay={500}>
+            <LocationsHeader onExit={onExit} onLike={() => {}} />
+          </FadeInBox>
+        )}
+      </Portal>
       <ImageSlide imageSize={ww} srcURIs={location.gallery} />
       <CustomBottomSheet sheetProps={{ snapPoints: [wh - ww + 70, wh - 80] }}>
-        <LocationDetail location={geoJson} />
+        <FadeInBox width="100%" delay={500}>
+          <LocationDetail location={geoJson} />
+        </FadeInBox>
       </CustomBottomSheet>
-      <PriceAndMessageBox location={geoJson} />
+      <Portal hostName="tabBarHost">
+        {pathname.toLowerCase().includes('locations') && (
+          <FadeInBox width="100%" delay={500}>
+            <PriceAndMessageBox
+              style={{ paddingBottom: bottom, paddingTop: 20 }}
+              isOwn
+              location={geoJson}
+            />
+          </FadeInBox>
+        )}
+      </Portal>
     </>
   );
 }

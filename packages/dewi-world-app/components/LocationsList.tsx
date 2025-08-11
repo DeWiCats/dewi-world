@@ -35,8 +35,6 @@ export default function LocationsList({
     return () => clearTimeout(timeout);
   }, [searchValue, locations]);
 
-  useEffect(() => console.log('filteredLocations', filteredLocations), [filteredLocations]);
-
   const emptyComponent = useMemo(
     () => (
       <Box width="100%" gap="md" marginTop="md">

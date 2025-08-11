@@ -15,12 +15,14 @@ interface PriceAndMessageBoxProps {
   location?: null | GeoJSONLocation;
   style?: StyleProp<ViewStyle>;
   animatedStyle?: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
+  isOwn?: boolean;
 }
 
 export default function PriceAndMessageBox({
   location,
   animatedStyle,
   style,
+  isOwn = false,
 }: PriceAndMessageBoxProps) {
   const { createConversation } = useConversations();
   const router = useRouter();
@@ -75,7 +77,7 @@ export default function PriceAndMessageBox({
             onPress={handleMessageOwner}
             fontSize={16}
             innerContainerProps={{ padding: 'xl' }}
-            title="Message Owner"
+            title={isOwn ? 'View Conversation' : 'Message Owner'}
             backgroundColor={'pink.500'}
             backgroundColorPressed="pink.400"
           />

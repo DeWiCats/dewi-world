@@ -397,10 +397,10 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
       deployable_hardware: [],
       gallery: [],
     });
-    bottomSheet.current?.forceClose();
+    bottomSheet.current?.forceClose({ duration: 300 });
 
     // Give time for the closing animation to complete before hiding the stepper
-    setTimeout(hideStepper, 500);
+    setTimeout(hideStepper, 400);
   };
 
   const { bottom } = useSafeAreaInsets();
@@ -416,12 +416,17 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
     <Portal>
       <CustomBottomSheet
         ref={bottomSheet}
+        sheetViewProps={{
+          style: {
+            height: wh,
+          },
+        }}
         sheetProps={{
+          maxDynamicContentSize: wh,
           backdropComponent: props => (
             <BottomSheetBackdrop {...props} style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} />
           ),
-          snapPoints: [wh - 110],
-          onClose: onExit,
+          snapPoints: [wh],
         }}
       >
         <Box

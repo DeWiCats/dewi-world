@@ -15,6 +15,7 @@ import {
   Alert,
   Dimensions,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -52,7 +53,10 @@ const MessageBubble = ({ message, isOwn, showTimestamp }: MessageBubbleProps) =>
 
   return (
     <View style={[styles.messageBubble, isOwn ? styles.ownMessage : styles.otherMessage]}>
-      <Text style={[styles.messageText, isOwn ? styles.ownMessageText : styles.otherMessageText]}>
+      <Text
+        variant="textMdLight"
+        style={[styles.messageText, isOwn ? styles.ownMessageText : styles.otherMessageText]}
+      >
         {messageContent}
       </Text>
       {showTimestamp && (
@@ -154,13 +158,20 @@ export default function ChatDetailScreen() {
     markAsRead,
   } = useMessages(conversationId || '');
 
-  useEffect(() => {
-    console.log('conversation messages', messages);
-  }, []);
-
   const { isTyping, typingUsers, startTyping, stopTyping } = useTypingIndicator(
     conversationId || ''
   );
+  const [avoidKeyboard, setAvoidKeyboard] = useState(false);
+
+  useEffect(() => {
+    Keyboard.addListener('keyboardDidShow', () => setAvoidKeyboard(true));
+    Keyboard.addListener('keyboardDidHide', () => setAvoidKeyboard(false));
+
+    return () => {
+      Keyboard.removeAllListeners('keyboardDidShow');
+      Keyboard.removeAllListeners('keyboardDidHide');
+    };
+  }, []);
 
   // Mark messages as read when entering the screen
   useEffect(() => {
@@ -304,7 +315,8 @@ export default function ChatDetailScreen() {
   return (
     <Box flex={1} backgroundColor="base.black">
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={{ height: '100%' }}
+        enabled={avoidKeyboard}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Header */}
@@ -325,7 +337,10 @@ export default function ChatDetailScreen() {
         >
           {/* Back button */}
           <TouchableContainer
-            onPress={() => router.back()}
+            onPress={() => {
+              console.log('back');
+              router.back();
+            }}
             justifyContent={'center'}
             alignItems={'center'}
             padding={'4'}

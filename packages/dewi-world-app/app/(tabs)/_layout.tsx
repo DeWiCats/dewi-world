@@ -3,7 +3,6 @@ import TabsHeader from '@/components/TabsHeader';
 import { darkTheme } from '@/constants/theme';
 import { useSpacing } from '@/hooks/theme';
 import { ThemeProvider } from '@shopify/restyle';
-import React from 'react';
 
 export default function TabsLayout() {
   const spacing = useSpacing();

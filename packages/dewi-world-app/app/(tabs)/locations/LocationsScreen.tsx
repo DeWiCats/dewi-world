@@ -180,29 +180,29 @@ export default function LocationsScreen() {
       {selectedLocation ? (
         <DetailScreen onExit={handleExitDetail} location={selectedLocation} />
       ) : (
-        <FlatList
-          data={filteredLocations}
-          renderItem={({ item }) => (
-            <LocationCard
-              location={item}
-              onPress={() => handleLocationPress(item)}
-              onDeleteStart={handleDeleteStart}
-              onDeleteComplete={handleDeleteComplete}
-              onDeleteError={handleDeleteError}
-            />
-          )}
-          keyExtractor={item => item.id}
-          ListHeaderComponent={renderHeader}
-          ListEmptyComponent={loading ? <LocationSkeletonList count={3} /> : renderEmptyState}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingBottom: 120,
-            paddingTop: 120,
-          }}
-          showsVerticalScrollIndicator={false}
-          refreshing={loading}
-          onRefresh={refreshLocations}
-        />
+          <FlatList
+            data={filteredLocations}
+            renderItem={({ item }) => (
+              <LocationCard
+                location={item}
+                onPress={() => handleLocationPress(item)}
+                onDeleteStart={handleDeleteStart}
+                onDeleteComplete={handleDeleteComplete}
+                onDeleteError={handleDeleteError}
+              />
+            )}
+            keyExtractor={item => item.id}
+            ListHeaderComponent={renderHeader}
+            ListEmptyComponent={loading ? <LocationSkeletonList count={3} /> : renderEmptyState}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: 120,
+              paddingTop: 120,
+            }}
+            showsVerticalScrollIndicator={false}
+            refreshing={loading}
+            onRefresh={refreshLocations}
+          />
       )}
     </Box>
   );

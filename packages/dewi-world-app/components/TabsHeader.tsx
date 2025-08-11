@@ -4,6 +4,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useTabsStore } from '@/stores/useTabsStore';
 import { PortalHost } from '@gorhom/portal';
 import { BoxProps } from '@shopify/restyle';
+import { usePathname } from 'expo-router';
 import React from 'react';
 import Box from './ui/Box';
 import ImageBox from './ui/ImageBox';
@@ -12,6 +13,7 @@ import TouchableContainer from './ui/TouchableContainer';
 export default function TabsHeader(props: BoxProps<Theme>) {
   const { showSettings } = useSettingsStore();
   const { headerVisible } = useTabsStore();
+  const pathname = usePathname();
 
   return (
     <Box
@@ -26,6 +28,7 @@ export default function TabsHeader(props: BoxProps<Theme>) {
       paddingHorizontal={'6'}
       paddingTop={'7xl'}
       paddingBottom={'6'}
+      pointerEvents={pathname.toLowerCase().includes('chat') ? 'none' : 'auto'}
       {...props}
     >
       <Box>
