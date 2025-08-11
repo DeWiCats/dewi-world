@@ -1,13 +1,12 @@
-import { useConversations } from '@/hooks/useMessages';
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
-import { CreateConversationRequest } from '@/lib/messagingTypes';
 import { useTabsStore } from '@/stores/useTabsStore';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
 import { AnimatedStyle } from 'react-native-reanimated';
 import ButtonPressable from './ButtonPressable';
 import { ReAnimatedBox } from './Reanimated';
+import { ServiceSheetStackNavigationProp } from './ServiceSheetLayout';
 import Box from './ui/Box';
 import Text from './ui/Text';
 
@@ -24,12 +23,25 @@ export default function PriceAndMessageBox({
   style,
   isOwn = false,
 }: PriceAndMessageBoxProps) {
-  const { createConversation } = useConversations();
+  //const { createConversation } = useConversations();
+  const nav = useNavigation<ServiceSheetStackNavigationProp>();
   const router = useRouter();
   const { tabBarVisible } = useTabsStore();
 
   const handleMessageOwner = useCallback(async () => {
-    if (!location) return;
+    console.log('Attempting to message owner...');
+    nav.navigate('ChatTab');
+
+    router.replace({
+      pathname: '/(tabs)/chat',
+    });
+
+    /*router.replace({
+      pathname: '/(tabs)/chat',
+      params: { conversationId: '6c05a2d9-b025-4303-98c7-1664042476a0' },
+    });*/
+
+    /*if (!location) return;
     try {
       console.log('Attempting to message owner...');
 
@@ -53,7 +65,7 @@ export default function PriceAndMessageBox({
       });
     } catch (error) {
       console.error('Error while trying to message location owner:', error);
-    }
+    }*/
   }, [location]);
 
   return (
