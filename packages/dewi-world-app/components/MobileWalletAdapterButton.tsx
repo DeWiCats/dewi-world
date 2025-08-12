@@ -181,6 +181,10 @@ const MobileWalletAdapterButton = ({
     }
 
     try {
+      console.log('getting latest blockhash');
+      // Get latest blockhash
+      const latestBlockhash = await connection.getLatestBlockhash();
+      console.log('latestBlockhash', latestBlockhash);
       const txSignature = await transact(async (wallet: any) => {
         console.log('authToken', authToken);
         // Authorize the wallet session (reuse existing auth_token if available)
@@ -200,6 +204,7 @@ const MobileWalletAdapterButton = ({
         const authorizedPubkey = new PublicKey(
           toByteArray(authorizationResult.accounts[0].address)
         );
+        console.log('Authorized public key', authorizedPubkey);
 
         // Update local state if we didn't have the address before
         if (!address) {
@@ -207,9 +212,7 @@ const MobileWalletAdapterButton = ({
           setAddress(base58Address);
           setAuthToken(authorizationResult.auth_token);
         }
-
-        // Get latest blockhash
-        const latestBlockhash = await connection.getLatestBlockhash();
+        console.log('address', address);
 
         // Create recipient PublicKey
         const toPubkey = new PublicKey(recipientAddress);
@@ -229,14 +232,17 @@ const MobileWalletAdapterButton = ({
           recentBlockhash: latestBlockhash.blockhash,
           instructions,
         }).compileToV0Message();
+        console.log('Instructions constructed, begin transfer');
 
         const transferTx = new VersionedTransaction(txMessage);
+        console.log('sending transaction...');
 
         // Send the unsigned transaction, the wallet will sign and submit it to the network
         const transactionSignatures = await wallet.signAndSendTransactions({
           transactions: [transferTx],
         });
 
+        console.log('transaction sent');
         return transactionSignatures[0];
       });
 

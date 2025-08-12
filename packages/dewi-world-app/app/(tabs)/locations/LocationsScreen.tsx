@@ -4,21 +4,56 @@ import { LocationSkeletonList } from '@/components/LocationSkeleton';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
 import { useLocations } from '@/hooks/useLocations';
+import { useConversations } from '@/hooks/useMessages';
 import { LocationPost } from '@/lib/api';
+import { CreateConversationRequest } from '@/lib/messagingTypes';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useTabsStore } from '@/stores/useTabsStore';
+import { useNavigation } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DetailScreen from './DetailScreen';
+import { LocationsStackNavigationProp } from './LocationsNavigator';
 
 export default function LocationsScreen() {
+  const nav = useNavigation<LocationsStackNavigationProp>();
   const { hideHeader, hideTabBar, showHeader, showTabBar } = useTabsStore();
   const [searchQuery, setSearchQuery] = useState('');
   const { user, session, hydrated } = useAuthStore();
   const { locations, loading, error, refreshLocations } = useLocations();
   const [selectedLocation, setSelectedLocation] = useState<null | LocationPost>();
   const { top, bottom } = useSafeAreaInsets();
+  const { createConversation } = useConversations();
+
+  const handleMessageOwner = useCallback(async () => {
+    try {
+      console.log('Attempting to message owner...');
+
+      let request: CreateConversationRequest = {
+        receiver_id: selectedLocation?.owner_id as string,
+        location_id: selectedLocation?.id as string,
+      };
+
+      if (selectedLocation?.owner_id !== user?.id) {
+        request.initial_message =
+          "Hello, I'm interested in your location post at " +
+          selectedLocation?.address +
+          ". Happy to chat if the timing's right!";
+      }
+
+      const response = await createConversation(request);
+
+      console.log('Successfully created the following conversation:', response);
+
+      //TODO fix
+      handleExitDetail();
+      nav.navigate('Conversation', { conversationId: response.id });
+      //'6c05a2d9-b025-4303-98c7-1664042476a0'
+    } catch (error) {
+      console.error('Error while trying to message location owner:', error);
+    }
+  }, [selectedLocation]);
 
   // Memoized callbacks for delete operations to prevent Reanimated crashes
   const handleDeleteStart = useCallback((locationId: string) => {
@@ -178,31 +213,35 @@ export default function LocationsScreen() {
       style={{ paddingTop: top, paddingBottom: bottom }}
     >
       {selectedLocation ? (
-        <DetailScreen onExit={handleExitDetail} location={selectedLocation} />
+        <DetailScreen
+          onMessageOwner={handleMessageOwner}
+          onExit={handleExitDetail}
+          location={selectedLocation}
+        />
       ) : (
-          <FlatList
-            data={filteredLocations}
-            renderItem={({ item }) => (
-              <LocationCard
-                location={item}
-                onPress={() => handleLocationPress(item)}
-                onDeleteStart={handleDeleteStart}
-                onDeleteComplete={handleDeleteComplete}
-                onDeleteError={handleDeleteError}
-              />
-            )}
-            keyExtractor={item => item.id}
-            ListHeaderComponent={renderHeader}
-            ListEmptyComponent={loading ? <LocationSkeletonList count={3} /> : renderEmptyState}
-            contentContainerStyle={{
-              paddingHorizontal: 16,
-              paddingBottom: 120,
-              paddingTop: 120,
-            }}
-            showsVerticalScrollIndicator={false}
-            refreshing={loading}
-            onRefresh={refreshLocations}
-          />
+        <FlatList
+          data={filteredLocations}
+          renderItem={({ item }) => (
+            <LocationCard
+              location={item}
+              onPress={() => handleLocationPress(item)}
+              onDeleteStart={handleDeleteStart}
+              onDeleteComplete={handleDeleteComplete}
+              onDeleteError={handleDeleteError}
+            />
+          )}
+          keyExtractor={item => item.id}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={loading ? <LocationSkeletonList count={3} /> : renderEmptyState}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: 120,
+            paddingTop: 120,
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshing={loading}
+          onRefresh={refreshLocations}
+        />
       )}
     </Box>
   );

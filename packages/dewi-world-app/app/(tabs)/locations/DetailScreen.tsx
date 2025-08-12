@@ -15,9 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface DetailScreenProps {
   onExit: () => void;
   location: LocationPost;
+  onMessageOwner: () => void;
 }
 
-export default function DetailScreen({ onExit, location }: DetailScreenProps) {
+export default function DetailScreen({ onExit, location, onMessageOwner }: DetailScreenProps) {
   const pathname = usePathname();
   const { bottom } = useSafeAreaInsets();
 
@@ -47,11 +48,12 @@ export default function DetailScreen({ onExit, location }: DetailScreenProps) {
   return (
     <>
       <Portal hostName="headerHost">
-        {pathname.toLowerCase().includes('locations') && (
-          <FadeInBox width="100%" delay={500}>
-            <LocationsHeader onExit={onExit} onLike={() => {}} />
-          </FadeInBox>
-        )}
+        {pathname.toLowerCase().includes('locations') &&
+          !pathname.toLowerCase().includes('conversation') && (
+            <FadeInBox width="100%" delay={500}>
+              <LocationsHeader onExit={onExit} onLike={() => {}} />
+            </FadeInBox>
+          )}
       </Portal>
       <ImageSlide imageSize={ww} srcURIs={location.gallery} />
       <CustomBottomSheet sheetProps={{ snapPoints: [wh - ww + 70, wh - 80] }}>
@@ -60,15 +62,17 @@ export default function DetailScreen({ onExit, location }: DetailScreenProps) {
         </FadeInBox>
       </CustomBottomSheet>
       <Portal hostName="tabBarHost">
-        {pathname.toLowerCase().includes('locations') && (
-          <FadeInBox width="100%" delay={500}>
-            <PriceAndMessageBox
-              style={{ paddingBottom: bottom, paddingTop: 20 }}
-              isOwn
-              location={geoJson}
-            />
-          </FadeInBox>
-        )}
+        {pathname.toLowerCase().includes('locations') &&
+          !pathname.toLowerCase().includes('conversation') && (
+            <FadeInBox width="100%" delay={500}>
+              <PriceAndMessageBox
+                onMessageOwner={onMessageOwner}
+                style={{ paddingBottom: bottom, paddingTop: 20 }}
+                isOwn
+                location={geoJson}
+              />
+            </FadeInBox>
+          )}
       </Portal>
     </>
   );

@@ -190,6 +190,7 @@ export default function ChatDetailScreen() {
   }, [messages.length]);
 
   const handleSendMessage = async () => {
+    console.log("sending a message")
     if (!inputText.trim() || !conversationId || isSending || !conversation?.other_user?.id) return;
 
     const messageText = inputText.trim();
