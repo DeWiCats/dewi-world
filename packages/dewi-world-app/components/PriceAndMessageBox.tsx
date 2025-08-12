@@ -1,9 +1,5 @@
-import { useConversations } from '@/hooks/useMessages';
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
-import { CreateConversationRequest } from '@/lib/messagingTypes';
 import { useTabsStore } from '@/stores/useTabsStore';
-import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
 import { AnimatedStyle } from 'react-native-reanimated';
 import ButtonPressable from './ButtonPressable';
@@ -16,6 +12,7 @@ interface PriceAndMessageBoxProps {
   style?: StyleProp<ViewStyle>;
   animatedStyle?: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
   isOwn?: boolean;
+  onMessageOwner: () => void;
 }
 
 export default function PriceAndMessageBox({
@@ -23,38 +20,9 @@ export default function PriceAndMessageBox({
   animatedStyle,
   style,
   isOwn = false,
+  onMessageOwner,
 }: PriceAndMessageBoxProps) {
-  const { createConversation } = useConversations();
-  const router = useRouter();
   const { tabBarVisible } = useTabsStore();
-
-  const handleMessageOwner = useCallback(async () => {
-    if (!location) return;
-    try {
-      console.log('Attempting to message owner...');
-
-      const request: CreateConversationRequest = {
-        receiver_id: location.properties.owner_id,
-        location_id: location.properties.id,
-        initial_message:
-          "Hello, I'm interested in your location post at " +
-          location.properties.address +
-          ". Happy to chat if the timing's right!",
-      };
-
-      const response = await createConversation(request);
-
-      console.log('Successfully created the following conversation:', response);
-
-      //TODO fix
-      router.push({
-        pathname: '/(tabs)/chat/Conversation',
-        params: { conversationId: response.id },
-      });
-    } catch (error) {
-      console.error('Error while trying to message location owner:', error);
-    }
-  }, [location]);
 
   return (
     <ReAnimatedBox style={animatedStyle}>
@@ -74,7 +42,7 @@ export default function PriceAndMessageBox({
             {location.properties.is_negotiable ? '/mo' : '/mo (fixed)'}
           </Text>
           <ButtonPressable
-            onPress={handleMessageOwner}
+            onPress={onMessageOwner}
             fontSize={16}
             innerContainerProps={{ padding: 'xl' }}
             title={isOwn ? 'View Conversation' : 'Message Owner'}

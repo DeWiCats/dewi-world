@@ -1,7 +1,10 @@
 import LocationsHeader from '@/components/LocationsHeader';
 import PriceAndMessageBox from '@/components/PriceAndMessageBox';
 import Box, { ReAnimatedBox } from '@/components/ui/Box';
+import { useConversations } from '@/hooks/useMessages';
 import { fetchLocationsGeoJSON, GeoJSONLocation, GeoJSONResponse } from '@/lib/geojsonAPI';
+import { CreateConversationRequest } from '@/lib/messagingTypes';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useTabsStore } from '@/stores/useTabsStore';
 import { Portal } from '@gorhom/portal';
 import {
@@ -15,11 +18,12 @@ import {
 } from '@rnmapbox/maps';
 import { OnPressEvent } from '@rnmapbox/maps/lib/typescript/src/types/OnPressEvent';
 import * as Location from 'expo-location';
-import { usePathname } from 'expo-router';
+import { useNavigation, usePathname } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WorldDrawer from './WorldDrawer';
+import { WorldStackNavigationProp } from './WorldNavigator';
 
 setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN as string);
 
@@ -27,6 +31,10 @@ const DEFAULT_ZOOM_LEVEL = 17;
 const DEFAULT_RADIUS_KM = 50; // Default radius for location fetching
 
 export default function WorldScreen() {
+  const nav = useNavigation<WorldStackNavigationProp>();
+  const { user } = useAuthStore();
+  const { createConversation } = useConversations();
+
   // Control globe camera
   const camera = useRef<Camera>(null);
   const map = useRef<MapView>(null);
@@ -35,6 +43,35 @@ export default function WorldScreen() {
   const pathname = usePathname();
 
   const [selectedLocation, setSelectedLocation] = useState<null | GeoJSONLocation>();
+
+  const handleMessageOwner = useCallback(async () => {
+    try {
+      console.log('Attempting to message owner...');
+
+      console.log('properties', selectedLocation?.properties);
+      let request: CreateConversationRequest = {
+        receiver_id: selectedLocation?.properties.owner_id as string,
+        location_id: selectedLocation?.properties.id as string,
+      };
+
+      if (selectedLocation?.properties.owner_id !== user?.id) {
+        request.initial_message =
+          "Hello, I'm interested in your location post at " +
+          selectedLocation?.properties.address +
+          ". Happy to chat if the timing's right!";
+      }
+
+      const response = await createConversation(request);
+
+      console.log('Successfully created the following conversation:', response);
+
+      //TODO fix
+      nav.navigate('Conversation', { conversationId: response.id });
+    } catch (error) {
+      console.error('Error while trying to message location owner:', error);
+    }
+  }, [selectedLocation]);
+  
   const [fadeIn, setFadeIn] = useState(true);
   const [geoJsonData, setGeoJsonData] = useState<GeoJSONResponse>({
     type: 'FeatureCollection',
@@ -197,10 +234,12 @@ export default function WorldScreen() {
     }
 
     return () => {
-      showHeader();
-      showTabBar();
+      if (pathname.toLowerCase().includes('world')) {
+        showHeader();
+        showTabBar();
+      }
     };
-  }, [selectedLocation]);
+  }, [selectedLocation, pathname]);
 
   const onSelectLocation = useCallback(
     async (event: OnPressEvent) => {
@@ -242,9 +281,10 @@ export default function WorldScreen() {
     <Box width="100%" height="100%" position={'relative'}>
       <Portal hostName="headerHost">
         <ReAnimatedBox width="100%" style={fadeInStyle}>
-          {pathname.toLowerCase().includes('world') && (
-            <LocationsHeader paddingTop="7xl" onExit={onCloseDrawer} onLike={() => {}} />
-          )}
+          {pathname.toLowerCase().includes('world') &&
+            !pathname.toLowerCase().includes('conversation') && (
+              <LocationsHeader paddingTop="7xl" onExit={onCloseDrawer} onLike={() => {}} />
+            )}
         </ReAnimatedBox>
       </Portal>
       <MapView
@@ -306,13 +346,15 @@ export default function WorldScreen() {
         selectedLocation={selectedLocation}
       />
       <Portal hostName="tabBarHost">
-        {pathname.toLowerCase().includes('world') && (
-          <PriceAndMessageBox
-            animatedStyle={fadeInStyle}
-            style={{ paddingBottom: bottom, paddingTop: 20 }}
-            location={selectedLocation}
-          />
-        )}
+        {pathname.toLowerCase().includes('world') &&
+          !pathname.toLowerCase().includes('conversation') && (
+            <PriceAndMessageBox
+              onMessageOwner={handleMessageOwner}
+              animatedStyle={fadeInStyle}
+              style={{ paddingBottom: bottom, paddingTop: 20 }}
+              location={selectedLocation}
+            />
+          )}
       </Portal>
     </Box>
   );

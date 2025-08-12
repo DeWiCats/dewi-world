@@ -256,15 +256,18 @@ export default async function messagingController(fastify: FastifyInstance) {
       preHandler: authMiddleware,
     },
     async (request: AuthenticatedRequest, reply: FastifyReply) => {
+      console.log('creating new conversation');
       try {
         const body = request.body as CreateConversationRequest;
         const userId = request.user_id!;
 
         if (body.receiver_id === userId) {
+          console.log('create conversation with self');
+          /**
           return reply.status(400).send({
             success: false,
             message: 'Cannot create conversation with yourself',
-          });
+          }); */
         }
 
         // Use the database function to get or create conversation
@@ -276,6 +279,7 @@ export default async function messagingController(fastify: FastifyInstance) {
             p_user_id_2: body.receiver_id,
           }
         );
+        console.log("error", funcError)
 
         if (funcError) {
           return reply.status(500).send({
