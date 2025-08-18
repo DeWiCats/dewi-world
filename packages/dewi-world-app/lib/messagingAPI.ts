@@ -98,7 +98,6 @@ class RealMessagingAPI {
       if (!headers) {
         throw new Error('No authentication token');
       }
-      console.log('conversation data set', conversationData);
 
       const response = await fetch(`${API_BASE_URL}/api/v1/messaging/conversations`, {
         method: 'POST',

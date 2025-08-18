@@ -18,7 +18,7 @@ interface SettingsBottomSheetProps {
 
 export default function SettingsBottomSheet({ visible, onClose }: SettingsBottomSheetProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const { logout, user } = useAuthStore();
+  const { logout, deleteAcc, user } = useAuthStore();
   const { hideSettings } = useSettingsStore();
   const router = useRouter();
 
@@ -53,6 +53,29 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
         onPress: async () => {
           try {
             await logout();
+            hideSettings();
+            router.replace('/');
+          } catch (error) {
+            console.error('Logout error:', error);
+            Alert.alert('Error', 'Failed to log out. Please try again.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleDelete = () => {
+    Alert.alert('Delete', 'Are you sure you want to delete your account? This action cannot be reversed.', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete my account',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteAcc();
             hideSettings();
             router.replace('/');
           } catch (error) {
@@ -169,6 +192,42 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
                   </Text>
                   <Text variant="textSmRegular" color="text.quaternary-500">
                     Sign out of your account
+                  </Text>
+                </Box>
+              </Box>
+              <Text color="gray.500" fontSize={16}>
+                →
+              </Text>
+            </TouchableContainer>
+            {/* Delete accoubt */}
+            <TouchableContainer
+              onPress={handleDelete}
+              backgroundColor="transparent"
+              paddingVertical="4"
+              paddingHorizontal="4"
+              borderRadius="2xl"
+              flexDirection="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Box flexDirection="row" alignItems="center">
+                <Box
+                  width={40}
+                  height={40}
+                  borderRadius="full"
+                  backgroundColor="error.900"
+                  justifyContent="center"
+                  alignItems="center"
+                  marginRight="4"
+                >
+                  <Text fontSize={18}>❌</Text>
+                </Box>
+                <Box>
+                  <Text variant="textMdMedium" color="error.500">
+                    Delete account
+                  </Text>
+                  <Text variant="textSmRegular" color="text.quaternary-500">
+                    Delete your account permanently
                   </Text>
                 </Box>
               </Box>

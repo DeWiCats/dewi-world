@@ -1,3 +1,4 @@
+import { UsersAPI } from '@/lib/usersAPI';
 import { supabase } from '@/utils/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Session, User } from '@supabase/supabase-js';
@@ -20,11 +21,14 @@ type AuthStore = {
   resendEmailCode: (email: string) => Promise<void>;
   loginWithProvider: (provider: 'google' | 'apple') => Promise<void>;
   logout: () => Promise<void>;
+  deleteAcc: () => Promise<void>;
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setAuthState: (user: User | null, session: Session | null) => void;
   setPendingEmail: (email: string | null) => void;
 };
+
+const api = new UsersAPI();
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -312,6 +316,21 @@ export const useAuthStore = create<AuthStore>()(
         console.log('🚪 Logging out user');
         await supabase.auth.signOut();
         set({ user: null, session: null, error: null, pendingEmail: null });
+      },
+
+      deleteAcc: async () => {
+        try {
+          console.log('🚪 Deleting user');
+          const user = get().user;
+          if (!user) return;
+
+          const data = await api.deleteCurrentUser();
+
+          console.log('User deleted successfully:', data);
+          set({ user: null, session: null, error: null, pendingEmail: null });
+        } catch (error) {
+          console.error('Error deleting user', error);
+        }
       },
 
       setUser: user => set({ user }),

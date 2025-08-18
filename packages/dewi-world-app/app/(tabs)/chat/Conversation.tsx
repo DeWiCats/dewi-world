@@ -190,7 +190,6 @@ export default function ChatDetailScreen() {
   }, [messages.length]);
 
   const handleSendMessage = async () => {
-    console.log("sending a message")
     if (!inputText.trim() || !conversationId || isSending || !conversation?.other_user?.id) return;
 
     const messageText = inputText.trim();
@@ -338,10 +337,7 @@ export default function ChatDetailScreen() {
         >
           {/* Back button */}
           <TouchableContainer
-            onPress={() => {
-              console.log('back');
-              router.back();
-            }}
+            onPress={router.back}
             justifyContent={'center'}
             alignItems={'center'}
             padding={'4'}

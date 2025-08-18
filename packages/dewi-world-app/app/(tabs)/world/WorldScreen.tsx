@@ -46,9 +46,6 @@ export default function WorldScreen() {
 
   const handleMessageOwner = useCallback(async () => {
     try {
-      console.log('Attempting to message owner...');
-
-      console.log('properties', selectedLocation?.properties);
       let request: CreateConversationRequest = {
         receiver_id: selectedLocation?.properties.owner_id as string,
         location_id: selectedLocation?.properties.id as string,
@@ -63,15 +60,13 @@ export default function WorldScreen() {
 
       const response = await createConversation(request);
 
-      console.log('Successfully created the following conversation:', response);
-
       //TODO fix
       nav.navigate('Conversation', { conversationId: response.id });
     } catch (error) {
       console.error('Error while trying to message location owner:', error);
     }
   }, [selectedLocation]);
-  
+
   const [fadeIn, setFadeIn] = useState(true);
   const [geoJsonData, setGeoJsonData] = useState<GeoJSONResponse>({
     type: 'FeatureCollection',
