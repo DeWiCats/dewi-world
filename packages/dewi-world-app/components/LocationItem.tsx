@@ -31,7 +31,11 @@ export default function LocationItem({ location, onSelect = () => {} }: Location
           }}
         />
       </Pressable>
-      <ProfileDisplay name={location.properties.name} rating={location.properties.rating} />
+      <ProfileDisplay
+        fetchProfile
+        userId={location.properties.owner_id}
+        rating={location.properties.rating}
+      />
       <Text variant="textXsLight" color="gray.400">
         {location.properties.address}
       </Text>

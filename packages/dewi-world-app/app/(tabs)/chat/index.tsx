@@ -1,14 +1,15 @@
+import CircleLoader from '@/components/CircleLoader';
 import Box from '@/components/ui/Box';
 import ImageBox from '@/components/ui/ImageBox';
 import Text from '@/components/ui/Text';
 import { useConversations } from '@/hooks/useMessages';
 import { Conversation } from '@/lib/messagingTypes';
+import { Profile } from '@/lib/usersAPI';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LocationsStackNavigationProp } from '../locations/LocationsNavigator';
 import { ChatStackNavigationProp } from './ChatNavigator';
 
 // Simple date formatting without external dependencies
@@ -37,77 +38,108 @@ function ConversationCard({
   conversation: Conversation;
   onPress: () => void;
 }) {
+  const { getProfileById } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<null | Profile>(null);
+
+  useEffect(() => {
+    new Promise(async () => {
+      try {
+        setLoading(true);
+        if (!conversation?.other_user?.id) throw new Error('Missing other user ID in conversation');
+        const profile = await getProfileById(conversation.other_user.id);
+        setProfile(profile);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    });
+  }, []);
+
   return (
-    <Pressable onPress={onPress}>
-      <Box
-        paddingHorizontal="4"
-        paddingVertical="4"
-        backgroundColor="cardBackground"
-        marginBottom="1"
-        flexDirection="row"
-        alignItems="center"
-      >
-        {/* Avatar */}
-        <ImageBox
-          source={require('@assets/images/profile-pic.png')}
-          width={48}
-          height={48}
-          borderRadius={'full'}
-          marginRight="3"
-        />
-
-        {/* Content */}
-        <Box flex={1} gap="1">
-          <Box flexDirection="row" alignItems="center" justifyContent="space-between">
-            <Text
-              variant="textMdSemibold"
-              color="primaryBackground"
-              numberOfLines={1}
-              style={{ flex: 1 }}
+    <>
+      {loading ? (
+        <CircleLoader />
+      ) : (
+        profile && (
+          <Pressable onPress={onPress}>
+            <Box
+              paddingHorizontal="4"
+              paddingVertical="4"
+              backgroundColor="cardBackground"
+              marginBottom="1"
+              flexDirection="row"
+              alignItems="center"
             >
-              {conversation.other_user?.email?.split('@')[0] || 'Peroni Alt'}
-            </Text>
-            <Text variant="textXsRegular" color="secondaryText">
-              {formatTimeAgo(conversation.last_message_at)}
-            </Text>
-          </Box>
+              {/* Avatar */}
+              <ImageBox
+                source={{ uri: profile.avatar }}
+                width={48}
+                height={48}
+                borderRadius={'full'}
+                marginRight="3"
+              />
 
-          <Text variant="textSmRegular" color="secondaryText" numberOfLines={1} style={{ flex: 1 }}>
-            {conversation.last_message || 'Hey I have a helium hotspot...'}
-          </Text>
-        </Box>
+              {/* Content */}
+              <Box flex={1} gap="1">
+                <Box flexDirection="row" alignItems="center" justifyContent="space-between">
+                  <Text
+                    variant="textMdSemibold"
+                    color="base.white"
+                    numberOfLines={1}
+                    style={{ flex: 1 }}
+                  >
+                    {profile.username}
+                  </Text>
+                  <Text variant="textXsRegular" color="secondaryText">
+                    {formatTimeAgo(conversation.last_message_at)}
+                  </Text>
+                </Box>
 
-        {/* Location thumbnail */}
-        <Box
-          style={{ width: 60, height: 45 }}
-          borderRadius="lg"
-          backgroundColor="blue.500"
-          alignItems="center"
-          justifyContent="center"
-          marginLeft="3"
-        >
-          {conversation.location?.gallery?.[0] ? (
-            <ImageBox
-              source={{ uri: conversation.location.gallery[0] }}
-              borderRadius="lg"
-              width={60}
-              height={45}
-              style={{ width: 60, height: 45 }}
-            />
-          ) : (
-            <Text variant="textSmBold" color="primaryBackground">
-              📍
-            </Text>
-          )}
-        </Box>
-      </Box>
-    </Pressable>
+                <Text
+                  variant="textSmRegular"
+                  color="secondaryText"
+                  numberOfLines={1}
+                  style={{ flex: 1 }}
+                >
+                  {conversation.last_message || 'Hey I have a helium hotspot...'}
+                </Text>
+              </Box>
+
+              {/* Location thumbnail */}
+              <Box
+                style={{ width: 60, height: 45 }}
+                borderRadius="lg"
+                backgroundColor="blue.500"
+                alignItems="center"
+                justifyContent="center"
+                marginLeft="3"
+              >
+                {conversation.location?.gallery?.[0] ? (
+                  <ImageBox
+                    source={{ uri: conversation.location.gallery[0] }}
+                    borderRadius="lg"
+                    width={60}
+                    height={45}
+                    style={{ width: 60, height: 45 }}
+                  />
+                ) : (
+                  <Text variant="textSmBold" color="primaryBackground">
+                    📍
+                  </Text>
+                )}
+              </Box>
+            </Box>
+          </Pressable>
+        )
+      )}
+    </>
   );
 }
 
 export default function ChatListScreen() {
   const nav = useNavigation<ChatStackNavigationProp>();
-  const locationsNav = useNavigation<LocationsStackNavigationProp>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');

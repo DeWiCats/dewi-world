@@ -1,5 +1,6 @@
 import { Theme } from '@/constants/theme';
 // import DrawerMenu from '@assets/svgs/drawer-menu.svg';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useTabsStore } from '@/stores/useTabsStore';
 import { PortalHost } from '@gorhom/portal';
@@ -13,6 +14,7 @@ import TouchableContainer from './ui/TouchableContainer';
 export default function TabsHeader(props: BoxProps<Theme>) {
   const { showSettings } = useSettingsStore();
   const { headerVisible } = useTabsStore();
+  const { profile } = useAuthStore();
   const pathname = usePathname();
 
   return (
@@ -56,9 +58,9 @@ export default function TabsHeader(props: BoxProps<Theme>) {
             onPress={showSettings}
           >
             <ImageBox
-              source={require('@assets/images/profile-pic.png')}
-              width={30}
-              height={30}
+              source={{ uri: profile?.avatar }}
+              width={45}
+              height={45}
               borderRadius={'full'}
             />
           </TouchableContainer>

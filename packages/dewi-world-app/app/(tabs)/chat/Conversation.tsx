@@ -6,6 +6,7 @@ import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
 import { useConversation, useMessages, useTypingIndicator } from '@/hooks/useMessages';
 import { Message } from '@/lib/messagingTypes';
+import { Profile } from '@/lib/usersAPI';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useTabsStore } from '@/stores/useTabsStore';
 import { RouteProp, useRoute } from '@react-navigation/native';
@@ -28,18 +29,6 @@ import { ChatStackParamList } from './ChatNavigator';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-// Simple date formatting for messages
-const formatMessageTime = (timestamp: string) => {
-  const date = new Date(timestamp);
-  return date.toLocaleString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    month: 'short',
-    day: 'numeric',
-    hour12: true,
-  });
-};
-
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
@@ -48,8 +37,6 @@ interface MessageBubbleProps {
 
 const MessageBubble = ({ message, isOwn, showTimestamp }: MessageBubbleProps) => {
   const messageContent = message.content || '[Empty message]';
-  const hasContent = !!message.content;
-  const contentLength = message.content?.length || 0;
 
   return (
     <View style={[styles.messageBubble, isOwn ? styles.ownMessage : styles.otherMessage]}>
@@ -128,7 +115,7 @@ export default function ChatDetailScreen() {
   const route = useRoute<Route>();
   const { conversationId } = route.params;
   const insets = useSafeAreaInsets();
-  const { user } = useAuthStore();
+  const { user, getProfileById } = useAuthStore();
 
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -158,6 +145,9 @@ export default function ChatDetailScreen() {
     markAsRead,
   } = useMessages(conversationId || '');
 
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [otherProfile, setOtherProfile] = useState<null | Profile>(null);
+
   const { isTyping, typingUsers, startTyping, stopTyping } = useTypingIndicator(
     conversationId || ''
   );
@@ -172,6 +162,22 @@ export default function ChatDetailScreen() {
       Keyboard.removeAllListeners('keyboardDidHide');
     };
   }, []);
+
+  // Fetch profile information for other user in conversation
+  useEffect(() => {
+    new Promise(async () => {
+      try {
+        if (!conversation?.other_user?.id) return;
+        setProfileLoading(true);
+        const profile = await getProfileById(conversation.other_user.id);
+        setOtherProfile(profile);
+      } catch (error) {
+        console.error('Error fetchin conversation', error);
+      } finally {
+        setProfileLoading(false);
+      }
+    });
+  }, [conversation]);
 
   // Mark messages as read when entering the screen
   useEffect(() => {
@@ -360,21 +366,29 @@ export default function ChatDetailScreen() {
 
           {/* Profile info */}
           <Box flex={1} flexDirection="row" alignItems="center">
-            <ImageBox
-              source={require('@assets/images/profile-pic.png')}
-              width={40}
-              height={40}
-              borderRadius={'full'}
-              marginRight="3"
-            />
-            <Box>
-              <Text variant="textMdBold" color="primaryBackground">
-                {conversation?.other_user?.email?.split('@')[0] || 'Unknown User'}
-              </Text>
-              <Text variant="textSmRegular" color="secondaryText">
-                {conversation?.location?.title || 'General'}
-              </Text>
-            </Box>
+            {profileLoading ? (
+              <CircleLoader />
+            ) : (
+              otherProfile && (
+                <>
+                  <ImageBox
+                    source={{ uri: otherProfile.avatar }}
+                    width={40}
+                    height={40}
+                    borderRadius={'full'}
+                    marginRight="3"
+                  />
+                  <Box>
+                    <Text variant="textMdBold" color="base.white">
+                      {otherProfile.username}
+                    </Text>
+                    <Text variant="textSmRegular" color="secondaryText" maxWidth="90%" numberOfLines={2}>
+                      {conversation?.location?.title || 'General'}
+                    </Text>
+                  </Box>
+                </>
+              )
+            )}
           </Box>
 
           {/* Location thumbnail */}

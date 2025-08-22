@@ -1,4 +1,4 @@
-import { UsersAPI } from '@/lib/usersAPI';
+import { Profile, UsersAPI } from '@/lib/usersAPI';
 import { supabase } from '@/utils/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Session, User } from '@supabase/supabase-js';
@@ -6,6 +6,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 type AuthStore = {
+  profile: Profile | null;
   user: User | null;
   session: Session | null;
   hydrated: boolean;
@@ -15,13 +16,20 @@ type AuthStore = {
   _isInternalUpdate: boolean; // Internal flag to prevent infinite loops
 
   /* Mutations */
+  getProfileById: (user_id: string) => Promise<null | Profile>;
   loginWithEmailPassword: (email: string, password: string) => Promise<void>;
-  registerWithEmail: (email: string, password: string) => Promise<{ needsVerification: boolean }>;
+  registerWithEmail: (
+    email: string,
+    password: string,
+    username: string,
+    avatar: string
+  ) => Promise<{ needsVerification: boolean }>;
   verifyEmail: (email: string, token: string) => Promise<void>;
   resendEmailCode: (email: string) => Promise<void>;
   loginWithProvider: (provider: 'google' | 'apple') => Promise<void>;
   logout: () => Promise<void>;
   deleteAcc: () => Promise<void>;
+  setProfile: (profile: Profile | null) => void;
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setAuthState: (user: User | null, session: Session | null) => void;
@@ -33,6 +41,7 @@ const api = new UsersAPI();
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
+      profile: null,
       user: null,
       session: null,
       hydrated: false,
@@ -40,7 +49,7 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
       pendingEmail: null,
       _isInternalUpdate: false,
-
+      getProfileById: async (user_id: string) => await api.getUserProfile({ user_id }),
       loginWithEmailPassword: async (email, password) => {
         console.log('🔐 Starting email login process for:', email);
         set({ loading: true, error: null });
@@ -110,6 +119,7 @@ export const useAuthStore = create<AuthStore>()(
           });
 
           set({
+            profile: await get().getProfileById(data.user.id),
             user: data.user,
             session: data.session,
             loading: false,
@@ -123,11 +133,22 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      registerWithEmail: async (email, password) => {
+      registerWithEmail: async (email, password, username, avatar) => {
         console.log('📧 Starting email registration for:', email);
         set({ loading: true, error: null });
 
         try {
+          // Check if username alredy exists
+          const existingUser = await api.getUserProfile({ username });
+
+          if (existingUser) {
+            set({
+              error: 'This username is already taken. Please choose another one.',
+              loading: false,
+            });
+            return { needsVerification: false };
+          }
+
           const { data, error } = await supabase.auth.signUp({
             email: email.trim(),
             password: password.trim(),
@@ -172,6 +193,19 @@ export const useAuthStore = create<AuthStore>()(
             return { needsVerification: false };
           }
 
+          let profile: Profile | null = null;
+
+          // Create new profile entry
+          if (data.user) {
+            profile = await api.createUserProfile({
+              user_id: data.user.id,
+              avatar,
+              username,
+            });
+
+            console.log('📧 Profile registration response:', profile);
+          }
+
           // Check if email verification is needed
           if (data.user && !data.session) {
             console.log('📧 Email verification required');
@@ -187,6 +221,7 @@ export const useAuthStore = create<AuthStore>()(
           if (data.user && data.session) {
             console.log('✅ Registration successful with immediate session');
             set({
+              profile: profile,
               user: data.user,
               session: data.session,
               loading: false,
@@ -258,6 +293,7 @@ export const useAuthStore = create<AuthStore>()(
           if (data.user && data.session) {
             console.log('✅ Email verification successful');
             set({
+              profile: await get().getProfileById(data.user.id),
               user: data.user,
               session: data.session,
               loading: false,
@@ -332,7 +368,7 @@ export const useAuthStore = create<AuthStore>()(
           console.error('Error deleting user', error);
         }
       },
-
+      setProfile: profile => set({ profile }),
       setUser: user => set({ user }),
       setSession: session => set({ session }),
       setAuthState: (user, session) => {
@@ -425,7 +461,7 @@ export const useAuthStore = create<AuthStore>()(
 );
 
 // Listen for auth changes and update store
-supabase.auth.onAuthStateChange((_event, session) => {
+supabase.auth.onAuthStateChange(async (_event, session) => {
   const state = useAuthStore.getState();
 
   // Handle different auth events appropriately
@@ -433,6 +469,12 @@ supabase.auth.onAuthStateChange((_event, session) => {
     if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
       // Always update on sign in or token refresh
       const user = session?.user ?? null;
+      const profile = state.profile;
+
+      if (user && !profile) {
+        console.log('set profile on sign in and token refresh');
+        state.setProfile(await state.getProfileById(user.id));
+      }
       state.setAuthState(user, session);
     } else if (_event === 'SIGNED_OUT') {
       // Always clear on sign out
@@ -441,6 +483,14 @@ supabase.auth.onAuthStateChange((_event, session) => {
       // Only update on initial session if we don't have a persisted session
       if (!state.session) {
         const user = session?.user ?? null;
+        const profile = state.profile;
+
+        if (user && !profile) {
+          console.log('set profile on initial session');
+          const profile = await state.getProfileById(user.id);
+          console.log('fetched profile is', profile);
+          state.setProfile(profile);
+        }
         state.setAuthState(user, session);
       }
     }

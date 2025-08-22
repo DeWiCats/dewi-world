@@ -82,10 +82,7 @@ export default function RootLayout() {
             <CreateLocationStepper visible={isVisible} onComplete={hideStepper} />
 
             {/* Global Settings Bottom Sheet */}
-            <SettingsBottomSheet
-              visible={isSettingsVisible}
-              onClose={hideSettings}
-            />
+            <SettingsBottomSheet visible={isSettingsVisible} onClose={hideSettings} />
           </SafeAreaProvider>
         </PortalProvider>
       </GestureHandlerRootView>

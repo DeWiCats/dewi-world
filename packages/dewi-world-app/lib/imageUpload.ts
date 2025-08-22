@@ -88,6 +88,7 @@ export async function pickImages(maxImages: number = 5): Promise<ImagePickerResu
 
     // Launch image picker with platform-optimized settings
     const result = await ImagePicker.launchImageLibraryAsync({
+      base64: true,
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       quality: 0.8,

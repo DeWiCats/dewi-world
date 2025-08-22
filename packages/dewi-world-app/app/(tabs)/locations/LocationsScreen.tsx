@@ -20,7 +20,7 @@ export default function LocationsScreen() {
   const nav = useNavigation<LocationsStackNavigationProp>();
   const { hideHeader, hideTabBar, showHeader, showTabBar } = useTabsStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, session, hydrated } = useAuthStore();
+  const { user, profile, session, hydrated } = useAuthStore();
   const { locations, loading, error, refreshLocations } = useLocations();
   const [selectedLocation, setSelectedLocation] = useState<null | LocationPost>();
   const { top, bottom } = useSafeAreaInsets();
@@ -117,7 +117,7 @@ export default function LocationsScreen() {
           <Text variant="textSmRegular" color="secondaryText">
             {hydrated
               ? user
-                ? `Welcome back, ${user.email?.split('@')[0]}`
+                ? `Welcome back, ${profile?.username}!`
                 : 'Please sign in to continue'
               : 'Loading...'}
           </Text>

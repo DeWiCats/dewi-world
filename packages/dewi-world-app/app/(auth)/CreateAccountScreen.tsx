@@ -1,22 +1,46 @@
 import ButtonPressable from '@/components/ButtonPressable';
+import ImageUploadForm from '@/components/ImageUploadForm';
 import SafeAreaBox from '@/components/SafeAreaBox';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
 import { useColors } from '@/hooks/theme';
+import { pickImages } from '@/lib/imageUpload';
 import { useAuthStore } from '@/stores/useAuthStore';
+import ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, TextInput } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function CreateAccountScreen() {
+  const imageLimit = 1;
   const router = useRouter();
   const { registerWithEmail, loading, error, user, session, hydrated } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState<null | ImagePicker.ImagePickerAsset>(null);
+  const [uploadProgress] = useState({ completed: 0, total: 0 });
   const colors = useColors();
+
+  const handleImagePicker = async () => {
+    try {
+      const result = await pickImages(imageLimit);
+      if (result.success && result.images) {
+        setSelectedAvatar(result.images[0]);
+      } else if (result.error) {
+        Alert.alert('Error', result.error);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick images');
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedAvatar(null);
+  };
 
   // Redirect if already logged in
   useEffect(() => {
@@ -31,7 +55,7 @@ export default function CreateAccountScreen() {
   };
 
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !username || !selectedAvatar) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -51,8 +75,10 @@ export default function CreateAccountScreen() {
       return;
     }
 
+    const avatar = `data:image/jpeg;base64,${selectedAvatar.base64}`;
+
     try {
-      const result = await registerWithEmail(email, password);
+      const result = await registerWithEmail(email, password, username, avatar);
 
       if (result.needsVerification) {
         router.push('/(auth)/VerifyEmailScreen');
@@ -175,6 +201,57 @@ export default function CreateAccountScreen() {
                   color: '#ffffff',
                   fontFamily: 'Figtree',
                 }}
+              />
+            </Box>
+          </Box>
+
+          {/* Username Input */}
+          <Box>
+            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+              Username
+            </Text>
+            <Box
+              backgroundColor="cardBackground"
+              borderRadius="2xl"
+              paddingHorizontal="4"
+              paddingVertical="4"
+              borderWidth={1}
+              borderColor="gray.800"
+            >
+              <TextInput
+                value={username}
+                onChangeText={setUsername}
+                placeholder="Create a username (must be unique)"
+                placeholderTextColor="#9CA3AF"
+                style={{
+                  fontSize: 16,
+                  color: '#ffffff',
+                  fontFamily: 'Figtree',
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Avatar input */}
+          <Box>
+            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+              Avatar
+            </Text>
+            <Box
+              backgroundColor="cardBackground"
+              borderRadius="2xl"
+              paddingHorizontal="4"
+              paddingVertical="4"
+              borderWidth={1}
+              borderColor="gray.800"
+            >
+              <ImageUploadForm
+                handleImagePicker={handleImagePicker}
+                removeImage={removeImage}
+                imageLimit={imageLimit}
+                isLoading={loading}
+                selectedImages={selectedAvatar ? [selectedAvatar] : []}
+                uploadProgress={uploadProgress}
               />
             </Box>
           </Box>
