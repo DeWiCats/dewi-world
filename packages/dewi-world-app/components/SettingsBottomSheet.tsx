@@ -101,7 +101,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
       <CustomBottomSheet
         sheetProps={{
           onAnimate: animateHandler,
-          snapPoints: [1, 350],
+          snapPoints: [1, 550],
           index: 0,
           backdropComponent: props => (
             <BottomSheetBackdrop

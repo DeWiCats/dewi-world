@@ -26,8 +26,22 @@ export default function ImageUploadForm({
       {/* Selected Images */}
       {selectedImages.length > 0 && (
         <Box marginBottom="4">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <Box justifyContent="center" flexDirection="row" gap="3" paddingHorizontal="2">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            <Box
+              justifyContent="center"
+              flexDirection="row"
+              gap="3"
+              paddingHorizontal="2"
+              paddingVertical="2"
+            >
               {selectedImages.map((image, index) => (
                 <Box key={index} position="relative">
                   <Image
