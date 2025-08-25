@@ -1,6 +1,6 @@
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
-import { useEffect, useMemo, useState } from 'react';
-import { FlatList } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView } from 'react-native-gesture-handler';
 import CircleLoader from './CircleLoader';
 import LocationItem from './LocationItem';
 import { LocationSkeletonList } from './LocationSkeleton';
@@ -11,13 +11,16 @@ interface LocationsListProps {
   locations: GeoJSONLocation[];
   onSelect: (location: GeoJSONLocation) => void;
   loading?: boolean;
+  index?: number;
 }
 
 export default function LocationsList({
   locations,
   onSelect,
   loading = false,
+  index,
 }: LocationsListProps) {
+  const ref = useRef<null | ScrollView>(null);
   const [filteredLocations, setFilteredLocations] = useState(locations);
   const [searchValue, setSearchValue] = useState('');
 
@@ -45,8 +48,19 @@ export default function LocationsList({
     [loading]
   );
 
+  useEffect(() => {
+    if (index === 0) ref?.current?.scrollTo({ y: 0 });
+  }, [index]);
+
   return (
-    <Box paddingHorizontal={'3xl'} paddingVertical="md" alignItems="center" gap="md" width="100%">
+    <Box
+      paddingHorizontal={'3xl'}
+      paddingVertical="md"
+      alignItems="center"
+      gap="md"
+      width="100%"
+      height="100%"
+    >
       <SearchInput
         onChangeText={changeTextHandler}
         height={50}
@@ -56,15 +70,17 @@ export default function LocationsList({
           style: { height: 50, fontWeight: 'bold', color: 'white' },
         }}
       />
-      <FlatList
+      {locations.length === 0 && emptyComponent}
+      <ScrollView
+        ref={ref}
+        showsVerticalScrollIndicator={false}
         style={{ width: '100%' }}
-        data={filteredLocations}
-        refreshing={locations.length === 0}
-        ListEmptyComponent={emptyComponent}
-        renderItem={({ item }) => (
-          <LocationItem onSelect={onSelect} key={item.properties.name} location={item} />
-        )}
-      />
+        contentContainerStyle={{ paddingBottom: 320, gap: 10 }}
+      >
+        {filteredLocations.map(item => (
+          <LocationItem key={item.properties.name} onSelect={onSelect} location={item} />
+        ))}
+      </ScrollView>
     </Box>
   );
 }

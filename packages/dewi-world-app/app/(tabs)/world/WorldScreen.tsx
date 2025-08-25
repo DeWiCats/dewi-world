@@ -209,10 +209,10 @@ export default function WorldScreen() {
         if (distance < threshold) return;
       }
 
-      // Adjust radius based on zoom level
-      const dynamicRadius = 1000;
+      // Fixed search radius
+      const radius = 1000;
 
-      await fetchLocations(center[1], center[0], dynamicRadius);
+      await fetchLocations(center[1], center[0], radius);
     } catch (error) {
       console.error('Error handling map move:', error);
     }

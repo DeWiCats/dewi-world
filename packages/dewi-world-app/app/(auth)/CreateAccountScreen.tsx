@@ -12,9 +12,11 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, TextInput } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CreateAccountScreen() {
   const imageLimit = 1;
+  const { bottom, top } = useSafeAreaInsets();
   const router = useRouter();
   const { registerWithEmail, loading, error, user, session, hydrated } = useAuthStore();
   const [email, setEmail] = useState('');
@@ -98,210 +100,214 @@ export default function CreateAccountScreen() {
   };
 
   return (
-    <ScrollView
-      style={{
-        backgroundColor: colors['primaryBackground'],
-      }}
-    >
-      <SafeAreaBox flex={1} backgroundColor="primaryBackground" paddingHorizontal="6">
-        {/* Header */}
-        <Box marginTop="4xl" marginBottom="12" alignItems="center">
-          <Text variant="riolaTitle" color="primaryText" marginBottom="2">
-            Create Account
-          </Text>
-          <Text variant="textLgRegular" color="text.quaternary-500" textAlign="center">
-            Join the adventure and start exploring
-          </Text>
-        </Box>
-
-        {/* Registration Form */}
-        <Box gap="6">
-          {/* Email Input */}
-          <Box>
-            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
-              Email Address
+    <Box width="100%" height="100%" backgroundColor={'primaryBackground'}>
+      <ScrollView
+        style={{
+          marginTop: top,
+          marginBottom: bottom,
+          backgroundColor: colors['primaryBackground'],
+        }}
+      >
+        <SafeAreaBox flex={1} backgroundColor="primaryBackground" paddingHorizontal="6">
+          {/* Header */}
+          <Box marginTop="4xl" marginBottom="12" alignItems="center">
+            <Text variant="riolaTitle" color="primaryText" marginBottom="2">
+              Create Account
             </Text>
-            <Box
-              backgroundColor="cardBackground"
-              borderRadius="2xl"
-              paddingHorizontal="4"
-              paddingVertical="4"
-              borderWidth={1}
-              borderColor="gray.800"
-            >
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={{
-                  fontSize: 16,
-                  color: '#ffffff',
-                  fontFamily: 'Figtree',
-                }}
-              />
-            </Box>
-            <Text variant="textSmRegular" color="text.quaternary-500" marginTop="2">
-              We&apos;ll send you a verification code
+            <Text variant="textLgRegular" color="text.quaternary-500" textAlign="center">
+              Join the adventure and start exploring
             </Text>
           </Box>
 
-          {/* Password Input */}
-          <Box>
-            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
-              Password
-            </Text>
-            <Box
-              backgroundColor="cardBackground"
-              borderRadius="2xl"
-              paddingHorizontal="4"
-              paddingVertical="4"
-              borderWidth={1}
-              borderColor="gray.800"
-            >
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Create a password (min 6 characters)"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                style={{
-                  fontSize: 16,
-                  color: '#ffffff',
-                  fontFamily: 'Figtree',
-                }}
-              />
-            </Box>
-          </Box>
-
-          {/* Confirm Password Input */}
-          <Box>
-            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
-              Confirm Password
-            </Text>
-            <Box
-              backgroundColor="cardBackground"
-              borderRadius="2xl"
-              paddingHorizontal="4"
-              paddingVertical="4"
-              borderWidth={1}
-              borderColor="gray.800"
-            >
-              <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm your password"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                style={{
-                  fontSize: 16,
-                  color: '#ffffff',
-                  fontFamily: 'Figtree',
-                }}
-              />
-            </Box>
-          </Box>
-
-          {/* Username Input */}
-          <Box>
-            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
-              Username
-            </Text>
-            <Box
-              backgroundColor="cardBackground"
-              borderRadius="2xl"
-              paddingHorizontal="4"
-              paddingVertical="4"
-              borderWidth={1}
-              borderColor="gray.800"
-            >
-              <TextInput
-                value={username}
-                onChangeText={setUsername}
-                placeholder="Create a username (must be unique)"
-                placeholderTextColor="#9CA3AF"
-                style={{
-                  fontSize: 16,
-                  color: '#ffffff',
-                  fontFamily: 'Figtree',
-                }}
-              />
-            </Box>
-          </Box>
-
-          {/* Avatar input */}
-          <Box>
-            <Text variant="textMdMedium" color="primaryText" marginBottom="3">
-              Avatar
-            </Text>
-            <Box
-              backgroundColor="cardBackground"
-              borderRadius="2xl"
-              paddingHorizontal="4"
-              paddingVertical="4"
-              borderWidth={1}
-              borderColor="gray.800"
-            >
-              <ImageUploadForm
-                handleImagePicker={handleImagePicker}
-                removeImage={removeImage}
-                imageLimit={imageLimit}
-                isLoading={loading}
-                selectedImages={selectedAvatar ? [selectedAvatar] : []}
-                uploadProgress={uploadProgress}
-              />
-            </Box>
-          </Box>
-
-          {/* Error Message */}
-          {error && (
-            <Box
-              backgroundColor="error.900"
-              padding="4"
-              borderRadius="xl"
-              borderWidth={1}
-              borderColor="error.500"
-            >
-              <Text variant="textSmMedium" color="error.500" textAlign="center">
-                {error}
+          {/* Registration Form */}
+          <Box gap="6">
+            {/* Email Input */}
+            <Box>
+              <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+                Email Address
+              </Text>
+              <Box
+                backgroundColor="cardBackground"
+                borderRadius="2xl"
+                paddingHorizontal="4"
+                paddingVertical="4"
+                borderWidth={1}
+                borderColor="gray.800"
+              >
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  style={{
+                    fontSize: 16,
+                    color: '#ffffff',
+                    fontFamily: 'Figtree',
+                  }}
+                />
+              </Box>
+              <Text variant="textSmRegular" color="text.quaternary-500" marginTop="2">
+                We&apos;ll send you a verification code
               </Text>
             </Box>
-          )}
 
-          {/* Create Account Button */}
-          <ButtonPressable
-            onPress={handleRegister}
-            disabled={loading}
-            backgroundColor={loading ? 'gray.700' : 'base.white'}
-            title={loading ? 'Creating Account...' : 'Create Account'}
-            titleColor="primaryBackground"
-            fontSize={16}
-            fontWeight="bold"
-            marginTop="4"
-          />
-
-          {/* Sign In Link */}
-          <TouchableContainer
-            onPress={() => router.push('/(auth)/LoginScreen')}
-            alignItems="center"
-            paddingVertical="4"
-            marginTop="4"
-            defaultBackground="primaryBackground"
-            pressedBackgroundColor="gray.900"
-            borderRadius={'full'}
-          >
-            <Text variant="textMdRegular" color="blue.500">
-              Already have an account?{' '}
-              <Text variant="textMdMedium" color="blue.400">
-                Sign in
+            {/* Password Input */}
+            <Box>
+              <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+                Password
               </Text>
-            </Text>
-          </TouchableContainer>
-        </Box>
-      </SafeAreaBox>
-    </ScrollView>
+              <Box
+                backgroundColor="cardBackground"
+                borderRadius="2xl"
+                paddingHorizontal="4"
+                paddingVertical="4"
+                borderWidth={1}
+                borderColor="gray.800"
+              >
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Create a password (min 6 characters)"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  style={{
+                    fontSize: 16,
+                    color: '#ffffff',
+                    fontFamily: 'Figtree',
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Confirm Password Input */}
+            <Box>
+              <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+                Confirm Password
+              </Text>
+              <Box
+                backgroundColor="cardBackground"
+                borderRadius="2xl"
+                paddingHorizontal="4"
+                paddingVertical="4"
+                borderWidth={1}
+                borderColor="gray.800"
+              >
+                <TextInput
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm your password"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  style={{
+                    fontSize: 16,
+                    color: '#ffffff',
+                    fontFamily: 'Figtree',
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Username Input */}
+            <Box>
+              <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+                Username
+              </Text>
+              <Box
+                backgroundColor="cardBackground"
+                borderRadius="2xl"
+                paddingHorizontal="4"
+                paddingVertical="4"
+                borderWidth={1}
+                borderColor="gray.800"
+              >
+                <TextInput
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="Create a username (must be unique)"
+                  placeholderTextColor="#9CA3AF"
+                  style={{
+                    fontSize: 16,
+                    color: '#ffffff',
+                    fontFamily: 'Figtree',
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Avatar input */}
+            <Box>
+              <Text variant="textMdMedium" color="primaryText" marginBottom="3">
+                Avatar
+              </Text>
+              <Box
+                backgroundColor="cardBackground"
+                borderRadius="2xl"
+                paddingHorizontal="4"
+                paddingVertical="4"
+                borderWidth={1}
+                borderColor="gray.800"
+              >
+                <ImageUploadForm
+                  handleImagePicker={handleImagePicker}
+                  removeImage={removeImage}
+                  imageLimit={imageLimit}
+                  isLoading={loading}
+                  selectedImages={selectedAvatar ? [selectedAvatar] : []}
+                  uploadProgress={uploadProgress}
+                />
+              </Box>
+            </Box>
+
+            {/* Error Message */}
+            {error && (
+              <Box
+                backgroundColor="error.900"
+                padding="4"
+                borderRadius="xl"
+                borderWidth={1}
+                borderColor="error.500"
+              >
+                <Text variant="textSmMedium" color="error.500" textAlign="center">
+                  {error}
+                </Text>
+              </Box>
+            )}
+
+            {/* Create Account Button */}
+            <ButtonPressable
+              onPress={handleRegister}
+              disabled={loading}
+              backgroundColor={loading ? 'gray.700' : 'base.white'}
+              title={loading ? 'Creating Account...' : 'Create Account'}
+              titleColor="primaryBackground"
+              fontSize={16}
+              fontWeight="bold"
+              marginTop="4"
+            />
+
+            {/* Sign In Link */}
+            <TouchableContainer
+              onPress={() => router.push('/(auth)/LoginScreen')}
+              alignItems="center"
+              paddingVertical="4"
+              marginTop="4"
+              defaultBackground="primaryBackground"
+              pressedBackgroundColor="gray.900"
+              borderRadius={'full'}
+            >
+              <Text variant="textMdRegular" color="blue.500">
+                Already have an account?{' '}
+                <Text variant="textMdMedium" color="blue.400">
+                  Sign in
+                </Text>
+              </Text>
+            </TouchableContainer>
+          </Box>
+        </SafeAreaBox>
+      </ScrollView>
+    </Box>
   );
 }
