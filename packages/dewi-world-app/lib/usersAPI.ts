@@ -30,7 +30,10 @@ export class UsersAPI {
     try {
       const params = new URLSearchParams(payload).toString();
 
-      const response = await fetch(`${ENDPOINT_URL}?${params}`, {});
+      const url = `${ENDPOINT_URL}?${params}`;
+      console.log('request url', url);
+
+      const response = await fetch(url, {});
 
       const { data, message } = await response.json();
 

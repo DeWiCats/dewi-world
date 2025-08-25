@@ -138,6 +138,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ loading: true, error: null });
 
         try {
+          console.log('Check for existing username');
           // Check if username alredy exists
           const existingUser = await api.getUserProfile({ username });
 
