@@ -31,11 +31,12 @@ export default function WorldDrawer({
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [panningEnabled, setPanningEnabled] = useState(true);
   const { bottom } = useSafeAreaInsets();
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
     Keyboard.addListener('keyboardDidShow', () => {
       setPanningEnabled(false);
-      bottomSheetRef.current?.snapToIndex(1);
+      bottomSheetRef.current?.snapToIndex(2);
     });
     Keyboard.addListener('keyboardDidHide', () => {
       setPanningEnabled(true);
@@ -47,6 +48,7 @@ export default function WorldDrawer({
   }, []);
 
   const animateHandler = (fromIndex: number, toIndex: number) => {
+    setIndex(toIndex);
     if (fromIndex === 0) return;
     if (toIndex === 0 && selectedLocation) {
       onClose();
@@ -80,7 +82,12 @@ export default function WorldDrawer({
           {selectedLocation ? (
             <LocationDetail location={selectedLocation} />
           ) : (
-            <LocationsList loading={loading} onSelect={onSelect} locations={locations} />
+            <LocationsList
+              index={index}
+              loading={loading}
+              onSelect={onSelect}
+              locations={locations}
+            />
           )}
         </ReAnimatedBox>
       </CustomBottomSheet>

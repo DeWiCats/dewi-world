@@ -6,7 +6,7 @@ import { useLocations } from '@/hooks/useLocations';
 import { CreateLocationRequest } from '@/lib/api';
 import { pickImages, uploadMultipleImages } from '@/lib/imageUpload';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, Switch, TextInput } from 'react-native';
 import Animated, {
   runOnJS,
@@ -17,6 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 // Import hardware icons and Solana functionality
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useStepperStore } from '@/stores/useStepperStore';
 import { wh } from '@/utils/layout';
 import Icon5G from '@assets/svgs/5g-logo.svg';
@@ -105,47 +106,58 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
   const [selectedImages, setSelectedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
 
+  const { profile } = useAuthStore();
+
   // Animation values
   const slideX = useSharedValue(0);
   const opacity = useSharedValue(1);
 
-  const steps = [
-    {
-      title: 'What is your location called?',
-      subtitle: 'Give your location a memorable name that hosts will recognize',
-      icon: '📍',
-    },
-    {
-      title: 'Where is it located?',
-      subtitle: 'Help us find your exact address for accurate mapping',
-      icon: '🗺️',
-    },
-    {
-      title: 'Tell us more about it',
-      subtitle: 'Share details that will help hosts understand what makes your location special',
-      icon: '✨',
-    },
-    {
-      title: 'Set your pricing',
-      subtitle: 'Choose a competitive rate for your hosting services',
-      icon: '💰',
-    },
-    {
-      title: 'What can be deployed?',
-      subtitle: 'Select the types of hardware your location can support',
-      icon: '🔧',
-    },
-    {
-      title: 'Add some photos',
-      subtitle: 'Show off your location with high-quality images',
-      icon: '📸',
-    },
-    {
-      title: 'Connect & pay to create location',
-      subtitle: `Pay ${PAYMENT_AMOUNT_SOL} SOL to publish your location and make it discoverable`,
-      icon: '💳',
-    },
-  ];
+  const steps = useMemo(() => {
+    // Location creation steps
+    const steps = [
+      {
+        title: 'What is your location called?',
+        subtitle: 'Give your location a memorable name that hosts will recognize',
+        icon: '📍',
+      },
+      {
+        title: 'Where is it located?',
+        subtitle: 'Help us find your exact address for accurate mapping',
+        icon: '🗺️',
+      },
+      {
+        title: 'Tell us more about it',
+        subtitle: 'Share details that will help hosts understand what makes your location special',
+        icon: '✨',
+      },
+      {
+        title: 'Set your pricing',
+        subtitle: 'Choose a competitive rate for your hosting services',
+        icon: '💰',
+      },
+      {
+        title: 'What can be deployed?',
+        subtitle: 'Select the types of hardware your location can support',
+        icon: '🔧',
+      },
+      {
+        title: 'Add some photos',
+        subtitle: 'Show off your location with high-quality images',
+        icon: '📸',
+      },
+    ];
+
+    // If profile is not verified, add SOL payment step
+    if (!profile?.dewi_verified) {
+      steps.push({
+        title: 'Connect & pay to create location',
+        subtitle: `Pay ${PAYMENT_AMOUNT_SOL} SOL to publish your location and make it discoverable`,
+        icon: '💳',
+      });
+    }
+
+    return steps;
+  }, [profile]);
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -271,6 +283,12 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
 
   const handleFinish = async () => {
     if (!canProceed()) return;
+
+    // If we're at the images step and the user's profile is verified, create the location.
+    // This skips the payment step entirely.
+    if (currentStep === 5 && profile?.dewi_verified) {
+      return await createLocationAfterPayment();
+    }
 
     // For the payment step, the MobileWalletAdapterButton handles the payment
     // and calls handlePaymentSuccess which automatically creates the location
@@ -411,7 +429,7 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
   // We should be able to control visibility using only the bottom sheet
   // However removing this line of code causes an infinite render loop
   // So for now just leave it as a TODO
-  if (!visible) return null;
+  if (!visible || !profile) return null;
 
   return (
     <Portal>
@@ -521,7 +539,11 @@ export default function CreateLocationStepper({ onComplete, visible }: StepperPr
                 })}
               >
                 <Text variant="textLgBold" color="primaryBackground" textAlign="center">
-                  {loading ? 'Processing...' : 'Continue'}
+                  {loading
+                    ? 'Processing...'
+                    : currentStep === 5 && profile?.dewi_verified
+                      ? 'Create Location'
+                      : 'Continue'}
                 </Text>
               </Pressable>
             )}

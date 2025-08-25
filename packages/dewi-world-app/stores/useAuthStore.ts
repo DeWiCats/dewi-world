@@ -149,6 +149,8 @@ export const useAuthStore = create<AuthStore>()(
             return { needsVerification: false };
           }
 
+          console.log('auth registration');
+
           const { data, error } = await supabase.auth.signUp({
             email: email.trim(),
             password: password.trim(),
@@ -156,6 +158,8 @@ export const useAuthStore = create<AuthStore>()(
               emailRedirectTo: undefined, // Don't use email links, use OTP codes instead
             },
           });
+
+          console.log('auth registration success');
 
           console.log('📧 Email registration response:', {
             hasUser: !!data.user,
@@ -197,6 +201,7 @@ export const useAuthStore = create<AuthStore>()(
 
           // Create new profile entry
           if (data.user) {
+            console.log('creating user profile');
             profile = await api.createUserProfile({
               user_id: data.user.id,
               avatar,

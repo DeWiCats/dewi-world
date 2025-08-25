@@ -7,6 +7,15 @@ export interface Profile {
   user_id: string;
   username: string;
   avatar: string;
+  dewi_verified?: boolean;
+  blue_chip?: boolean;
+  verified_address?: string;
+}
+
+export interface ProfileCreationRequest {
+  user_id: string;
+  username: string;
+  avatar: string;
 }
 
 export class UsersAPI {
@@ -15,7 +24,9 @@ export class UsersAPI {
     return getAuthHeaders();
   }
 
-  async getUserProfile(payload: Partial<Profile>): Promise<null | Profile> {
+  async getUserProfile(
+    payload: Partial<Omit<Profile, 'dewi_verified' | 'blue_chip'>>
+  ): Promise<null | Profile> {
     try {
       const params = new URLSearchParams(payload).toString();
 
@@ -34,12 +45,19 @@ export class UsersAPI {
     }
   }
 
-  async createUserProfile(payload: Profile): Promise<Profile> {
+  async createUserProfile(payload: ProfileCreationRequest): Promise<Profile> {
     try {
+      console.log('request url', ENDPOINT_URL);
+      console.log('user', payload.username);
       const response = await fetch(ENDPOINT_URL, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          username: payload.username,
+          user_id: payload.user_id,
+          avatar: payload.avatar,
+        }),
       });
+      console.log('response is', response);
 
       const { data, message } = await response.json();
 

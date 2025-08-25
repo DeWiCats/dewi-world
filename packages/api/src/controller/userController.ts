@@ -1,7 +1,13 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { verifyDewiOwner } from '../lib/dewi';
 import { supabase } from '../lib/supabase';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
-import { Profile } from '../types/user';
+import {
+  Profile,
+  ProfileCreationRequest,
+  RegisterUserRequest,
+  VerifyUserRequest,
+} from '../types/user';
 
 export default async function userController(fastify: FastifyInstance) {
   // GET /api/v1/user
@@ -26,36 +32,95 @@ export default async function userController(fastify: FastifyInstance) {
     }
 
     const { data, error, status, count } = await supabaseQuery;
-    console.log('get user result', data, error, status, count);
 
     return reply.status(status).send({ data, count, message: error?.message });
   });
 
-  fastify.post(
-    '/',
+  fastify.post('/', async function (request: FastifyRequest, reply: FastifyReply) {
+    console.log('creating new user');
+    const body = JSON.parse(request.body as string) as ProfileCreationRequest;
+    console.log('request body', body);
 
-    async function (request: FastifyRequest, reply: FastifyReply) {
-      console.log('create new user');
-      console.log('request body', request.body);
-      const body = JSON.parse(request.body as string) as Profile;
-      console.log('body', body);
-      const insertData = {
-        user_id: body.user_id,
-        username: body.username,
-        avatar: body.avatar,
-      };
-      console.log('insertData', insertData);
+    const insertData = {
+      user_id: body.user_id,
+      username: body.username,
+      avatar: body.avatar,
+      dewi_verified: false,
+      blue_chip: false,
+    };
 
-      const { data, error, status } = await supabase
-        .from('profile')
-        .insert(insertData)
-        .select('*')
-        .single();
-      console.log('create new user result', data, error, status);
+    console.log('insertData', insertData);
 
-      return reply.status(status).send({ data, message: error?.message });
+    const { data, error, status } = await supabase
+      .from('profile')
+      .insert(insertData)
+      .select('*')
+      .single();
+
+    console.log('result', data, error, status);
+
+    return reply.status(status).send({ data, message: error?.message });
+  });
+
+  fastify.get('/verify', async function (request: FastifyRequest, reply: FastifyReply) {
+    // Endpoint to verify alredy registered users
+    const searchParams = request.query as VerifyUserRequest;
+    const dewiAddress = searchParams.dewiAddress;
+
+    const hasDewiCat = await verifyDewiOwner(dewiAddress);
+
+    if (!hasDewiCat) {
+      return reply.status(403).send({ message: 'Wallet does not have any DeWiCats' });
     }
-  );
+    const { data, error, status } = await supabase
+      .from('profile')
+      .select()
+      .eq('verified_address', dewiAddress)
+      .single();
+
+    return reply.status(status).send({ data, message: error?.message });
+  });
+
+  fastify.post('/register', async function (request: FastifyRequest, reply: FastifyReply) {
+    const body = JSON.parse(request.body as string) as RegisterUserRequest;
+
+    // Verify if wallet actually owns a DeWiCat
+    const hasDewiCat = await verifyDewiOwner(body.dewiAddress);
+
+    if (!hasDewiCat) {
+      return reply.status(403).send({ message: 'Wallet does not have any DeWiCats' });
+    }
+
+    // Get user from auth.users table
+    const { data, error } = await supabase.auth.admin.listUsers();
+    const user = data.users.find(user => user.email === body.email);
+
+    if (!user) return reply.status(404).send({ message: 'User not found: ' + error?.message });
+
+    // Remove existing registration in case user is alredy verified
+    const { error: deleteError, status: deleteStatus } = await supabase
+      .from('profile')
+      .update({ dewi_verified: false, verified_address: null })
+      .eq('verified_address', body.dewiAddress);
+
+    if (deleteError) {
+      return reply.status(deleteStatus).send({ message: deleteError.message });
+    }
+
+    // Update user profile to add verification data
+    const {
+      data: profileData,
+      error: profileError,
+      status,
+    } = await supabase
+      .from('profile')
+      .update({ dewi_verified: true, verified_address: body.dewiAddress })
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    return reply.status(status).send({ data: profileData, message: profileError?.message });
+  });
 
   fastify.delete(
     '/',

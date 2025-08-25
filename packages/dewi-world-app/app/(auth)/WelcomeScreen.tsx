@@ -88,7 +88,7 @@ export default function WelcomeScreen() {
         Welcome to Dewi World
       </Text>
 
-      <Box width={'100%'} paddingHorizontal={'xl'} gap="xl" marginBottom={'5'}>
+      <Box width={'100%'} paddingHorizontal={'xl'} gap="xl" marginBottom={'10'}>
         <Link href="/(auth)/CreateAccountScreen" asChild>
           <ButtonPressable
             width={'100%'}
