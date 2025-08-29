@@ -46,7 +46,7 @@ export const APP_IDENTITY = {
 let connection: any = null;
 
 if (isSolanaSupported && Connection) {
-  connection = new Connection('https://api.devnet.solana.com', {
+  connection = new Connection(process.env.EXPO_PUBLIC_SOLANA_RPC, {
     commitment: 'confirmed',
     confirmTransactionInitialTimeout: 60000, // 60 seconds
     wsEndpoint: undefined, // Disable websocket for better emulator compatibility
