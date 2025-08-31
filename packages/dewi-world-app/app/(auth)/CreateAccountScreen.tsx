@@ -1,3 +1,4 @@
+import defaultProfilePic from '@/assets/images/default-profile-pic';
 import ButtonPressable from '@/components/ButtonPressable';
 import ImageUploadForm from '@/components/ImageUploadForm';
 import SafeAreaBox from '@/components/SafeAreaBox';
@@ -44,7 +45,7 @@ export default function CreateAccountScreen() {
       const result = await pickImages(imageLimit);
       if (result.success && result.images) {
         setSelectedAvatar(result.images[0]);
-      } else if (result.error) {
+      } else if (result.error && result.error !== 'Image selection was cancelled') {
         Alert.alert('Error', result.error);
       }
     } catch (error) {
@@ -69,7 +70,7 @@ export default function CreateAccountScreen() {
   };
 
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword || !username || !selectedAvatar) {
+    if (!email || !password || !confirmPassword || !username) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -89,7 +90,9 @@ export default function CreateAccountScreen() {
       return;
     }
 
-    const avatar = `data:image/jpeg;base64,${selectedAvatar.base64}`;
+    const avatar = selectedAvatar
+      ? `data:image/jpeg;base64,${selectedAvatar.base64}`
+      : defaultProfilePic;
 
     try {
       const result = await registerWithEmail(email, password, username, avatar);

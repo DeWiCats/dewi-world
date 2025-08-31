@@ -822,7 +822,7 @@ const PhotosStep = ({
       const result = await pickImages(imageLimit - selectedImages.length);
       if (result.success && result.images) {
         onImagesChange([...selectedImages, ...result.images].slice(0, imageLimit));
-      } else if (result.error) {
+      } else if (result.error && result.error !== 'Image selection was cancelled') {
         Alert.alert('Error', result.error);
       }
     } catch (error) {
