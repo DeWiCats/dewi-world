@@ -17,6 +17,7 @@ type AuthStore = {
 
   /* Mutations */
   getProfileById: (user_id: string) => Promise<null | Profile>;
+  resetPasswordForEmail: (email: string) => Promise<void>;
   loginWithEmailPassword: (email: string, password: string) => Promise<void>;
   registerWithEmail: (
     email: string,
@@ -50,6 +51,15 @@ export const useAuthStore = create<AuthStore>()(
       pendingEmail: null,
       _isInternalUpdate: false,
       getProfileById: async (user_id: string) => await api.getUserProfile({ user_id }),
+      resetPasswordForEmail: async email => {
+        set({ loading: true, error: null });
+        try {
+          await api.resetPasswordForEmail(email);
+        } catch (error) {
+          console.error('Error resetting password', error);
+          set({ error: 'An error has ocurred, please try again.', loading: false });
+        }
+      },
       loginWithEmailPassword: async (email, password) => {
         console.log('🔐 Starting email login process for:', email);
         set({ loading: true, error: null });
@@ -472,6 +482,9 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
 
   // Handle different auth events appropriately
   if (state.hydrated) {
+    if (_event === 'PASSWORD_RECOVERY') {
+      console.log('Password Recovery Event');
+    }
     if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
       // Always update on sign in or token refresh
       const user = session?.user ?? null;
