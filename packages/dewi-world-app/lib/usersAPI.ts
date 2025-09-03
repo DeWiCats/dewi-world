@@ -48,6 +48,21 @@ export class UsersAPI {
     }
   }
 
+  async resetPasswordForEmail(email: string) {
+    try {
+      const response = await fetch(`${ENDPOINT_URL}/resetPassword?email=${email}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async createUserProfile(payload: ProfileCreationRequest): Promise<Profile> {
     try {
       console.log('request url', ENDPOINT_URL);

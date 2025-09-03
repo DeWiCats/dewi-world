@@ -21,3 +21,12 @@ export interface RegisterUserRequest {
 export interface VerifyUserRequest {
   dewiAddress: string;
 }
+
+export interface ResetPasswordQueryParams {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  access_token: string;
+  password: string;
+}

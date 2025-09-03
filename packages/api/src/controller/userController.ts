@@ -1,4 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { readFile } from 'fs/promises';
+import { resolve } from 'path';
 import { verifyDewiOwner } from '../lib/dewi';
 import { supabase } from '../lib/supabase';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
@@ -6,6 +8,8 @@ import {
   Profile,
   ProfileCreationRequest,
   RegisterUserRequest,
+  ResetPasswordQueryParams,
+  ResetPasswordRequest,
   VerifyUserRequest,
 } from '../types/user';
 
@@ -36,10 +40,63 @@ export default async function userController(fastify: FastifyInstance) {
     return reply.status(status).send({ data, count, message: error?.message });
   });
 
+  fastify.put('/resetPassword', async function (request: FastifyRequest, reply: FastifyReply) {
+    const body = JSON.parse(request.body as string) as ResetPasswordRequest;
+    if (!body?.password || !body?.access_token) {
+      return reply.status(400).send({ message: 'Missing parameters' });
+    }
+
+    const { data, error } = await supabase.auth.getUser(body.access_token);
+
+    if (error) {
+      return reply.status(error.status || 500).send({ message: error.message });
+    }
+
+    if (data?.user) {
+      const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
+        data.user.id,
+        { password: body.password }
+      );
+      let status = 200;
+      if (updateError) {
+        status = updateError.status || 500;
+      }
+
+      return reply.status(status).send({ data: updateData, message: updateError?.message });
+    }
+  });
+
+  fastify.get('/resetPassword', async function (_request: FastifyRequest, reply: FastifyReply) {
+    const htmlPath = resolve(__dirname, '../../static/resetPassword.html');
+    const htmlContent = await readFile(htmlPath);
+    reply.header('Content-Type', 'text/html; charset=utf-8').send(htmlContent);
+  });
+
+  fastify.get(
+    '/sendResetPasswordEmail',
+    async function (request: FastifyRequest, reply: FastifyReply) {
+      const url = 'https://dewi-world-api.fly.dev/api/v1/user/resetPassword';
+      console.log('redirecturl', url);
+      const query = request.query as ResetPasswordQueryParams;
+      if (!query.email) {
+        return reply.status(403).send({ message: 'Missing email parameter.' });
+      }
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(query.email, {
+        redirectTo: url,
+      });
+
+      let status = 200;
+      if (error) {
+        status = error.status || 500;
+      }
+
+      return reply.status(status).send({ data, message: error?.message });
+    }
+  );
+
   fastify.post('/', async function (request: FastifyRequest, reply: FastifyReply) {
-    console.log('creating new user');
     const body = JSON.parse(request.body as string) as ProfileCreationRequest;
-    console.log('request body', body);
 
     const insertData = {
       user_id: body.user_id,
