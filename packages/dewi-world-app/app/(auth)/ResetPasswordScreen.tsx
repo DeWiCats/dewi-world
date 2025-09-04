@@ -52,6 +52,7 @@ export default function ResetPasswordScreen() {
         'Password reset failed',
         error instanceof Error ? error.message : 'Unknown error'
       );
+      setSubmitFinished(false);
     }
   };
 

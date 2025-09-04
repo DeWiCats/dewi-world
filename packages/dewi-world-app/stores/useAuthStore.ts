@@ -25,6 +25,7 @@ type AuthStore = {
     username: string,
     avatar: string
   ) => Promise<{ needsVerification: boolean }>;
+  updateCurrentProfile: (payload: Partial<Record<'username' | 'avatar', string>>) => Promise<void>;
   verifyEmail: (email: string, token: string) => Promise<void>;
   resendEmailCode: (email: string) => Promise<void>;
   loginWithProvider: (provider: 'google' | 'apple') => Promise<void>;
@@ -50,7 +51,29 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
       pendingEmail: null,
       _isInternalUpdate: false,
-      getProfileById: async (user_id: string) => await api.getUserProfile({ user_id }),
+      getProfileById: async user_id => await api.getUserProfile({ user_id }),
+      updateCurrentProfile: async payload => {
+        set({ loading: true, error: null });
+        try {
+          console.log('Check for existing username');
+          // Check if username alredy exists
+          const existingUser = await api.getUserProfile({ username: payload.username });
+
+          if (existingUser) {
+            set({
+              error: 'This username is already taken. Please choose another one.',
+              loading: false,
+            });
+            return;
+          }
+
+          await api.updateUserProfile(payload);
+          set({ loading: false, error: null });
+        } catch (error) {
+          console.error('Error updating profile', error);
+          set({ error: 'An error has ocurred, please try again.', loading: false });
+        }
+      },
       resetPasswordForEmail: async email => {
         set({ loading: true, error: null });
         try {

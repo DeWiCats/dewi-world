@@ -30,3 +30,8 @@ export interface ResetPasswordRequest {
   access_token: string;
   password: string;
 }
+
+export interface UpdateUserRequest {
+  username?: string;
+  avatar?: string;
+}

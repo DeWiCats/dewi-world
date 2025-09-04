@@ -24,6 +24,33 @@ export class UsersAPI {
     return getAuthHeaders();
   }
 
+  async updateUserProfile(
+    payload: Partial<Record<'username' | 'avatar', string>>
+  ): Promise<Profile> {
+    try {
+      const headers = this.getAuthHeaders();
+
+      const response = await fetch(ENDPOINT_URL, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+        headers: {
+          ...headers,
+        },
+      });
+
+      const { data, message } = await response.json();
+
+      if (!response.ok) {
+        throw new Error(message);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+  }
+
   async getUserProfile(
     payload: Partial<Omit<Profile, 'dewi_verified' | 'blue_chip'>>
   ): Promise<null | Profile> {
@@ -50,7 +77,7 @@ export class UsersAPI {
 
   async resetPasswordForEmail(email: string) {
     try {
-      const response = await fetch(`${ENDPOINT_URL}/resetPassword?email=${email}`);
+      const response = await fetch(`${ENDPOINT_URL}/sendResetPasswordEmail?email=${email}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -59,14 +86,13 @@ export class UsersAPI {
 
       return data;
     } catch (error) {
+      console.error('Error resetting password:', error);
       throw error;
     }
   }
 
   async createUserProfile(payload: ProfileCreationRequest): Promise<Profile> {
     try {
-      console.log('request url', ENDPOINT_URL);
-      console.log('user', payload.username);
       const response = await fetch(ENDPOINT_URL, {
         method: 'POST',
         body: JSON.stringify({
@@ -75,7 +101,6 @@ export class UsersAPI {
           avatar: payload.avatar,
         }),
       });
-      console.log('response is', response);
 
       const { data, message } = await response.json();
 

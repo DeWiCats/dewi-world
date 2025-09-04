@@ -10,13 +10,13 @@ import {
   RegisterUserRequest,
   ResetPasswordQueryParams,
   ResetPasswordRequest,
+  UpdateUserRequest,
   VerifyUserRequest,
 } from '../types/user';
 
 export default async function userController(fastify: FastifyInstance) {
   // GET /api/v1/user
   fastify.get('/', async function (request: FastifyRequest, reply: FastifyReply) {
-    console.log('get user');
     const query = request.query as Partial<Profile>;
 
     // Start building the Supabase query - filter by owner_id first
@@ -39,6 +39,74 @@ export default async function userController(fastify: FastifyInstance) {
 
     return reply.status(status).send({ data, count, message: error?.message });
   });
+
+  fastify.post('/', async function (request: FastifyRequest, reply: FastifyReply) {
+    const body = JSON.parse(request.body as string) as ProfileCreationRequest;
+
+    const insertData = {
+      user_id: body.user_id,
+      username: body.username,
+      avatar: body.avatar,
+      dewi_verified: false,
+      blue_chip: false,
+    };
+
+    console.log('insertData', insertData);
+
+    const { data, error, status } = await supabase
+      .from('profile')
+      .insert(insertData)
+      .select('*')
+      .single();
+
+    console.log('result', data, error, status);
+
+    return reply.status(status).send({ data, message: error?.message });
+  });
+
+  fastify.put(
+    '/',
+    { preHandler: authMiddleware },
+    async function (request: AuthenticatedRequest, reply: FastifyReply) {
+      const userId = request.user_id!;
+      const body = JSON.parse(request.body as string) as UpdateUserRequest;
+
+      let updateFields: Partial<Record<'username' | 'avatar', string>> = {};
+
+      if (body.username) {
+        updateFields.username = body.username;
+      }
+
+      if (body.avatar) {
+        updateFields.avatar = body.avatar;
+      }
+
+      const { data, error, status } = await supabase
+        .from('profile')
+        .update(updateFields)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      return reply.status(status).send({ data, message: error?.message });
+    }
+  );
+
+  fastify.delete(
+    '/',
+    { preHandler: authMiddleware },
+    async function (request: AuthenticatedRequest, reply: FastifyReply) {
+      const userId = request.user_id!;
+
+      let status = 200;
+      const { data, error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) {
+        status = error.status || 500;
+      }
+
+      return reply.status(status).send({ data, message: error?.message });
+    }
+  );
 
   fastify.put('/resetPassword', async function (request: FastifyRequest, reply: FastifyReply) {
     const body = JSON.parse(request.body as string) as ResetPasswordRequest;
@@ -75,7 +143,7 @@ export default async function userController(fastify: FastifyInstance) {
   fastify.get(
     '/sendResetPasswordEmail',
     async function (request: FastifyRequest, reply: FastifyReply) {
-      const url = 'https://dewi-world-api.fly.dev/api/v1/user/resetPassword';
+      const url = 'http://localhost:3006/api/v1/user/resetPassword';
       console.log('redirecturl', url);
       const query = request.query as ResetPasswordQueryParams;
       if (!query.email) {
@@ -94,30 +162,6 @@ export default async function userController(fastify: FastifyInstance) {
       return reply.status(status).send({ data, message: error?.message });
     }
   );
-
-  fastify.post('/', async function (request: FastifyRequest, reply: FastifyReply) {
-    const body = JSON.parse(request.body as string) as ProfileCreationRequest;
-
-    const insertData = {
-      user_id: body.user_id,
-      username: body.username,
-      avatar: body.avatar,
-      dewi_verified: false,
-      blue_chip: false,
-    };
-
-    console.log('insertData', insertData);
-
-    const { data, error, status } = await supabase
-      .from('profile')
-      .insert(insertData)
-      .select('*')
-      .single();
-
-    console.log('result', data, error, status);
-
-    return reply.status(status).send({ data, message: error?.message });
-  });
 
   fastify.get('/verify', async function (request: FastifyRequest, reply: FastifyReply) {
     // Endpoint to verify alredy registered users
@@ -178,20 +222,4 @@ export default async function userController(fastify: FastifyInstance) {
 
     return reply.status(status).send({ data: profileData, message: profileError?.message });
   });
-
-  fastify.delete(
-    '/',
-    { preHandler: authMiddleware },
-    async function (request: AuthenticatedRequest, reply: FastifyReply) {
-      const userId = request.user_id!;
-
-      let status = 200;
-      const { data, error } = await supabase.auth.admin.deleteUser(userId);
-      if (error) {
-        status = error.status || 500;
-      }
-
-      return reply.status(status).send({ data, message: error?.message });
-    }
-  );
 }

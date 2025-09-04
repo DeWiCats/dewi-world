@@ -16,7 +16,6 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CreateAccountScreen() {
-  const imageLimit = 1;
   const { bottom, top } = useSafeAreaInsets();
   const router = useRouter();
   const colors = useColors();
@@ -27,6 +26,7 @@ export default function CreateAccountScreen() {
   const [username, setUsername] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState<null | ImagePicker.ImagePickerAsset>(null);
   const [uploadProgress] = useState({ completed: 0, total: 0 });
+  const imageLimit = 1;
   const [avoidKeyboard, setAvoidKeyboard] = useState(false);
 
   // Effect for avoiding keyboard on input focus
