@@ -163,15 +163,13 @@ export default async function userController(fastify: FastifyInstance) {
   fastify.get(
     '/sendResetPasswordEmail',
     async function (request: FastifyRequest, reply: FastifyReply) {
-      const url = 'http://localhost:3006/api/v1/user/resetPassword';
-      console.log('redirecturl', url);
       const query = request.query as ResetPasswordQueryParams;
       if (!query.email) {
         return reply.status(403).send({ message: 'Missing email parameter.' });
       }
 
       const { data, error } = await supabase.auth.resetPasswordForEmail(query.email, {
-        redirectTo: url,
+        redirectTo: process.env.PASSWORD_REDIRECT_URL,
       });
 
       let status = 200;
