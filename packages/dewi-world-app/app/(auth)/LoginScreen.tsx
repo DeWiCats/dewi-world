@@ -11,7 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { loginWithEmailPassword, loading, error, user, session, hydrated } = useAuthStore();
+  const { loginWithEmailPassword, loading, error, user, session, hydrated, setError } =
+    useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [avoidKeyboard, setAvoidKeyboard] = useState(false);
@@ -28,12 +29,21 @@ export default function LoginScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    setError(null);
+  }, []);
+
   // Redirect if already logged in
   useEffect(() => {
     if (hydrated && user && session?.access_token) {
       router.replace('/(tabs)/world/WorldScreen');
     }
   }, [hydrated, user, session, router]);
+
+  const handleResetPassword = () => {
+    setError(null);
+    router.push('/(auth)/ResetPasswordScreen');
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -188,7 +198,7 @@ export default function LoginScreen() {
               </TouchableContainer>
               {/* Forget Password Link */}
               <TouchableContainer
-                onPress={() => router.push('/(auth)/ResetPasswordScreen')}
+                onPress={handleResetPassword}
                 alignItems="center"
                 defaultBackground="primaryBackground"
                 pressedBackgroundColor="gray.900"

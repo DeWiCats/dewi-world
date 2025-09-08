@@ -5,6 +5,7 @@ import { verifyDewiOwner } from '../lib/dewi';
 import { supabase } from '../lib/supabase';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
 import {
+  DeleteProfileQueryParams,
   Profile,
   ProfileCreationRequest,
   RegisterUserRequest,
@@ -17,7 +18,7 @@ import {
 export default async function userController(fastify: FastifyInstance) {
   // GET /api/v1/user
   fastify.get('/', async function (request: FastifyRequest, reply: FastifyReply) {
-    const query = request.query as Partial<Profile>;
+    const query = request.query as Partial<Profile & { email: string }>;
 
     // Start building the Supabase query - filter by owner_id first
     let supabaseQuery = supabase.from('profile').select('*');
@@ -33,6 +34,13 @@ export default async function userController(fastify: FastifyInstance) {
 
     if (query.avatar) {
       supabaseQuery = supabaseQuery.eq('avatar', query.avatar!);
+    }
+
+    if (query.email) {
+      const user = (await supabase.auth.admin.listUsers()).data.users.find(
+        user => user.email === query.email
+      );
+      supabaseQuery = supabaseQuery.eq('user_id', user?.id);
     }
 
     const { data, error, status, count } = await supabaseQuery;
@@ -107,6 +115,18 @@ export default async function userController(fastify: FastifyInstance) {
       return reply.status(status).send({ data, message: error?.message });
     }
   );
+
+  fastify.delete('/deleteProfile', async function (request: FastifyRequest, reply: FastifyReply) {
+    const query = request.query as DeleteProfileQueryParams;
+
+    let status = 200;
+    const { data, error } = await supabase.auth.admin.deleteUser(query.user_id);
+    if (error) {
+      status = error.status || 500;
+    }
+
+    return reply.status(status).send({ data, message: error?.message });
+  });
 
   fastify.put('/resetPassword', async function (request: FastifyRequest, reply: FastifyReply) {
     const body = JSON.parse(request.body as string) as ResetPasswordRequest;

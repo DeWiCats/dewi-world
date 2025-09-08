@@ -52,15 +52,14 @@ export class UsersAPI {
   }
 
   async getUserProfile(
-    payload: Partial<Omit<Profile, 'dewi_verified' | 'blue_chip'>>
+    payload: Partial<Omit<Profile & { email: string }, 'dewi_verified' | 'blue_chip'>>
   ): Promise<null | Profile> {
     try {
       const params = new URLSearchParams(payload).toString();
 
       const url = `${ENDPOINT_URL}?${params}`;
-      console.log('request url', url);
 
-      const response = await fetch(url, {});
+      const response = await fetch(url);
 
       const { data, message } = await response.json();
 
@@ -71,6 +70,27 @@ export class UsersAPI {
       return data?.at(0);
     } catch (error) {
       console.error('Error getting user:', error);
+      throw error;
+    }
+  }
+
+  async deleteProfileById(uid: string) {
+    try {
+      const url = `${ENDPOINT_URL}/deleteProfile?user_id=${uid}`;
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+      });
+
+      const { data, message } = await response.json();
+
+      if (!response.ok) {
+        throw new Error(message);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error deleting profile:', error);
       throw error;
     }
   }

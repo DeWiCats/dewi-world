@@ -9,7 +9,7 @@ import { Alert, Keyboard, KeyboardAvoidingView, TextInput } from 'react-native';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const { resetPasswordForEmail, loading, error } = useAuthStore();
+  const { resetPasswordForEmail, loading, error, setError } = useAuthStore();
   const [email, setEmail] = useState('');
   const [avoidKeyboard, setAvoidKeyboard] = useState(false);
   const [submitFinished, setSubmitFinished] = useState(false);
@@ -54,6 +54,11 @@ export default function ResetPasswordScreen() {
       );
       setSubmitFinished(false);
     }
+  };
+
+  const returnLoginHandler = () => {
+    setError(null);
+    router.replace('/(auth)/LoginScreen');
   };
 
   return (
@@ -139,7 +144,7 @@ export default function ResetPasswordScreen() {
 
           {/* Login Screen Link */}
           <TouchableContainer
-            onPress={() => router.replace('/(auth)/LoginScreen')}
+            onPress={returnLoginHandler}
             alignItems="center"
             paddingVertical="4"
             marginTop="4"

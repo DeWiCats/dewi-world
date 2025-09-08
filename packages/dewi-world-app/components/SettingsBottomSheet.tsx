@@ -1,8 +1,9 @@
+import LeftArrow from '@/assets/svgs/leftArrow.svg';
 import CustomBottomSheet from '@/components/CustomBottomSheet';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
-import { useColors } from '@/hooks/theme';
+import { useBorderRadii, useColors, useSpacing } from '@/hooks/theme';
 import { pickImages } from '@/lib/imageUpload';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -32,7 +33,8 @@ interface SettingsBottomSheetProps {
 
 export default function SettingsBottomSheet({ visible, onClose }: SettingsBottomSheetProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const { logout, deleteAcc, updateCurrentProfile, loading, error, user } = useAuthStore();
+  const { logout, deleteAcc, updateCurrentProfile, loading, error, user, profile, setError } =
+    useAuthStore();
   const { hideSettings, isVisible } = useSettingsStore();
   const router = useRouter();
   // Animation values
@@ -49,8 +51,12 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
   const [uploadProgress] = useState({ completed: 0, total: 0 });
   const imageLimit = 1;
   const colors = useColors();
+  const spacing = useSpacing();
+  const borderRadii = useBorderRadii();
+
   const canSubmit = useMemo(() => !!selectedAvatar || !!username, [selectedAvatar, username]);
 
+  // Reset slide values and form data when exiting the sheet
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!isVisible) {
@@ -58,6 +64,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
         setCurrentStep(0);
         setUsername('');
         setSelectedAvatar(null);
+        setError(null);
       }
     }, 500);
     return () => clearTimeout(timeout);
@@ -99,6 +106,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
       slideX.value = withTiming(100, { duration: 300 }, finished => {
         if (finished) {
           runOnJS(setCurrentStep)(prevStepIndex);
+          runOnJS(setError)(null);
           slideX.value = -100;
           slideX.value = withSpring(0, { damping: 20, stiffness: 200 });
         }
@@ -109,244 +117,318 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
   const editProfileHandler = async () => {
     if (!canSubmit) return;
 
-    await updateCurrentProfile({
-      username,
-      avatar: `data:image/jpeg;base64,${selectedAvatar?.base64}`,
-    });
+    if (username === profile?.username) {
+      Alert.alert('Error', 'The entered username is identical to your current one.');
+      return;
+    }
+
+    let updateParams: Partial<Record<'username' | 'avatar', string>> = {};
+    if (username) {
+      updateParams.username = username;
+    }
+
+    if (selectedAvatar) {
+      updateParams.avatar = `data:image/jpeg;base64,${selectedAvatar?.base64}`;
+    }
+
+    await updateCurrentProfile(updateParams);
     setSubmitFinished(true);
   };
 
   useEffect(() => {
     if (error) {
-      setSubmitFinished(false)
-      return
+      setSubmitFinished(false);
+      return;
     }
     if (!error && submitFinished) {
-      Alert.alert("Success", "Your profile has been successfully updated!")
+      Alert.alert('Success', 'Your profile has been successfully updated!');
+      setSubmitFinished(false);
+      setSelectedAvatar(null);
+      setUsername('');
     }
-  }, [submitFinished, error])
+  }, [submitFinished, error]);
 
   const renderContent = useCallback(() => {
     switch (currentStep) {
+      // Settings section
+
       case 0:
         return (
-          <Box flex={1} width="100%" paddingHorizontal="6" paddingTop="4">
-            {/* Header */}
-            <Box marginBottom="6">
-              <Text variant="displaySmSemibold" color="primaryText" marginBottom="2">
-                Settings
-              </Text>
-              <Text variant="textSmRegular" color="text.quaternary-500">
-                Version 1.0.0
-              </Text>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <Box flex={1} width="100%" paddingHorizontal="6" paddingTop="4">
+              {/* Header */}
+              <Box marginBottom="6">
+                <Text variant="displaySmSemibold" color="primaryText" marginBottom="2">
+                  Settings
+                </Text>
+                <Text variant="textSmRegular" color="text.quaternary-500">
+                  Version 1.0.0
+                </Text>
+              </Box>
+
+              {/* Settings Items */}
+              <Box gap="4">
+                {/* Edit profile */}
+                <TouchableContainer
+                  onPress={nextStep}
+                  backgroundColor="transparent"
+                  paddingVertical="4"
+                  paddingHorizontal="4"
+                  borderRadius="2xl"
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Box flexDirection="row" alignItems="center">
+                    <Box
+                      width={40}
+                      height={40}
+                      borderRadius="full"
+                      backgroundColor="gray.800"
+                      justifyContent="center"
+                      alignItems="center"
+                      marginRight="4"
+                    >
+                      <Text fontSize={18}>✏️</Text>
+                    </Box>
+                    <Box width="70%">
+                      <Text variant="textMdMedium" color="primaryText">
+                        Edit profile
+                      </Text>
+                      <Text variant="textSmRegular" color="text.quaternary-500">
+                        Edit your profile info
+                      </Text>
+                    </Box>
+                  </Box>
+                  <Text color="gray.500" fontSize={16}>
+                    →
+                  </Text>
+                </TouchableContainer>
+
+                {/* Privacy Policy */}
+                <TouchableContainer
+                  onPress={handlePrivacyPolicy}
+                  backgroundColor="transparent"
+                  paddingVertical="4"
+                  paddingHorizontal="4"
+                  borderRadius="2xl"
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Box flexDirection="row" alignItems="center">
+                    <Box
+                      width={40}
+                      height={40}
+                      borderRadius="full"
+                      backgroundColor="gray.800"
+                      justifyContent="center"
+                      alignItems="center"
+                      marginRight="4"
+                    >
+                      <Text fontSize={18}>🔒</Text>
+                    </Box>
+                    <Box width="70%">
+                      <Text variant="textMdMedium" color="primaryText">
+                        Privacy Policy
+                      </Text>
+                      <Text variant="textSmRegular" color="text.quaternary-500">
+                        View our privacy policy
+                      </Text>
+                    </Box>
+                  </Box>
+                  <Text color="gray.500" fontSize={16}>
+                    →
+                  </Text>
+                </TouchableContainer>
+
+                {/* Logout */}
+                <TouchableContainer
+                  onPress={handleLogout}
+                  backgroundColor="transparent"
+                  paddingVertical="4"
+                  paddingHorizontal="4"
+                  borderRadius="2xl"
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Box flexDirection="row" alignItems="center">
+                    <Box
+                      width={40}
+                      height={40}
+                      borderRadius="full"
+                      backgroundColor="error.900"
+                      justifyContent="center"
+                      alignItems="center"
+                      marginRight="4"
+                    >
+                      <Text fontSize={18}>🚪</Text>
+                    </Box>
+                    <Box width="70%">
+                      <Text variant="textMdMedium" color="error.500">
+                        Log Out
+                      </Text>
+                      <Text variant="textSmRegular" color="text.quaternary-500">
+                        Sign out of your account
+                      </Text>
+                    </Box>
+                  </Box>
+                  <Text color="gray.500" fontSize={16}>
+                    →
+                  </Text>
+                </TouchableContainer>
+                {/* Delete account */}
+                <TouchableContainer
+                  onPress={handleDelete}
+                  backgroundColor="transparent"
+                  paddingVertical="4"
+                  paddingHorizontal="4"
+                  borderRadius="2xl"
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Box flexDirection="row" alignItems="center">
+                    <Box
+                      width={40}
+                      height={40}
+                      borderRadius="full"
+                      backgroundColor="error.900"
+                      justifyContent="center"
+                      alignItems="center"
+                      marginRight="4"
+                    >
+                      <Text fontSize={18}>❌</Text>
+                    </Box>
+                    <Box width="70%">
+                      <Text variant="textMdMedium" color="error.500">
+                        Delete account
+                      </Text>
+                      <Text variant="textSmRegular" color="text.quaternary-500">
+                        Delete your account permanently
+                      </Text>
+                    </Box>
+                  </Box>
+                  <Text color="gray.500" fontSize={16}>
+                    →
+                  </Text>
+                </TouchableContainer>
+              </Box>
             </Box>
-
-            {/* Settings Items */}
-            <Box gap="4">
-              {/* Edit profile */}
-              <TouchableContainer
-                onPress={nextStep}
-                backgroundColor="transparent"
-                paddingVertical="4"
-                paddingHorizontal="4"
-                borderRadius="2xl"
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Box flexDirection="row" alignItems="center">
-                  <Box
-                    width={40}
-                    height={40}
-                    borderRadius="full"
-                    backgroundColor="gray.800"
-                    justifyContent="center"
-                    alignItems="center"
-                    marginRight="4"
-                  >
-                    <Text fontSize={18}>🔒</Text>
-                  </Box>
-                  <Box>
-                    <Text variant="textMdMedium" color="primaryText">
-                      Edit profile
-                    </Text>
-                    <Text variant="textSmRegular" color="text.quaternary-500">
-                      Edit your profile info
-                    </Text>
-                  </Box>
-                </Box>
-                <Text color="gray.500" fontSize={16}>
-                  →
-                </Text>
-              </TouchableContainer>
-
-              {/* Privacy Policy */}
-              <TouchableContainer
-                onPress={handlePrivacyPolicy}
-                backgroundColor="transparent"
-                paddingVertical="4"
-                paddingHorizontal="4"
-                borderRadius="2xl"
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Box flexDirection="row" alignItems="center">
-                  <Box
-                    width={40}
-                    height={40}
-                    borderRadius="full"
-                    backgroundColor="gray.800"
-                    justifyContent="center"
-                    alignItems="center"
-                    marginRight="4"
-                  >
-                    <Text fontSize={18}>🔒</Text>
-                  </Box>
-                  <Box>
-                    <Text variant="textMdMedium" color="primaryText">
-                      Privacy Policy
-                    </Text>
-                    <Text variant="textSmRegular" color="text.quaternary-500">
-                      View our privacy policy
-                    </Text>
-                  </Box>
-                </Box>
-                <Text color="gray.500" fontSize={16}>
-                  →
-                </Text>
-              </TouchableContainer>
-
-              {/* Logout */}
-              <TouchableContainer
-                onPress={handleLogout}
-                backgroundColor="transparent"
-                paddingVertical="4"
-                paddingHorizontal="4"
-                borderRadius="2xl"
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Box flexDirection="row" alignItems="center">
-                  <Box
-                    width={40}
-                    height={40}
-                    borderRadius="full"
-                    backgroundColor="error.900"
-                    justifyContent="center"
-                    alignItems="center"
-                    marginRight="4"
-                  >
-                    <Text fontSize={18}>🚪</Text>
-                  </Box>
-                  <Box>
-                    <Text variant="textMdMedium" color="error.500">
-                      Log Out
-                    </Text>
-                    <Text variant="textSmRegular" color="text.quaternary-500">
-                      Sign out of your account
-                    </Text>
-                  </Box>
-                </Box>
-                <Text color="gray.500" fontSize={16}>
-                  →
-                </Text>
-              </TouchableContainer>
-              {/* Delete account */}
-              <TouchableContainer
-                onPress={handleDelete}
-                backgroundColor="transparent"
-                paddingVertical="4"
-                paddingHorizontal="4"
-                borderRadius="2xl"
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Box flexDirection="row" alignItems="center">
-                  <Box
-                    width={40}
-                    height={40}
-                    borderRadius="full"
-                    backgroundColor="error.900"
-                    justifyContent="center"
-                    alignItems="center"
-                    marginRight="4"
-                  >
-                    <Text fontSize={18}>❌</Text>
-                  </Box>
-                  <Box>
-                    <Text variant="textMdMedium" color="error.500">
-                      Delete account
-                    </Text>
-                    <Text variant="textSmRegular" color="text.quaternary-500">
-                      Delete your account permanently
-                    </Text>
-                  </Box>
-                </Box>
-                <Text color="gray.500" fontSize={16}>
-                  →
-                </Text>
-              </TouchableContainer>
-            </Box>
-          </Box>
+          </ScrollView>
         );
+
+      // Edit profile section
 
       case 1:
         return (
-          <Box flex={1} width="100%" paddingHorizontal="6" paddingTop="4">
-            <Box width="100%" alignItems={'center'} marginBottom="xl">
-              <ButtonPressable
-                disabled={loading}
-                width={100}
-                height={40}
-                backgroundColor={'base.white'}
-                titleColor="base.black"
-                title="Back"
-                fontSize={14}
-                fontWeight="bold"
-                onPress={prevStep}
-              />
-            </Box>
-            <Text textAlign={'center'} variant="riolaTitle" color="primaryText" marginBottom="2">
-              Update your profile
-            </Text>
-            <Text>Update profile picture</Text>
-            <ImageUploadForm
-              handleImagePicker={handleImagePicker}
-              removeImage={removeImage}
-              imageLimit={imageLimit}
-              isLoading={loading}
-              selectedImages={selectedAvatar ? [selectedAvatar] : []}
-              uploadProgress={uploadProgress}
-            />
-            <Text>Update username</Text>
-            <TextInput
-              fontSize={16}
-              fontWeight="bold"
-              textColor="activeBackground"
-              textInputProps={{
-                onChangeText: setUsername,
-                value: username,
-                placeholder: 'Enter new username',
-                placeholderTextColor: colors['gray.500'],
-                autoCorrect: false,
-                selectionColor: colors['gray.500'],
-                autoComplete: 'off',
+          <Box flex={1} width="100%" paddingHorizontal="6" paddingTop="1" paddingBottom="20">
+            {/* Back button */}
+            <TouchableContainer
+              onPress={prevStep}
+              justifyContent={'center'}
+              alignItems={'center'}
+              padding={'4'}
+              borderRadius={'full'}
+              width={48}
+              height={48}
+              defaultBackground={'base.black'}
+              pressedBackgroundColor={'gray.900'}
+              pressableStyles={{
+                flex: undefined,
               }}
-              backgroundColor="fg.quinary-400"
-            />
+              shadowColor={'base.black'}
+              shadowOffset={{ width: 0, height: 2 }}
+              shadowOpacity={0.25}
+              shadowRadius={3.84}
+              elevation={5}
+              marginBottom="sm"
+            >
+              <LeftArrow width={20} height={20} />
+            </TouchableContainer>
+
+            {/* Form contents */}
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 55, alignItems: 'center' }}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Upload Image Input */}
+
+              <Box>
+                <Text
+                  textAlign={'center'}
+                  variant="riolaTitle"
+                  color="primaryText"
+                  marginBottom="4"
+                >
+                  Update profile picture
+                </Text>
+                <ImageUploadForm
+                  handleImagePicker={handleImagePicker}
+                  removeImage={removeImage}
+                  imageLimit={imageLimit}
+                  isLoading={loading}
+                  selectedImages={selectedAvatar ? [selectedAvatar] : []}
+                  uploadProgress={uploadProgress}
+                />
+              </Box>
+
+              {/* Username Input */}
+
+              <Box>
+                <Text
+                  textAlign={'center'}
+                  variant="riolaTitle"
+                  color="primaryText"
+                  marginBottom="4"
+                >
+                  Update username
+                </Text>
+                <TextInput
+                  fontSize={15}
+                  fontWeight="bold"
+                  textColor="gray.500"
+                  textInputProps={{
+                    onChangeText: setUsername,
+                    value: username,
+                    placeholder: 'Enter new username...',
+                    placeholderTextColor: colors['gray.500'],
+                    autoCorrect: false,
+                    selectionColor: colors['gray.500'],
+                    autoComplete: 'off',
+                    style: {
+                      backgroundColor: colors['gray.900'],
+                      paddingVertical: spacing.xl,
+                      paddingHorizontal: spacing['3xl'],
+                      borderRadius: borderRadii['4xl'],
+                    },
+                  }}
+                />
+              </Box>
+            </ScrollView>
+
+            {/* Submit button */}
+
             <ButtonPressable
+              alignSelf={'center'}
               disabled={!canSubmit || loading}
-              width={'90%'}
+              width={250}
+              backgroundColorDisabled="bg.disabled"
               backgroundColor={'base.white'}
               titleColor="base.black"
               title={loading ? 'Please wait...' : 'Submit'}
               fontSize={14}
               fontWeight="bold"
               onPress={editProfileHandler}
+              marginTop="4"
             />
+
             {/* Error Message */}
             {error && (
               <Box
@@ -355,6 +437,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
                 borderRadius="xl"
                 borderWidth={1}
                 borderColor="error.500"
+                marginTop="6"
               >
                 <Text variant="textSmMedium" color="error.500" textAlign="center">
                   {error}
@@ -363,11 +446,13 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
             )}
           </Box>
         );
+      // Default switch case to remove warnings
       default:
         return <></>;
     }
-  }, [currentStep]);
+  }, [currentStep, username, selectedAvatar, canSubmit, loading, uploadProgress, error]);
 
+  // Snap sheet in and out of view based on visible flag
   useEffect(() => {
     if (visible) {
       bottomSheetRef.current?.snapToIndex(1);
@@ -446,6 +531,8 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
     }
   };
 
+  // Render method
+
   return (
     <Portal>
       <CustomBottomSheet
@@ -463,15 +550,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
         }}
         ref={bottomSheetRef}
       >
-        <Animated.View style={[{ flex: 1 }, animatedStyle]}>
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {renderContent()}
-          </ScrollView>
-        </Animated.View>
+        <Animated.View style={[{ flex: 1 }, animatedStyle]}>{renderContent()}</Animated.View>
       </CustomBottomSheet>
     </Portal>
   );

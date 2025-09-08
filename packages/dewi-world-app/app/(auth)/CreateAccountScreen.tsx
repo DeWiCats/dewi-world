@@ -19,7 +19,7 @@ export default function CreateAccountScreen() {
   const { bottom, top } = useSafeAreaInsets();
   const router = useRouter();
   const colors = useColors();
-  const { registerWithEmail, loading, error, user, session, hydrated } = useAuthStore();
+  const { registerWithEmail, loading, error, user, session, hydrated, setError } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,6 +38,10 @@ export default function CreateAccountScreen() {
       Keyboard.removeAllListeners('keyboardDidShow');
       Keyboard.removeAllListeners('keyboardDidHide');
     };
+  }, []);
+
+  useEffect(() => {
+    setError(null);
   }, []);
 
   const handleImagePicker = async () => {

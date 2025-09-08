@@ -16,6 +16,7 @@ type AuthStore = {
   _isInternalUpdate: boolean; // Internal flag to prevent infinite loops
 
   /* Mutations */
+  setError: (error: string | null) => void;
   getProfileById: (user_id: string) => Promise<null | Profile>;
   resetPasswordForEmail: (email: string) => Promise<void>;
   loginWithEmailPassword: (email: string, password: string) => Promise<void>;
@@ -51,24 +52,27 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
       pendingEmail: null,
       _isInternalUpdate: false,
+      setError: error => set({ error }),
       getProfileById: async user_id => await api.getUserProfile({ user_id }),
       updateCurrentProfile: async payload => {
         set({ loading: true, error: null });
         try {
-          console.log('Check for existing username');
-          // Check if username alredy exists
-          const existingUser = await api.getUserProfile({ username: payload.username });
+          if (payload.username) {
+            // Check if username alredy exists
+            const existingUser = await api.getUserProfile({ username: payload.username });
 
-          if (existingUser) {
-            set({
-              error: 'This username is already taken. Please choose another one.',
-              loading: false,
-            });
-            return;
+            if (existingUser) {
+              set({
+                error: 'This username is already taken. Please choose another one.',
+                loading: false,
+              });
+              return;
+            }
           }
 
-          await api.updateUserProfile(payload);
-          set({ loading: false, error: null });
+          const updatedProfile = await api.updateUserProfile(payload);
+          // Update the user's current profile once the operation suceeds
+          set({ profile: updatedProfile, loading: false, error: null });
         } catch (error) {
           console.error('Error updating profile', error);
           set({ error: 'An error has ocurred, please try again.', loading: false });
@@ -172,6 +176,12 @@ export const useAuthStore = create<AuthStore>()(
         set({ loading: true, error: null });
 
         try {
+          // Check if profile has alredy been registered
+          const existingProfile = await api.getUserProfile({ email });
+          if (existingProfile) {
+            await api.deleteProfileById(existingProfile.user_id);
+          }
+
           console.log('Check for existing username');
           // Check if username alredy exists
           const existingUser = await api.getUserProfile({ username });
@@ -184,8 +194,6 @@ export const useAuthStore = create<AuthStore>()(
             return { needsVerification: false };
           }
 
-          console.log('auth registration');
-
           const { data, error } = await supabase.auth.signUp({
             email: email.trim(),
             password: password.trim(),
@@ -193,8 +201,6 @@ export const useAuthStore = create<AuthStore>()(
               emailRedirectTo: undefined, // Don't use email links, use OTP codes instead
             },
           });
-
-          console.log('auth registration success');
 
           console.log('📧 Email registration response:', {
             hasUser: !!data.user,
@@ -236,14 +242,11 @@ export const useAuthStore = create<AuthStore>()(
 
           // Create new profile entry
           if (data.user) {
-            console.log('creating user profile');
             profile = await api.createUserProfile({
               user_id: data.user.id,
               avatar,
               username,
             });
-
-            console.log('📧 Profile registration response:', profile);
           }
 
           // Check if email verification is needed

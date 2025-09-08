@@ -93,14 +93,15 @@ const TI = forwardRef(
             )}
           </Box>
           <TextInput
+            placeholderTextColor={getPlaceholderTextColor}
+            {...textInputProps}
             style={{
               color: getTextColor,
               fontSize: fontSize || inputVariants.regular.fontSize,
               fontWeight: fontWeight || '500',
               fontFamily: floatingLabel ? textVariants.textSmRegular.fontFamily : undefined,
+              ...(textInputProps?.style as any),
             }}
-            placeholderTextColor={getPlaceholderTextColor}
-            {...textInputProps}
             ref={ref}
           />
         </Box>

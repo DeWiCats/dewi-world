@@ -13,6 +13,10 @@ export interface ProfileCreationRequest {
   avatar: string;
 }
 
+export interface DeleteProfileQueryParams {
+  user_id: string;
+}
+
 export interface RegisterUserRequest {
   dewiAddress: string;
   email: string;
