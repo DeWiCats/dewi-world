@@ -2,10 +2,11 @@ import ButtonPressable from '@/components/ButtonPressable';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
+import { useAvoidKeyboard } from '@/hooks/useAvoidKeyboard';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Keyboard, KeyboardAvoidingView, TextInput } from 'react-native';
+import { Alert, KeyboardAvoidingView, TextInput } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,19 +16,8 @@ export default function LoginScreen() {
     useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [avoidKeyboard, setAvoidKeyboard] = useState(false);
   const { top, bottom } = useSafeAreaInsets();
-
-  // Effect for avoiding keyboard on input focus
-  useEffect(() => {
-    Keyboard.addListener('keyboardDidShow', () => setAvoidKeyboard(true));
-    Keyboard.addListener('keyboardDidHide', () => setAvoidKeyboard(false));
-
-    return () => {
-      Keyboard.removeAllListeners('keyboardDidShow');
-      Keyboard.removeAllListeners('keyboardDidHide');
-    };
-  }, []);
+  const avoidKeyboard = useAvoidKeyboard();
 
   useEffect(() => {
     setError(null);

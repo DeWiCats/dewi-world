@@ -2,28 +2,18 @@ import ButtonPressable from '@/components/ButtonPressable';
 import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
+import { useAvoidKeyboard } from '@/hooks/useAvoidKeyboard';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Keyboard, KeyboardAvoidingView, TextInput } from 'react-native';
+import { Alert, KeyboardAvoidingView, TextInput } from 'react-native';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const { resetPasswordForEmail, loading, error, setError } = useAuthStore();
   const [email, setEmail] = useState('');
-  const [avoidKeyboard, setAvoidKeyboard] = useState(false);
   const [submitFinished, setSubmitFinished] = useState(false);
-
-  // Effect for avoiding keyboard on input focus
-  useEffect(() => {
-    Keyboard.addListener('keyboardDidShow', () => setAvoidKeyboard(true));
-    Keyboard.addListener('keyboardDidHide', () => setAvoidKeyboard(false));
-
-    return () => {
-      Keyboard.removeAllListeners('keyboardDidShow');
-      Keyboard.removeAllListeners('keyboardDidHide');
-    };
-  }, []);
+  const avoidKeyboard = useAvoidKeyboard();
 
   useEffect(() => {
     if (error) {

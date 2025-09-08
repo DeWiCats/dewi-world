@@ -4,6 +4,7 @@ import Box from '@/components/ui/Box';
 import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
 import { useBorderRadii, useColors, useSpacing } from '@/hooks/theme';
+import { useAvoidKeyboard } from '@/hooks/useAvoidKeyboard';
 import { pickImages } from '@/lib/imageUpload';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -13,7 +14,7 @@ import ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, KeyboardAvoidingView } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -53,6 +54,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
   const colors = useColors();
   const spacing = useSpacing();
   const borderRadii = useBorderRadii();
+  const avoidKeyboard = useAvoidKeyboard();
 
   const canSubmit = useMemo(() => !!selectedAvatar || !!username, [selectedAvatar, username]);
 
@@ -327,135 +329,155 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
 
       case 1:
         return (
-          <Box flex={1} width="100%" paddingHorizontal="6" paddingTop="1" paddingBottom="20">
-            {/* Back button */}
-            <TouchableContainer
-              onPress={prevStep}
-              justifyContent={'center'}
-              alignItems={'center'}
-              padding={'4'}
-              borderRadius={'full'}
-              width={48}
-              height={48}
-              defaultBackground={'base.black'}
-              pressedBackgroundColor={'gray.900'}
-              pressableStyles={{
-                flex: undefined,
-              }}
-              shadowColor={'base.black'}
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.25}
-              shadowRadius={3.84}
-              elevation={5}
-              marginBottom="sm"
-            >
-              <LeftArrow width={20} height={20} />
-            </TouchableContainer>
-
-            {/* Form contents */}
-            <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={{ paddingHorizontal: 16, gap: 55, alignItems: 'center' }}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Upload Image Input */}
-
-              <Box>
-                <Text
-                  textAlign={'center'}
-                  variant="riolaTitle"
-                  color="primaryText"
-                  marginBottom="4"
-                >
-                  Update profile picture
-                </Text>
-                <ImageUploadForm
-                  handleImagePicker={handleImagePicker}
-                  removeImage={removeImage}
-                  imageLimit={imageLimit}
-                  isLoading={loading}
-                  selectedImages={selectedAvatar ? [selectedAvatar] : []}
-                  uploadProgress={uploadProgress}
-                />
-              </Box>
-
-              {/* Username Input */}
-
-              <Box>
-                <Text
-                  textAlign={'center'}
-                  variant="riolaTitle"
-                  color="primaryText"
-                  marginBottom="4"
-                >
-                  Update username
-                </Text>
-                <TextInput
-                  fontSize={15}
-                  fontWeight="bold"
-                  textColor="gray.500"
-                  textInputProps={{
-                    onChangeText: setUsername,
-                    value: username,
-                    placeholder: 'Enter new username...',
-                    placeholderTextColor: colors['gray.500'],
-                    autoCorrect: false,
-                    selectionColor: colors['gray.500'],
-                    autoComplete: 'off',
-                    style: {
-                      backgroundColor: colors['gray.900'],
-                      paddingVertical: spacing.xl,
-                      paddingHorizontal: spacing['3xl'],
-                      borderRadius: borderRadii['4xl'],
-                    },
-                  }}
-                />
-              </Box>
-            </ScrollView>
-
-            {/* Submit button */}
-
-            <ButtonPressable
-              alignSelf={'center'}
-              disabled={!canSubmit || loading}
-              width={250}
-              backgroundColorDisabled="bg.disabled"
-              backgroundColor={'base.white'}
-              titleColor="base.black"
-              title={loading ? 'Please wait...' : 'Submit'}
-              fontSize={14}
-              fontWeight="bold"
-              onPress={editProfileHandler}
-              marginTop="4"
-            />
-
-            {/* Error Message */}
-            {error && (
-              <Box
-                backgroundColor="error.900"
-                padding="4"
-                borderRadius="xl"
-                borderWidth={1}
-                borderColor="error.500"
-                marginTop="6"
+          <KeyboardAvoidingView
+            style={{ width: '100%', height: '100%' }}
+            behavior="position"
+            enabled={avoidKeyboard}
+          >
+            <Box flex={1} width="100%" paddingHorizontal="6" paddingTop="1" paddingBottom="20">
+              {/* Back button */}
+              <TouchableContainer
+                onPress={prevStep}
+                justifyContent={'center'}
+                alignItems={'center'}
+                padding={'4'}
+                borderRadius={'full'}
+                width={48}
+                height={48}
+                defaultBackground={'base.black'}
+                pressedBackgroundColor={'gray.900'}
+                pressableStyles={{
+                  flex: undefined,
+                }}
+                shadowColor={'base.black'}
+                shadowOffset={{ width: 0, height: 2 }}
+                shadowOpacity={0.25}
+                shadowRadius={3.84}
+                elevation={5}
+                marginBottom="sm"
               >
-                <Text variant="textSmMedium" color="error.500" textAlign="center">
-                  {error}
-                </Text>
-              </Box>
-            )}
-          </Box>
+                <LeftArrow width={20} height={20} />
+              </TouchableContainer>
+
+              {/* Form contents */}
+              <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                  paddingHorizontal: 16,
+                  paddingBottom: 100,
+                  gap: 55,
+                  alignItems: 'center',
+                }}
+                showsVerticalScrollIndicator={false}
+              >
+                {/* Upload Image Input */}
+
+                <Box>
+                  <Text
+                    textAlign={'center'}
+                    variant="riolaTitle"
+                    color="primaryText"
+                    marginBottom="4"
+                  >
+                    Update profile picture
+                  </Text>
+                  <ImageUploadForm
+                    handleImagePicker={handleImagePicker}
+                    removeImage={removeImage}
+                    imageLimit={imageLimit}
+                    isLoading={loading}
+                    selectedImages={selectedAvatar ? [selectedAvatar] : []}
+                    uploadProgress={uploadProgress}
+                  />
+                </Box>
+
+                {/* Username Input */}
+
+                <Box>
+                  <Text
+                    textAlign={'center'}
+                    variant="riolaTitle"
+                    color="primaryText"
+                    marginBottom="4"
+                  >
+                    Update username
+                  </Text>
+                  <TextInput
+                    fontSize={15}
+                    fontWeight="bold"
+                    textColor="gray.500"
+                    textInputProps={{
+                      onChangeText: setUsername,
+                      value: username,
+                      placeholder: 'Enter new username...',
+                      placeholderTextColor: colors['gray.500'],
+                      autoCorrect: false,
+                      selectionColor: colors['gray.500'],
+                      autoComplete: 'off',
+                      style: {
+                        backgroundColor: colors['gray.900'],
+                        paddingVertical: spacing.xl,
+                        paddingHorizontal: spacing['3xl'],
+                        borderRadius: borderRadii['4xl'],
+                      },
+                    }}
+                  />
+                </Box>
+              </ScrollView>
+
+              {/* Submit button */}
+
+              <ButtonPressable
+                alignSelf={'center'}
+                disabled={!canSubmit || loading}
+                width={250}
+                backgroundColorDisabled="bg.disabled"
+                backgroundColor={'base.white'}
+                titleColor="base.black"
+                title={loading ? 'Please wait...' : 'Submit'}
+                fontSize={14}
+                fontWeight="bold"
+                onPress={editProfileHandler}
+                marginTop="4"
+              />
+
+              {/* Error Message */}
+              {error && (
+                <Box
+                  backgroundColor="error.900"
+                  padding="4"
+                  borderRadius="xl"
+                  borderWidth={1}
+                  borderColor="error.500"
+                  marginTop="6"
+                >
+                  <Text variant="textSmMedium" color="error.500" textAlign="center">
+                    {error}
+                  </Text>
+                </Box>
+              )}
+            </Box>
+          </KeyboardAvoidingView>
         );
       // Default switch case to remove warnings
       default:
         return <></>;
     }
-  }, [currentStep, username, selectedAvatar, canSubmit, loading, uploadProgress, error]);
+  }, [
+    avoidKeyboard,
+    currentStep,
+    username,
+    selectedAvatar,
+    canSubmit,
+    loading,
+    uploadProgress,
+    error,
+  ]);
 
   // Snap sheet in and out of view based on visible flag
   useEffect(() => {
     if (visible) {
-      bottomSheetRef.current?.snapToIndex(1);
+      bottomSheetRef.current?.snapToIndex(2);
     } else {
       bottomSheetRef.current?.snapToIndex(0);
     }

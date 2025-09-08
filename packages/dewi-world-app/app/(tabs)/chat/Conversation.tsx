@@ -4,6 +4,7 @@ import Box from '@/components/ui/Box';
 import ImageBox from '@/components/ui/ImageBox';
 import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
+import { useAvoidKeyboard } from '@/hooks/useAvoidKeyboard';
 import { useConversation, useMessages, useTypingIndicator } from '@/hooks/useMessages';
 import { Message } from '@/lib/messagingTypes';
 import { Profile } from '@/lib/usersAPI';
@@ -16,7 +17,6 @@ import {
   Alert,
   Dimensions,
   FlatList,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -151,17 +151,7 @@ export default function ChatDetailScreen() {
   const { isTyping, typingUsers, startTyping, stopTyping } = useTypingIndicator(
     conversationId || ''
   );
-  const [avoidKeyboard, setAvoidKeyboard] = useState(false);
-
-  useEffect(() => {
-    Keyboard.addListener('keyboardDidShow', () => setAvoidKeyboard(true));
-    Keyboard.addListener('keyboardDidHide', () => setAvoidKeyboard(false));
-
-    return () => {
-      Keyboard.removeAllListeners('keyboardDidShow');
-      Keyboard.removeAllListeners('keyboardDidHide');
-    };
-  }, []);
+  const avoidKeyboard = useAvoidKeyboard();
 
   // Fetch profile information for other user in conversation
   useEffect(() => {
@@ -382,7 +372,12 @@ export default function ChatDetailScreen() {
                     <Text variant="textMdBold" color="base.white">
                       {otherProfile.username}
                     </Text>
-                    <Text variant="textSmRegular" color="secondaryText" maxWidth="90%" numberOfLines={2}>
+                    <Text
+                      variant="textSmRegular"
+                      color="secondaryText"
+                      maxWidth="90%"
+                      numberOfLines={2}
+                    >
                       {conversation?.location?.title || 'General'}
                     </Text>
                   </Box>

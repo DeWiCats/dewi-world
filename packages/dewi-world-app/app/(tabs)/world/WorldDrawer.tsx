@@ -4,6 +4,7 @@ import LocationDetail from '@/components/LocationDetail';
 import LocationsList from '@/components/LocationsList';
 import { ReAnimatedBox } from '@/components/ui/Box';
 import { GeoJSONLocation } from '@/lib/geojsonAPI';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { ww } from '@/utils/layout';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useEffect, useRef, useState } from 'react';
@@ -32,20 +33,22 @@ export default function WorldDrawer({
   const [panningEnabled, setPanningEnabled] = useState(true);
   const { bottom } = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
+  const { isVisible: isSettingsVisible } = useSettingsStore();
 
   useEffect(() => {
-    Keyboard.addListener('keyboardDidShow', () => {
+    if (isSettingsVisible) return;
+    const showKeyboardEvent = Keyboard.addListener('keyboardDidShow', () => {
       setPanningEnabled(false);
       bottomSheetRef.current?.snapToIndex(2);
     });
-    Keyboard.addListener('keyboardDidHide', () => {
+    const hideKeyboardEvent = Keyboard.addListener('keyboardDidHide', () => {
       setPanningEnabled(true);
     });
     return () => {
-      Keyboard.removeAllListeners('keyboardDidShow');
-      Keyboard.removeAllListeners('keyboardDidHide');
+      showKeyboardEvent.remove();
+      hideKeyboardEvent.remove();
     };
-  }, []);
+  }, [isSettingsVisible]);
 
   const animateHandler = (fromIndex: number, toIndex: number) => {
     setIndex(toIndex);
