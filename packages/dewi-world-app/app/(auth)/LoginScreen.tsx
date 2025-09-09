@@ -56,16 +56,16 @@ export default function LoginScreen() {
   };
 
   return (
-    <Box
-      flex={1}
-      backgroundColor="primaryBackground"
-      paddingHorizontal="6"
-      justifyContent={'center'}
+    <KeyboardAvoidingView
+      style={{ height: '100%', justifyContent: 'center' }}
+      behavior={'height'}
+      enabled={avoidKeyboard}
     >
-      <KeyboardAvoidingView
-        style={{ height: '100%', justifyContent: 'center' }}
-        behavior={'position'}
-        enabled={avoidKeyboard}
+      <Box
+        flex={1}
+        backgroundColor="primaryBackground"
+        paddingHorizontal="6"
+        justifyContent={'center'}
       >
         <ScrollView
           style={{
@@ -204,7 +204,7 @@ export default function LoginScreen() {
             </Box>
           </Box>
         </ScrollView>
-      </KeyboardAvoidingView>
-    </Box>
+      </Box>
+    </KeyboardAvoidingView>
   );
 }

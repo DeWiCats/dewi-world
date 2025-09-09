@@ -50,7 +50,7 @@ export class UsersAPI {
       throw error;
     }
   }
-
+  
   async getUserProfile(
     payload: Partial<Omit<Profile & { email: string }, 'dewi_verified' | 'blue_chip'>>
   ): Promise<null | Profile> {

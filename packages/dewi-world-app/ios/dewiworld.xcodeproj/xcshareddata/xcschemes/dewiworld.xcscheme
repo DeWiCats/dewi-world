@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "dewiworld.app"
-               BlueprintName = "dewiworld"
-               ReferencedContainer = "container:dewiworld.xcodeproj">
+               BuildableName = "DewiWorld.app"
+               BlueprintName = "DewiWorld"
+               ReferencedContainer = "container:DewiWorld.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "dewiworldTests.xctest"
-               BlueprintName = "dewiworldTests"
-               ReferencedContainer = "container:dewiworld.xcodeproj">
+               BuildableName = "DewiWorldTests.xctest"
+               BlueprintName = "DewiWorldTests"
+               ReferencedContainer = "container:DewiWorld.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "dewiworld.app"
-            BlueprintName = "dewiworld"
-            ReferencedContainer = "container:dewiworld.xcodeproj">
+            BuildableName = "DewiWorld.app"
+            BlueprintName = "DewiWorld"
+            ReferencedContainer = "container:DewiWorld.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "dewiworld.app"
-            BlueprintName = "dewiworld"
-            ReferencedContainer = "container:dewiworld.xcodeproj">
+            BuildableName = "DewiWorld.app"
+            BlueprintName = "DewiWorld"
+            ReferencedContainer = "container:DewiWorld.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

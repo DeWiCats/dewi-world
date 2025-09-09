@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "dewi-world",
+    "name": "Dewi World",
     "slug": "dewi-world",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -65,9 +65,7 @@
       [
         "expo-font",
         {
-          "fonts": [
-            "./assets/fonts/TheRiola.otf"
-          ]
+          "fonts": ["./assets/fonts/TheRiola.otf"]
         }
       ],
       [

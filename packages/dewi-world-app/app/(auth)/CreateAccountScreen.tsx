@@ -110,7 +110,7 @@ export default function CreateAccountScreen() {
 
   return (
     <Box width="100%" height="100%" backgroundColor={'primaryBackground'}>
-      <KeyboardAvoidingView style={{ height: '100%' }} behavior="position" enabled={avoidKeyboard}>
+      <KeyboardAvoidingView style={{ height: '100%' }} behavior="height" enabled={avoidKeyboard}>
         <ScrollView
           style={{
             marginTop: top,

@@ -38,8 +38,15 @@ export default async function userController(fastify: FastifyInstance) {
 
     if (query.email) {
       const user = (await supabase.auth.admin.listUsers()).data.users.find(
+        // Work around for email registration, only get profiles that haven't been confirmed yet
         user => user.email === query.email
       );
+      if (!user) {
+        return reply.status(200).send({ data: null });
+      }
+      if (user.email_confirmed_at) {
+        return reply.status(400).send({ data: null, message: 'User alredy exists' });
+      }
       supabaseQuery = supabaseQuery.eq('user_id', user?.id);
     }
 
@@ -119,11 +126,11 @@ export default async function userController(fastify: FastifyInstance) {
   fastify.delete('/deleteProfile', async function (request: FastifyRequest, reply: FastifyReply) {
     const query = request.query as DeleteProfileQueryParams;
 
-    let status = 200;
-    const { data, error } = await supabase.auth.admin.deleteUser(query.user_id);
-    if (error) {
-      status = error.status || 500;
-    }
+    const { data, error, status } = await supabase
+      .from('profile')
+      .delete()
+      .eq('user_id', query.user_id)
+      .select();
 
     return reply.status(status).send({ data, message: error?.message });
   });

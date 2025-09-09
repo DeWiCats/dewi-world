@@ -41,6 +41,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
   // Animation values
   const [currentStep, setCurrentStep] = useState(0);
   const slideX = useSharedValue(0);
+  const scrollRef = useRef<null | ScrollView>(null);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: slideX.value }],
@@ -71,6 +72,13 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
     }, 500);
     return () => clearTimeout(timeout);
   }, [isVisible]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (avoidKeyboard) scrollRef.current?.scrollToEnd({ animated: true });
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [avoidKeyboard]);
 
   const handleImagePicker = async () => {
     try {
@@ -157,8 +165,12 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
       case 0:
         return (
           <ScrollView
+            ref={scrollRef}
             style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: 120,
+            }}
             showsVerticalScrollIndicator={false}
           >
             <Box flex={1} width="100%" paddingHorizontal="6" paddingTop="4">
@@ -331,7 +343,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
         return (
           <KeyboardAvoidingView
             style={{ width: '100%', height: '100%' }}
-            behavior="position"
+            behavior="height"
             enabled={avoidKeyboard}
           >
             <Box flex={1} width="100%" paddingHorizontal="6" paddingTop="1" paddingBottom="20">
@@ -364,7 +376,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
                 style={{ flex: 1 }}
                 contentContainerStyle={{
                   paddingHorizontal: 16,
-                  paddingBottom: 100,
+                  
                   gap: 55,
                   alignItems: 'center',
                 }}
@@ -407,6 +419,7 @@ export default function SettingsBottomSheet({ visible, onClose }: SettingsBottom
                     fontWeight="bold"
                     textColor="gray.500"
                     textInputProps={{
+                      secureTextEntry: true,
                       onChangeText: setUsername,
                       value: username,
                       placeholder: 'Enter new username...',
