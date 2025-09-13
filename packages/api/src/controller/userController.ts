@@ -36,9 +36,9 @@ export default async function userController(fastify: FastifyInstance) {
       supabaseQuery = supabaseQuery.eq('avatar', query.avatar!);
     }
 
+    // Work around for email registration
     if (query.email) {
       const user = (await supabase.auth.admin.listUsers()).data.users.find(
-        // Work around for email registration, only get profiles that haven't been confirmed yet
         user => user.email === query.email
       );
       if (!user) {
@@ -50,7 +50,12 @@ export default async function userController(fastify: FastifyInstance) {
       supabaseQuery = supabaseQuery.eq('user_id', user?.id);
     }
 
-    const { data, error, status, count } = await supabaseQuery;
+    const { data, error, status: reqStatus, count } = await supabaseQuery;
+
+    let status = 200;
+    if (error) {
+      status = reqStatus || 500;
+    }
 
     return reply.status(status).send({ data, count, message: error?.message });
   });
