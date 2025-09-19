@@ -7,7 +7,7 @@ import Text from '@/components/ui/Text';
 import TouchableContainer from '@/components/ui/TouchableContainer';
 import { useColors } from '@/hooks/theme';
 import { useAvoidKeyboard } from '@/hooks/useAvoidKeyboard';
-import { pickImages } from '@/lib/imageUpload';
+import { pickImages, uploadMultipleImages } from '@/lib/imageUpload';
 import { useAuthStore } from '@/stores/useAuthStore';
 import ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -26,7 +26,7 @@ export default function CreateAccountScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState<null | ImagePicker.ImagePickerAsset>(null);
-  const [uploadProgress] = useState({ completed: 0, total: 0 });
+  const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
   const imageLimit = 1;
   const avoidKeyboard = useAvoidKeyboard();
 
@@ -84,12 +84,26 @@ export default function CreateAccountScreen() {
       return;
     }
 
-    const avatar = selectedAvatar
-      ? `data:image/jpeg;base64,${selectedAvatar.base64}`
-      : defaultProfilePic;
-
     try {
-      const result = await registerWithEmail(email, password, username, avatar);
+      let result;
+
+      if (selectedAvatar) {
+        // Upload images
+        const uploadResult = await uploadMultipleImages(
+          [selectedAvatar],
+          'locations',
+          (completed, total) => setUploadProgress({ completed, total })
+        );
+
+        if (!uploadResult.success || uploadResult.urls.length === 0) {
+          Alert.alert('Error', 'Failed to upload images. Please try again.');
+          return;
+        }
+
+        result = await registerWithEmail(email, password, username, uploadResult.urls[0]);
+      } else {
+        result = await registerWithEmail(email, password, username, defaultProfilePic);
+      }
 
       if (result.needsVerification) {
         router.push('/(auth)/VerifyEmailScreen');
@@ -250,7 +264,7 @@ export default function CreateAccountScreen() {
               {/* Avatar input */}
               <Box>
                 <Text variant="textMdMedium" color="primaryText" marginBottom="3">
-                  Avatar
+                  Avatar (Optional)
                 </Text>
                 <Box
                   backgroundColor="cardBackground"
