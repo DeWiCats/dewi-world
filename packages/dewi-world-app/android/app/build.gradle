@@ -95,9 +95,9 @@ packagingOptions {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.dewiworld'
+    namespace 'com.dewicats.dewiworld'
     defaultConfig {
-        applicationId 'com.anonymous.dewiworld'
+        applicationId 'com.dewicats.dewiworld'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

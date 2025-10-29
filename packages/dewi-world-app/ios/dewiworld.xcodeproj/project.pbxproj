@@ -11,7 +11,7 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		D2CC9C83FB60482BAB612303 /* TheRiola.otf in Resources */ = {isa = PBXBuildFile; fileRef = D987BD7182744A2E841316CF /* TheRiola.otf */; };
+		EFD2798C03FD412D82F42BBB /* TheRiola.otf in Resources */ = {isa = PBXBuildFile; fileRef = 27618F90C1984AD9A7256F80 /* TheRiola.otf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,7 +23,7 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = DewiWorld/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* DewiWorld-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "DewiWorld-Bridging-Header.h"; path = "DewiWorld/DewiWorld-Bridging-Header.h"; sourceTree = "<group>"; };
-		D987BD7182744A2E841316CF /* TheRiola.otf */ = {isa = PBXFileReference; name = "TheRiola.otf"; path = "../assets/fonts/TheRiola.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		27618F90C1984AD9A7256F80 /* TheRiola.otf */ = {isa = PBXFileReference; name = "TheRiola.otf"; path = "../assets/fonts/TheRiola.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,7 +72,7 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				9A4FC9E30F204A07B594EBE2 /* Resources */,
+				0B7D1C9B170845F5871DC882 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -96,10 +96,10 @@
 			path = DewiWorld/Supporting;
 			sourceTree = "<group>";
 		};
-		9A4FC9E30F204A07B594EBE2 /* Resources */ = {
+		0B7D1C9B170845F5871DC882 /* Resources */ = {
 			isa = "PBXGroup";
 			children = (
-				D987BD7182744A2E841316CF /* TheRiola.otf */,
+				27618F90C1984AD9A7256F80 /* TheRiola.otf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -167,7 +167,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				D2CC9C83FB60482BAB612303 /* TheRiola.otf in Resources */,
+				EFD2798C03FD412D82F42BBB /* TheRiola.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,7 +270,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.dewiworld";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dewicats.dewiworld";
 				PRODUCT_NAME = "DewiWorld";
 				SWIFT_OBJC_BRIDGING_HEADER = "DewiWorld/DewiWorld-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -299,7 +299,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.dewiworld";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dewicats.dewiworld";
 				PRODUCT_NAME = "DewiWorld";
 				SWIFT_OBJC_BRIDGING_HEADER = "DewiWorld/DewiWorld-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

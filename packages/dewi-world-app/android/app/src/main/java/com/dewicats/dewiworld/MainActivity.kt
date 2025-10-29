@@ -1,4 +1,4 @@
-package com.anonymous.dewiworld
+package com.dewicats.dewiworld
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

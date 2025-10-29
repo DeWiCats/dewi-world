@@ -1,4 +1,4 @@
-package com.anonymous.dewiworld
+package com.dewicats.dewiworld
 import com.facebook.react.common.assets.ReactFontManager
 
 import android.app.Application
