@@ -42,7 +42,7 @@ export const APP_IDENTITY = {
   icon: 'favicon.ico',
 };
 
-// Solana connection - using devnet for development, switch to mainnet for production
+// Solana connection
 let connection: any = null;
 
 if (isSolanaSupported && Connection) {
@@ -108,7 +108,7 @@ const MobileWalletAdapterButton = ({
     try {
       const authorizationResult = await transact(async (wallet: any) => {
         const authResult = await wallet.authorize({
-          chain: 'solana:devnet', // Change to 'solana:mainnet' for production
+          chain: 'solana:mainnet', // Change to 'solana:mainnet' for production
           identity: APP_IDENTITY,
           sign_in_payload: {
             domain: 'dewicats.com',
@@ -186,7 +186,7 @@ const MobileWalletAdapterButton = ({
       const txSignature = await transact(async (wallet: any) => {
         // Authorize the wallet session (reuse existing auth_token if available)
         const authorizationResult = await wallet.authorize({
-          chain: 'solana:devnet', // Change to 'solana:mainnet' for production
+          chain: 'solana:mainnet', // Change to 'solana:mainnet' for production
           identity: APP_IDENTITY,
           auth_token: authToken || undefined,
         });

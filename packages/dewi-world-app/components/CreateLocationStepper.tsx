@@ -985,7 +985,7 @@ const PaymentStep = ({
             style={{ opacity: 0.9 }}
           >
             <Text variant="textSmMedium" color="base.black">
-              Devnet
+              Mainnet
             </Text>
           </Box>
         </Box>
