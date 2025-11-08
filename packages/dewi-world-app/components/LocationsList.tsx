@@ -1,4 +1,4 @@
-import { GeoJSONLocation } from '@/lib/geojsonAPI';
+import { fetchLocationsGeoJSON, GeoJSONLocation } from '@/lib/geojsonAPI';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import CircleLoader from './CircleLoader';
@@ -27,14 +27,26 @@ export default function LocationsList({
   const changeTextHandler = (text: string) => setSearchValue(text);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    const timeout = setTimeout(async () => {
+      // If search value is empty, show all locations
       if (searchValue.trim().length == 0) setFilteredLocations(locations);
-      setFilteredLocations(
-        locations.filter(location =>
-          location.properties.address.toLowerCase().includes(searchValue.toLowerCase())
-        )
+
+      // Do initial search from current locations list
+      const initialSearch = locations.filter(location =>
+        location.properties.address.toLowerCase().includes(searchValue.toLowerCase())
       );
-    }, 500);
+
+      if (initialSearch.length > 0) {
+        setFilteredLocations(initialSearch);
+        return;
+      }
+
+      //If no locations were found, search from all possible locations in the DB
+      const params = { limit: 10, search: searchValue };
+
+      const geoJson = await fetchLocationsGeoJSON(params);
+      setFilteredLocations(geoJson.features);
+    }, 700);
     return () => clearTimeout(timeout);
   }, [searchValue, locations]);
 
