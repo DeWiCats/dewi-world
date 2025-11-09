@@ -29,7 +29,10 @@ export default function LocationsList({
   useEffect(() => {
     const timeout = setTimeout(async () => {
       // If search value is empty, show all locations
-      if (searchValue.trim().length == 0) setFilteredLocations(locations);
+      if (searchValue.trim().length === 0) {
+        setFilteredLocations(locations);
+        return;
+      }
 
       // Do initial search from current locations list
       const initialSearch = locations.filter(location =>
@@ -82,7 +85,7 @@ export default function LocationsList({
           style: { height: 50, fontWeight: 'bold', color: 'white' },
         }}
       />
-      {locations.length === 0 && emptyComponent}
+      {filteredLocations.length === 0 && emptyComponent}
       <ScrollView
         ref={ref}
         showsVerticalScrollIndicator={false}
